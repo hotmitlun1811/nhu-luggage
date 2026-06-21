@@ -62,7 +62,7 @@ export default function PrimaryNav() {
               key={link.href}
               href={link.href}
               onClick={(e) => scrollTo(e, link.href)}
-              className={`text-[11.5px] font-bold uppercase tracking-[0.07em] transition-colors whitespace-nowrap px-4 py-1 ${
+              className={`text-[11.5px] font-bold uppercase tracking-[0.07em] transition-colors whitespace-nowrap px-[18px] py-1 ${
                 scrolled
                   ? "text-[#6B7280] hover:text-[#16243F]"
                   : "text-white/80 hover:text-white"
