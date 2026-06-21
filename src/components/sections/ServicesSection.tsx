@@ -68,16 +68,14 @@ export default function ServicesSection() {
               More than storage
             </p>
             <h2
-              className="text-white leading-[1.06] mb-6"
+              className="text-white font-bold leading-[1.06] mb-6"
               style={{
-                fontFamily: "var(--font-playfair)",
-                fontStyle: "italic",
+                fontFamily: "var(--font-poppins)",
                 fontSize: "32px",
-                fontWeight: 700,
-                letterSpacing: "-0.025em",
+                letterSpacing: "-0.03em",
               }}
             >
-              We go where<br />you need us —
+              We go where<br />you need us.
             </h2>
             <p
               className="text-[14px] text-white/50 leading-relaxed"
@@ -184,13 +182,11 @@ export default function ServicesSection() {
                   {svc.subtitle}
                 </p>
                 <h3
-                  className="text-white leading-[1.06]"
+                  className="text-white font-bold leading-[1.06]"
                   style={{
-                    fontFamily: "var(--font-playfair)",
-                    fontStyle: "italic",
-                    fontWeight: 700,
+                    fontFamily: "var(--font-poppins)",
                     fontSize: "clamp(22px, 2.4vw, 40px)",
-                    letterSpacing: "-0.02em",
+                    letterSpacing: "-0.03em",
                   }}
                 >
                   {svc.title}
@@ -231,7 +227,7 @@ export default function ServicesSection() {
       </div>
 
       {/* ── Mobile: stacked cards ── */}
-      <div className="lg:hidden bg-[#0D1829] py-48">
+      <div className="lg:hidden bg-[#0D1829] py-16">
         <div className="max-w-[1280px] mx-auto px-6">
           <p
             className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8742C] mb-3"
@@ -240,16 +236,14 @@ export default function ServicesSection() {
             More than storage
           </p>
           <h2
-            className="text-white leading-[1.06] mb-5"
+            className="text-white font-bold leading-[1.06] mb-5"
             style={{
-              fontFamily: "var(--font-playfair)",
-              fontStyle: "italic",
+              fontFamily: "var(--font-poppins)",
               fontSize: "clamp(28px, 7vw, 44px)",
-              fontWeight: 700,
-              letterSpacing: "-0.025em",
+              letterSpacing: "-0.03em",
             }}
           >
-            We go where you need us —
+            We go where you need us.
           </h2>
           <p
             className="text-[14px] text-white/50 leading-relaxed mb-10"
@@ -293,12 +287,11 @@ export default function ServicesSection() {
                       {svc.subtitle}
                     </p>
                     <h3
-                      className="text-white mb-3"
+                      className="text-white font-bold mb-3"
                       style={{
-                        fontFamily: "var(--font-playfair)",
-                        fontStyle: "italic",
+                        fontFamily: "var(--font-poppins)",
                         fontSize: "22px",
-                        fontWeight: 700,
+                        letterSpacing: "-0.02em",
                       }}
                     >
                       {svc.title}
