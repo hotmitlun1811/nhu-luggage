@@ -39,3 +39,37 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Playwright MCP artifacts
+.playwright-mcp/
+
+# Root-level screenshot and audit files (not part of source)
+/audit-*.png
+/book-*.png
+/desk-s*.png
+/mob-s*.png
+/desktop-final.png
+/final-desktop-full.png
+/full-page-2.png
+/hero-*.png
+/image.png
+/intake-full.png
+/logo.png
+/mobile-*.png
+/nav-*.png
+/navbar-*.png
+/peakdesign-*.png
+/peakdesign-*.json
+/s1-*.png
+/s2-*.png
+/s3-*.png
+/s4-*.png
+/s5-*.png
+/s6-*.png
+/s7-*.png
+/s8-*.png
+/s9-*.png
+/section-*.png
+/stow-*.png
+/content-rewrite-hero.png
+/tos-*.png

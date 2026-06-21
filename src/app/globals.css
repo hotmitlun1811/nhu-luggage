@@ -1,26 +1,126 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
+html {
+  scroll-behavior: smooth;
 }
 
+@custom-variant dark (&:is(.dark *));
+
+/* ─── Stow — Luggage Storage Da Nang · Design System ─── */
 @theme inline {
+  /* shadcn/ui semantic tokens — mapped to Stow palette */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --radius-sm: calc(var(--radius) * 0.5);
+  --radius-md: var(--radius);
+  --radius-lg: calc(var(--radius) * 1.5);
+  --radius-xl: calc(var(--radius) * 2);
+  --radius-full: 9999px;
+
+  /* Font stacks */
+  --font-sans: var(--font-inter);
+  --font-heading: var(--font-poppins);
   --font-mono: var(--font-geist-mono);
+
+  /* ── Stow brand palette ── */
+  --color-navy:        #16243F;   /* primary — dark panels, text, nav */
+  --color-navy-dark:   #0D1829;   /* deeper navy for hero panels */
+  --color-navy-mid:    #1E3257;   /* medium navy for hover/active states */
+  --color-navy-light:  #2A4A7F;   /* lighter navy tint */
+  --color-orange:      #E8742C;   /* accent — CTAs, highlights, badges */
+  --color-orange-dark: #C85E1E;   /* darker orange for hover */
+  --color-orange-light:#FFF0E6;   /* very light orange tint for backgrounds */
+  --color-offwhite:    #F4F4F0;   /* page background */
+  --color-white:       #FFFFFF;
+  --color-gray-100:    #F9F9F7;   /* card surfaces */
+  --color-gray-200:    #E8E8E4;   /* borders, dividers */
+  --color-gray-400:    #9CA3AF;   /* muted text */
+  --color-gray-600:    #4B5563;   /* body text secondary */
+  --color-gray-900:    #111827;   /* body text primary */
+
+  /* Spacing scale */
+  --spacing-4:  4px;
+  --spacing-8:  8px;
+  --spacing-12: 12px;
+  --spacing-16: 16px;
+  --spacing-20: 20px;
+  --spacing-24: 24px;
+  --spacing-32: 32px;
+  --spacing-40: 40px;
+  --spacing-48: 48px;
+  --spacing-64: 64px;
+  --spacing-80: 80px;
+
+  /* Layout */
+  --page-max-width: 1280px;
+  --section-gap: 80px;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ─── Base theme (light only — Stow has no dark mode) ─── */
+:root {
+  --radius: 0.75rem; /* 12px — friendly, rounded */
+
+  --background:           #F4F4F0;
+  --foreground:           #16243F;
+  --card:                 #FFFFFF;
+  --card-foreground:      #16243F;
+  --popover:              #FFFFFF;
+  --popover-foreground:   #16243F;
+  --primary:              #16243F;
+  --primary-foreground:   #FFFFFF;
+  --secondary:            #F4F4F0;
+  --secondary-foreground: #16243F;
+  --muted:                #E8E8E4;
+  --muted-foreground:     #4B5563;
+  --accent:               #E8742C;
+  --accent-foreground:    #FFFFFF;
+  --destructive:          #DC2626;
+  --border:               #E8E8E4;
+  --input:                #FFFFFF;
+  --ring:                 #E8742C;
+
+  --sidebar:              #16243F;
+  --sidebar-foreground:   #FFFFFF;
+  --sidebar-primary:      #E8742C;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent:       #1E3257;
+  --sidebar-accent-foreground: #FFFFFF;
+  --sidebar-border:       #1E3257;
+  --sidebar-ring:         #E8742C;
+}
+
+/* ─── Base layer ─── */
+@layer base {
+  * {
+    @apply border-border;
   }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  body {
+    background: var(--background);
+    color: var(--foreground);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    color: var(--color-navy);
+  }
 }
