@@ -6,10 +6,10 @@ import Image from "next/image";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Pricing",      href: "#pricing" },
-  { label: "Location",     href: "#location" },
+  { label: "How It Works",  href: "#how-it-works" },
+  { label: "Pricing",       href: "#pricing" },
   { label: "Trust & Safety", href: "#trust-safety" },
+  { label: "Location",      href: "#location" },
 ];
 
 export default function PrimaryNav() {
