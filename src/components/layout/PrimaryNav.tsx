@@ -6,10 +6,11 @@ import Image from "next/image";
 import { Menu, X } from "lucide-react";
 
 const navLinks = [
-  { label: "How It Works",  href: "#how-it-works" },
-  { label: "Pricing",       href: "#pricing" },
-  { label: "Trust & Safety", href: "#trust-safety" },
-  { label: "Location",      href: "#location" },
+  { label: "How It Works", href: "#how-it-works" },
+  { label: "Services",     href: "#services" },
+  { label: "Pricing",      href: "#pricing" },
+  { label: "What We Store", href: "#trust-safety" },
+  { label: "Location",     href: "#location" },
 ];
 
 export default function PrimaryNav() {
@@ -61,7 +62,7 @@ export default function PrimaryNav() {
               key={link.href}
               href={link.href}
               onClick={(e) => scrollTo(e, link.href)}
-              className={`text-[11.5px] font-bold uppercase tracking-[0.07em] transition-colors whitespace-nowrap px-6 py-1 ${
+              className={`text-[11.5px] font-bold uppercase tracking-[0.07em] transition-colors whitespace-nowrap px-4 py-1 ${
                 scrolled
                   ? "text-[#6B7280] hover:text-[#16243F]"
                   : "text-white/80 hover:text-white"

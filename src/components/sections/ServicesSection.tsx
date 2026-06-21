@@ -44,7 +44,7 @@ export default function ServicesSection() {
   const [hovered, setHovered] = useState<number | null>(null);
 
   return (
-    <section className="w-full">
+    <section id="services" className="w-full">
 
       {/* ── Desktop: full-height horizontal panels ── */}
       <div className="hidden lg:flex" style={{ height: "100vh", minHeight: "640px" }}>
