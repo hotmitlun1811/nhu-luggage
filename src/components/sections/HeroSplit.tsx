@@ -8,8 +8,8 @@ import HeroBookingForm from "@/components/booking/HeroBookingForm";
 export default function HeroSplit() {
   return (
     <section
-      className="relative w-full overflow-hidden bg-[#0D1829]"
-      style={{ height: "100vh", minHeight: "600px" }}
+      className="relative w-full overflow-hidden bg-[#0D1829] lg:h-screen"
+      style={{ minHeight: "600px" }}
     >
       {/* ── Video background ── */}
       {/* Drop your travel/luggage video at: public/videos/hero-bg.mp4
@@ -47,8 +47,8 @@ export default function HeroSplit() {
       />
 
       {/* ── Content layer ── */}
-      <div className="relative z-10 max-w-[1280px] mx-auto px-6 h-full flex items-center">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-12 items-center py-24 lg:py-32">
+      <div className="relative z-10 max-w-[1280px] mx-auto px-6 lg:h-full lg:flex lg:items-center">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8 items-start pt-28 pb-14 lg:items-center lg:py-32">
 
           {/* ── Left — editorial text ── */}
           <div>

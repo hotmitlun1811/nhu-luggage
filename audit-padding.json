@@ -1,0 +1,398 @@
+[
+  {
+    "tag": "DIV",
+    "cls": "w-full bg-[#16243F] text-white flex items-center justify-center h-9 px-4",
+    "text": "Open 7 days a week · 7am–10pm|WhatsApp 0905 955 16",
+    "padding": {
+      "top": 0,
+      "right": 4,
+      "bottom": 0,
+      "left": 4
+    },
+    "rect": {
+      "x": 0,
+      "y": -2397,
+      "w": 1455,
+      "h": 36
+    },
+    "bg": "rgb(22, 36, 63)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "flex items-center justify-between px-5 py-4 rounded-xl border border-white/15",
+    "text": "Flexibleper hour15K VND",
+    "padding": {
+      "top": 4,
+      "right": 20,
+      "bottom": 4,
+      "left": 20
+    },
+    "rect": {
+      "x": 1000,
+      "y": -2083,
+      "w": 360,
+      "h": 48
+    },
+    "bg": "rgba(255, 255, 255, 0.08)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "flex items-center justify-between px-5 py-4 rounded-xl border border-white/15",
+    "text": "Flexibleper day60K VND",
+    "padding": {
+      "top": 4,
+      "right": 20,
+      "bottom": 4,
+      "left": 20
+    },
+    "rect": {
+      "x": 1000,
+      "y": -2023,
+      "w": 360,
+      "h": 48
+    },
+    "bg": "rgba(255, 255, 255, 0.08)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "flex items-center justify-between px-5 py-4 rounded-xl border border-white/15",
+    "text": "Long-stayflat-rateFrom 150K",
+    "padding": {
+      "top": 4,
+      "right": 20,
+      "bottom": 4,
+      "left": 20
+    },
+    "rect": {
+      "x": 1000,
+      "y": -1963,
+      "w": 360,
+      "h": 48
+    },
+    "bg": "rgba(255, 255, 255, 0.08)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "bg-[#16243F] rounded-2xl px-8 py-6 flex flex-col sm:flex-row items-start sm:item",
+    "text": "While you waitFree add-ons at the storePhone charg",
+    "padding": {
+      "top": 24,
+      "right": 8,
+      "bottom": 24,
+      "left": 8
+    },
+    "rect": {
+      "x": 96,
+      "y": -691,
+      "w": 1264,
+      "h": 91
+    },
+    "bg": "rgb(22, 36, 63)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "border border-[#E8E8E4] rounded-2xl overflow-hidden",
+    "text": "Lane 1 — FlexibleFor tourists & walk-ins. Pay per ",
+    "padding": {
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "rect": {
+      "x": 96,
+      "y": -408,
+      "w": 620,
+      "h": 313
+    },
+    "bg": "rgba(0, 0, 0, 0)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "p-8 flex flex-col gap-4 bg-white",
+    "text": "By the HourMinimum 1 hour, billed per hour15,000 V",
+    "padding": {
+      "top": 8,
+      "right": 8,
+      "bottom": 8,
+      "left": 8
+    },
+    "rect": {
+      "x": 97,
+      "y": -314,
+      "w": 618,
+      "h": 151
+    },
+    "bg": "rgb(255, 255, 255)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "flex items-center justify-between px-5 py-4 rounded-xl bg-[#F9F9F7] border borde",
+    "text": "By the HourMinimum 1 hour, billed per hour15,000 V",
+    "padding": {
+      "top": 4,
+      "right": 20,
+      "bottom": 4,
+      "left": 20
+    },
+    "rect": {
+      "x": 105,
+      "y": -306,
+      "w": 602,
+      "h": 53
+    },
+    "bg": "rgb(249, 249, 247)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "flex items-center justify-between px-5 py-4 rounded-xl bg-[#F9F9F7] border borde",
+    "text": "Best valueBy the DayUp to 24 hours from drop-off60",
+    "padding": {
+      "top": 4,
+      "right": 20,
+      "bottom": 4,
+      "left": 20
+    },
+    "rect": {
+      "x": 105,
+      "y": -250,
+      "w": 602,
+      "h": 53
+    },
+    "bg": "rgb(249, 249, 247)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "border border-[#16243F] rounded-2xl overflow-hidden",
+    "text": "Lane 2 — Flat RateFor expats & digital nomads. One",
+    "padding": {
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "rect": {
+      "x": 740,
+      "y": -408,
+      "w": 620,
+      "h": 313
+    },
+    "bg": "rgba(0, 0, 0, 0)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "p-8 flex flex-col gap-4 bg-[#16243F]",
+    "text": "MiniUp to 1 week150,000 VNDflat feeMost popularSta",
+    "padding": {
+      "top": 8,
+      "right": 8,
+      "bottom": 8,
+      "left": 8
+    },
+    "rect": {
+      "x": 741,
+      "y": -314,
+      "w": 618,
+      "h": 218
+    },
+    "bg": "rgb(22, 36, 63)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "flex items-center justify-between px-5 py-4 rounded-xl relative transition-color",
+    "text": "Long StayUp to 3 months500,000 VNDflat fee",
+    "padding": {
+      "top": 4,
+      "right": 20,
+      "bottom": 4,
+      "left": 20
+    },
+    "rect": {
+      "x": 749,
+      "y": -187,
+      "w": 602,
+      "h": 57
+    },
+    "bg": "lab(100 -0.0000298023 0.0000119209 / 0.06)"
+  },
+  {
+    "tag": "A",
+    "cls": "inline-flex items-center justify-center bg-[#E8742C] text-white text-[15px] font",
+    "text": "Book Your Storage",
+    "padding": {
+      "top": 14,
+      "right": 8,
+      "bottom": 14,
+      "left": 8
+    },
+    "rect": {
+      "x": 433,
+      "y": -56,
+      "w": 156,
+      "h": 51
+    },
+    "bg": "rgb(232, 116, 44)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "rounded-2xl border border-white/10 overflow-hidden",
+    "text": "The visa run cycle — solved1Visa expiresEvery 1–3 ",
+    "padding": {
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "rect": {
+      "x": 736,
+      "y": 67,
+      "w": 624,
+      "h": 450
+    },
+    "bg": "rgba(255, 255, 255, 0.04)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "mx-7 mb-7 p-4 rounded-xl bg-[#E8742C]/10 border border-[#E8742C]/25",
+    "text": "Flat Rate plans start at 150,000 VND for 1 week — ",
+    "padding": {
+      "top": 4,
+      "right": 4,
+      "bottom": 4,
+      "left": 4
+    },
+    "rect": {
+      "x": 765,
+      "y": 436,
+      "w": 566,
+      "h": 52
+    },
+    "bg": "lab(62.1915 42.803 58.3118 / 0.1)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "bg-[#16243F] rounded-2xl p-8",
+    "text": "Partner programWork together,earn together.Refer y",
+    "padding": {
+      "top": 8,
+      "right": 8,
+      "bottom": 8,
+      "left": 8
+    },
+    "rect": {
+      "x": 960,
+      "y": 1362,
+      "w": 400,
+      "h": 508
+    },
+    "bg": "rgb(22, 36, 63)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "flex flex-col gap-5 bg-[#F9F9F7] rounded-2xl p-8 border border-[#EFEFED]",
+    "text": "“Dropped off my bags before a day trip to Hoi An —",
+    "padding": {
+      "top": 8,
+      "right": 8,
+      "bottom": 8,
+      "left": 8
+    },
+    "rect": {
+      "x": 96,
+      "y": 2248,
+      "w": 408,
+      "h": 185
+    },
+    "bg": "rgb(249, 249, 247)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "flex items-center gap-3 pt-2 border-t border-[#EAEAEA]",
+    "text": "JJames T.UK · Backpacker",
+    "padding": {
+      "top": 8,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "rect": {
+      "x": 105,
+      "y": 2378,
+      "w": 390,
+      "h": 46
+    },
+    "bg": "rgba(0, 0, 0, 0)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "rounded-2xl overflow-hidden border border-white/10 h-[260px] lg:h-[400px]",
+    "text": "Stow Da NangCentral Da Nang · Near Han MarketOpen ",
+    "padding": {
+      "top": 0,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "rect": {
+      "x": 734,
+      "y": 2473,
+      "w": 626,
+      "h": 400
+    },
+    "bg": "rgba(0, 0, 0, 0)"
+  },
+  {
+    "tag": "A",
+    "cls": "flex items-center gap-2 bg-white/8 hover:bg-white/14 border border-white/12 text",
+    "text": "Open in Google Maps",
+    "padding": {
+      "top": 10,
+      "right": 4,
+      "bottom": 10,
+      "left": 4
+    },
+    "rect": {
+      "x": 964,
+      "y": 2689,
+      "w": 165,
+      "h": 42
+    },
+    "bg": "lab(100 -0.0000298023 0.0000119209 / 0.08)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "border-t border-white/10 py-6 flex flex-wrap gap-5 items-center justify-between",
+    "text": "Da Nang, Vietnam Open 7am–10pm daily +84 905 955 1",
+    "padding": {
+      "top": 24,
+      "right": 0,
+      "bottom": 24,
+      "left": 0
+    },
+    "rect": {
+      "x": 96,
+      "y": 3266,
+      "w": 1264,
+      "h": 69
+    },
+    "bg": "rgba(0, 0, 0, 0)"
+  },
+  {
+    "tag": "DIV",
+    "cls": "border-t border-white/5 pt-6 flex flex-col sm:flex-row items-start sm:items-cent",
+    "text": "© 2026 Stow — Luggage Storage Da Nang. All rights ",
+    "padding": {
+      "top": 24,
+      "right": 0,
+      "bottom": 0,
+      "left": 0
+    },
+    "rect": {
+      "x": 96,
+      "y": 3335,
+      "w": 1264,
+      "h": 45
+    },
+    "bg": "rgba(0, 0, 0, 0)"
+  }
+]

@@ -142,7 +142,7 @@ export default function PricingSection() {
               {lane1.map((plan, i) => (
                 <div
                   key={plan.id}
-                  className={`flex items-end justify-between py-6 ${
+                  className={`flex flex-col gap-1 md:flex-row md:items-end md:justify-between py-5 ${
                     i < lane1.length - 1 ? "border-b border-[#E2E2DE]" : ""
                   }`}
                 >
@@ -159,7 +159,7 @@ export default function PricingSection() {
                       {plan.price}
                     </span>
                     <span
-                      className="text-[13px] text-[#9CA3AF] ml-1.5"
+                      className="text-[13px] text-[#9CA3AF] ml-1.5 whitespace-nowrap"
                       style={{ fontFamily: "var(--font-inter)" }}
                     >
                       {plan.unit}
@@ -167,8 +167,8 @@ export default function PricingSection() {
                   </div>
 
                   {/* Name + tag + duration */}
-                  <div className="text-right ml-4">
-                    <div className="flex items-center gap-2 justify-end mb-1">
+                  <div className="text-left md:text-right md:ml-4">
+                    <div className="flex items-center gap-2 mb-0.5">
                       <p
                         className="text-[13px] font-semibold text-[#16243F]"
                         style={{ fontFamily: "var(--font-poppins)" }}
@@ -177,7 +177,7 @@ export default function PricingSection() {
                       </p>
                       {plan.tag && (
                         <span
-                          className="text-[9px] font-bold uppercase tracking-[0.1em] bg-[#16243F] text-white px-2 py-0.5 rounded-full"
+                          className="text-[9px] font-bold uppercase tracking-[0.1em] bg-[#16243F] text-white px-2 py-0.5 rounded-full whitespace-nowrap"
                           style={{ fontFamily: "var(--font-poppins)" }}
                         >
                           {plan.tag}
@@ -234,13 +234,13 @@ export default function PricingSection() {
               {lane2.map((plan, i) => (
                 <div
                   key={plan.id}
-                  className={`relative flex items-end justify-between py-6 ${
+                  className={`relative flex flex-col gap-1 md:flex-row md:items-end md:justify-between py-5 ${
                     i < lane2.length - 1 ? "border-b border-white/[0.14]" : ""
                   }`}
                 >
                   {/* Featured highlight bar */}
                   {plan.featured && (
-                    <div className="absolute inset-x-[-8px] inset-y-[6px] bg-white/[0.05] rounded-xl pointer-events-none" />
+                    <div className="absolute inset-x-[-8px] inset-y-[4px] bg-white/[0.05] rounded-xl pointer-events-none" />
                   )}
 
                   {/* Price */}
@@ -256,7 +256,7 @@ export default function PricingSection() {
                       {plan.price}
                     </span>
                     <span
-                      className={`text-[13px] ml-1.5 ${plan.featured ? "text-white/65" : "text-white/55"}`}
+                      className={`text-[13px] ml-1.5 whitespace-nowrap ${plan.featured ? "text-white/65" : "text-white/55"}`}
                       style={{ fontFamily: "var(--font-inter)" }}
                     >
                       {plan.unit}
@@ -264,8 +264,8 @@ export default function PricingSection() {
                   </div>
 
                   {/* Name + tag + duration */}
-                  <div className="text-right ml-4 relative z-10">
-                    <div className="flex items-center gap-2 justify-end mb-1">
+                  <div className="text-left md:text-right md:ml-4 relative z-10">
+                    <div className="flex items-center gap-2 mb-0.5">
                       <p
                         className={`text-[13px] font-semibold ${plan.featured ? "text-white" : "text-white/85"}`}
                         style={{ fontFamily: "var(--font-poppins)" }}
@@ -274,7 +274,7 @@ export default function PricingSection() {
                       </p>
                       {plan.tag && (
                         <span
-                          className="text-[9px] font-bold uppercase tracking-[0.1em] bg-[#E8742C] text-white px-2 py-0.5 rounded-full"
+                          className="text-[9px] font-bold uppercase tracking-[0.1em] bg-[#E8742C] text-white px-2 py-0.5 rounded-full whitespace-nowrap"
                           style={{ fontFamily: "var(--font-poppins)" }}
                         >
                           {plan.tag}
