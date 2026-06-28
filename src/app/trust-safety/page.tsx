@@ -22,7 +22,7 @@ const canStore = [
 
 const cannotStore = [
   { label: "Cash, jewelry, luxury watches" },
-  { label: "Laptops, cameras, tablets, drones" },
+  { label: "Laptops, cameras, tablets, drones (flat-rate plans only — accepted on hourly/daily)" },
   { label: "Flammable, hazardous, or pressurized items" },
   { label: "Illegal substances or weapons" },
   { label: "Fresh food, live animals, or perishables" },

@@ -45,7 +45,7 @@ const lane2 = [
   {
     id: "longstay",
     name: "Long Stay",
-    price: "500,000",
+    price: "1,000,000",
     unit: "₫ flat",
     duration: "Up to 3 months",
     tag: null,

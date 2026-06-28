@@ -93,7 +93,7 @@ export default function HeroSplit() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.2, ease: "easeOut" }}
             >
-              Your last day in Da Nang shouldn't be spent hauling bags around. Drop off in under 3 minutes. Pick up whenever you're ready. By the hour for day-trippers, by the month for expats on visa runs.
+              Fixed flat rates for expats, remote workers, and visa runners storing by the week or month. Hourly and daily plans for tourists and day-trippers. Drop off in under 3 minutes.
             </motion.p>
 
             {/* Contact info */}

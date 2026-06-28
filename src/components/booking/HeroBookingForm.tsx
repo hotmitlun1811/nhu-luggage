@@ -21,7 +21,7 @@ const PLANS: Record<PlanKey, {
   daily:    { name: "By the Day",  price: 60000,  unit: "/ day", lane: "flexible", oversizeSurcharge: 30000, popular: true },
   mini:     { name: "Mini",        price: 150000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
   standard: { name: "Standard",    price: 300000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
-  longstay: { name: "Long Stay",   price: 500000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 90 },
+  longstay: { name: "Long Stay",   price: 1000000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 90 },
 };
 
 const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
@@ -63,8 +63,8 @@ const ERR    = "border-red-400/70";
 export default function HeroBookingForm() {
   const today = new Date().toISOString().split("T")[0];
 
-  const [lane, setLane]             = useState<Lane>("flexible");
-  const [plan, setPlan]             = useState<PlanKey>("daily");
+  const [lane, setLane]             = useState<Lane>("flatrate");
+  const [plan, setPlan]             = useState<PlanKey>("standard");
   const [oversized, setOversized]   = useState(false);
   const [date, setDate]             = useState("");
   const [time, setTime]             = useState("");
@@ -195,7 +195,7 @@ export default function HeroBookingForm() {
       <div>
         <p className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>Lane</p>
         <div className="flex p-[3px] bg-white/[0.06] rounded-lg border border-white/[0.08] gap-[3px]">
-          {(["flexible", "flatrate"] as Lane[]).map((l) => (
+          {(["flatrate", "flexible"] as Lane[]).map((l) => (
             <button
               key={l}
               type="button"
@@ -258,6 +258,13 @@ export default function HeroBookingForm() {
           </motion.div>
         </AnimatePresence>
       </div>
+
+      {/* Laptop notice for flexible plans */}
+      {lane === "flexible" && (
+        <p className="text-[11px] text-white/35 -mt-1" style={{ fontFamily: "var(--font-inter)" }}>
+          Laptops and electronics accepted on flexible plans.
+        </p>
+      )}
 
       {/* Date / period fields — adapt per plan */}
       <AnimatePresence mode="wait">
