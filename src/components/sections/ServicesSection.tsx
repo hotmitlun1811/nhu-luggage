@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import { Truck, PlaneTakeoff, Hotel, BatteryCharging, Wifi, Coffee, Printer, ArrowRight } from "lucide-react";
-import Link from "next/link";
 
 const NAV_H = 72; // fixed nav height in px
 
@@ -130,13 +129,14 @@ export default function ServicesSection() {
               </div>
             </div>
 
-            <Link
-              href="/book"
+            <a
+              href="#booking"
+              onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
               className="inline-flex items-center gap-2 border border-white/20 text-white text-[13px] font-semibold px-6 py-3 rounded-lg hover:bg-white/8 transition-colors"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
               Book storage now <ArrowRight size={14} />
-            </Link>
+            </a>
           </div>
         </div>
 
@@ -337,13 +337,14 @@ export default function ServicesSection() {
             </div>
           </div>
 
-          <Link
-            href="/book"
+          <a
+            href="#booking"
+            onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
             className="inline-flex items-center gap-2 bg-[#E8742C] text-white text-[14px] font-semibold px-6 py-3.5 rounded-lg hover:bg-[#C85E1E] transition-colors"
             style={{ fontFamily: "var(--font-poppins)" }}
           >
             Book storage now <ArrowRight size={14} />
-          </Link>
+          </a>
         </div>
       </div>
 

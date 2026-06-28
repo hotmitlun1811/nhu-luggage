@@ -33,6 +33,14 @@ export default function PrimaryNav() {
     window.scrollTo({ top, behavior: "smooth" });
   };
 
+  const scrollToBooking = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    setMenuOpen(false);
+    const el = document.querySelector("#booking");
+    if (!el) return;
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
   return (
     <header
       className={`fixed top-0 left-0 right-0 z-50 w-full transition-all duration-300 ${
@@ -94,13 +102,14 @@ export default function PrimaryNav() {
             Chat with us
           </a>
 
-          <Link
-            href="/book"
+          <a
+            href="#booking"
+            onClick={scrollToBooking}
             className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[12px] font-bold px-6 py-2.5 rounded-[4px] hover:bg-[#C85E1E] transition-colors whitespace-nowrap tracking-[0.07em] uppercase"
             style={{ fontFamily: "var(--font-poppins)" }}
           >
             Book Now
-          </Link>
+          </a>
 
           <button
             className={`md:hidden p-2 rounded-lg transition-colors ${
@@ -144,14 +153,14 @@ export default function PrimaryNav() {
               </svg>
               Chat with us
             </a>
-            <Link
-              href="/book"
+            <a
+              href="#booking"
+              onClick={scrollToBooking}
               className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[15px] font-semibold px-5 py-3 rounded-lg hover:bg-[#C85E1E] transition-colors"
               style={{ fontFamily: "var(--font-poppins)" }}
-              onClick={() => setMenuOpen(false)}
             >
               Book Now
-            </Link>
+            </a>
           </div>
         </div>
       )}

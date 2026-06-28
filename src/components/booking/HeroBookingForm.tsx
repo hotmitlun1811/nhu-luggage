@@ -14,13 +14,14 @@ const PLANS: Record<PlanKey, {
   unit: string;
   lane: Lane;
   oversizeSurcharge: number;
+  maxDays?: number;
   popular?: boolean;
 }> = {
   hourly:   { name: "By the Hour", price: 15000,  unit: "/ hr",  lane: "flexible", oversizeSurcharge: 30000 },
   daily:    { name: "By the Day",  price: 60000,  unit: "/ day", lane: "flexible", oversizeSurcharge: 30000, popular: true },
-  mini:     { name: "Mini",        price: 150000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000 },
-  standard: { name: "Standard",    price: 300000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, popular: true },
-  longstay: { name: "Long Stay",   price: 500000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000 },
+  mini:     { name: "Mini",        price: 150000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
+  standard: { name: "Standard",    price: 300000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
+  longstay: { name: "Long Stay",   price: 500000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 90 },
 };
 
 const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
@@ -28,6 +29,20 @@ const FLAT_PLANS: PlanKey[] = ["mini", "standard", "longstay"];
 
 function vnd(n: number) {
   return n.toLocaleString("vi-VN") + " ₫";
+}
+
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T12:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+}
+
+function fmtShort(dateStr: string): string {
+  return new Date(dateStr + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function fmtLong(dateStr: string): string {
+  return new Date(dateStr + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
 }
 
 function generateSlots() {
@@ -48,57 +63,80 @@ const ERR    = "border-red-400/70";
 export default function HeroBookingForm() {
   const today = new Date().toISOString().split("T")[0];
 
-  const [lane, setLane]           = useState<Lane>("flexible");
-  const [plan, setPlan]           = useState<PlanKey>("daily");
-  const [oversized, setOversized] = useState(false);
-  const [date, setDate]           = useState("");
-  const [time, setTime]           = useState("");
-  const [name, setName]           = useState("");
-  const [phone, setPhone]         = useState("");
-  const [consent, setConsent]     = useState(false);
-  const [loading, setLoading]     = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors]       = useState<Record<string, string>>({});
+  const [lane, setLane]             = useState<Lane>("flexible");
+  const [plan, setPlan]             = useState<PlanKey>("daily");
+  const [oversized, setOversized]   = useState(false);
+  const [date, setDate]             = useState("");
+  const [time, setTime]             = useState("");
+  const [quantity, setQuantity]     = useState(1);
+  const [pickupDate, setPickupDate] = useState("");
+  const [name, setName]             = useState("");
+  const [phone, setPhone]           = useState("");
+  const [consent, setConsent]       = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [submitted, setSubmitted]   = useState(false);
+  const [errors, setErrors]         = useState<Record<string, string>>({});
 
   function switchLane(l: Lane) {
     setLane(l);
     setPlan(l === "flexible" ? "daily" : "standard");
+    setQuantity(1);
+    setPickupDate("");
+  }
+
+  function switchPlan(pk: PlanKey) {
+    setPlan(pk);
+    setQuantity(1);
+    setPickupDate("");
   }
 
   function clearErr(k: string) {
     setErrors(p => { const n = { ...p }; delete n[k]; return n; });
   }
 
-  const cur   = PLANS[plan];
-  const total = useMemo(() => cur.price + (oversized ? cur.oversizeSurcharge : 0), [cur, oversized]);
+  const cur = PLANS[plan];
+  const maxPickup = date && cur.maxDays ? addDays(date, cur.maxDays) : "";
+
+  const total = useMemo(() => {
+    const base = (plan === "hourly" || plan === "daily") ? cur.price * quantity : cur.price;
+    return base + (oversized ? cur.oversizeSurcharge : 0);
+  }, [cur, oversized, plan, quantity]);
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!date)        e.date    = "Required";
-    if (!time)        e.time    = "Required";
-    if (!name.trim()) e.name    = "Required";
-    if (!phone.trim())e.phone   = "Required";
-    if (!consent)     e.consent = "Required";
+    if (!date)          e.date    = "Required";
+    if (plan === "hourly" && !time) e.time = "Required";
+    if (!name.trim())   e.name    = "Required";
+    if (!phone.trim())  e.phone   = "Required";
+    if (!consent)       e.consent = "Required";
     return e;
   }
 
   function buildMessage() {
-    const dl = date
-      ? new Date(date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" })
-      : "TBD";
+    let periodLine = "";
+    if (plan === "hourly" && date) {
+      periodLine = `⏱ Duration: ${quantity} hour${quantity > 1 ? "s" : ""}${time ? ` starting at ${time}` : ""}`;
+    } else if (plan === "daily" && date) {
+      const pickup = addDays(date, quantity);
+      periodLine = `📅 Period: ${fmtShort(date)} → ${fmtShort(pickup)} (${quantity} day${quantity > 1 ? "s" : ""})`;
+    } else if (lane === "flatrate" && date && pickupDate) {
+      periodLine = `📅 Period: ${fmtShort(date)} → ${fmtShort(pickupDate)}`;
+    }
+
     return [
       `Hello Stow! 👋 I'd like to book luggage storage.`,
       ``,
       `📦 Plan: ${cur.name} — ${vnd(cur.price)}${cur.unit === "flat" ? " flat fee" : cur.unit}`,
       oversized ? `📏 Item: Oversized (+${vnd(cur.oversizeSurcharge)})` : `📏 Item: Standard size`,
-      `📅 Drop-off: ${dl} at ${time}`,
+      `📅 Drop-off: ${date ? fmtLong(date) : "TBD"}${plan === "hourly" && time ? ` at ${time}` : ""}`,
+      periodLine,
       `💰 Total: ${vnd(total)}`,
       ``,
       `👤 Name: ${name}`,
       `📱 WhatsApp: ${phone}`,
       ``,
       `Please confirm my booking. Thank you! 🙏`,
-    ].join("\n");
+    ].filter(Boolean).join("\n");
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -113,7 +151,7 @@ export default function HeroBookingForm() {
 
   const plans = lane === "flexible" ? FLEX_PLANS : FLAT_PLANS;
 
-  /* ── Success state ── */
+  /* ── Success ── */
   if (submitted) {
     return (
       <div className="flex flex-col items-center justify-center text-center py-10 px-6">
@@ -163,9 +201,7 @@ export default function HeroBookingForm() {
               type="button"
               onClick={() => switchLane(l)}
               className={`flex-1 py-1.5 rounded-md text-[12px] font-semibold transition-all leading-none ${
-                lane === l
-                  ? "bg-white text-[#0D1829] shadow-sm"
-                  : "text-white/35 hover:text-white/60"
+                lane === l ? "bg-white text-[#0D1829] shadow-sm" : "text-white/35 hover:text-white/60"
               }`}
               style={{ fontFamily: "var(--font-poppins)" }}
             >
@@ -194,11 +230,9 @@ export default function HeroBookingForm() {
                 <button
                   key={pk}
                   type="button"
-                  onClick={() => setPlan(pk)}
+                  onClick={() => switchPlan(pk)}
                   className={`relative flex flex-col items-start px-3 py-2 rounded-lg border transition-all text-left ${
-                    sel
-                      ? "bg-[#E8742C] border-[#E8742C]"
-                      : "bg-white/[0.05] border-white/[0.10] hover:border-white/20"
+                    sel ? "bg-[#E8742C] border-[#E8742C]" : "bg-white/[0.05] border-white/[0.10] hover:border-white/20"
                   }`}
                 >
                   {p.popular && (
@@ -225,36 +259,121 @@ export default function HeroBookingForm() {
         </AnimatePresence>
       </div>
 
-      {/* Date + Time */}
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            Date{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
-          </label>
-          <input
-            type="date"
-            value={date}
-            min={today}
-            onChange={(e) => { setDate(e.target.value); clearErr("date"); }}
-            className={`${INPUT} ${errors.date ? ERR : ""}`}
-            style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-          />
-        </div>
-        <div>
-          <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            Time{errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
-          </label>
-          <select
-            value={time}
-            onChange={(e) => { setTime(e.target.value); clearErr("time"); }}
-            className={`${INPUT} ${errors.time ? ERR : ""}`}
-            style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+      {/* Date / period fields — adapt per plan */}
+      <AnimatePresence mode="wait">
+        {lane === "flexible" ? (
+          <motion.div
+            key="flexible-dates"
+            className="flex flex-col gap-2"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
           >
-            <option value="">Select…</option>
-            {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
-        </div>
-      </div>
+            {/* Row 1: Date + Time */}
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+                  Drop-off date{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
+                </label>
+                <input
+                  type="date"
+                  value={date}
+                  min={today}
+                  onChange={(e) => { setDate(e.target.value); clearErr("date"); }}
+                  className={`${INPUT} ${errors.date ? ERR : ""}`}
+                  style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+                />
+              </div>
+              <div>
+                <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+                  Time{plan === "hourly" && errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
+                </label>
+                <select
+                  value={time}
+                  onChange={(e) => { setTime(e.target.value); clearErr("time"); }}
+                  className={`${INPUT} ${plan === "hourly" && errors.time ? ERR : ""}`}
+                  style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+                >
+                  <option value="">Select…</option>
+                  {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+              </div>
+            </div>
+
+            {/* Row 2: Quantity + pickup summary */}
+            <div className="grid grid-cols-2 gap-2 items-end">
+              <div>
+                <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+                  {plan === "hourly" ? "How many hours?" : "How many days?"}
+                </label>
+                <select
+                  value={quantity}
+                  onChange={(e) => setQuantity(Number(e.target.value))}
+                  className={INPUT}
+                  style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+                >
+                  {plan === "hourly"
+                    ? Array.from({ length: 15 }, (_, i) => i + 1).map((h) => (
+                        <option key={h} value={h}>{h} hr{h > 1 ? "s" : ""}</option>
+                      ))
+                    : Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
+                        <option key={d} value={d}>{d} day{d > 1 ? "s" : ""}</option>
+                      ))
+                  }
+                </select>
+              </div>
+              {plan === "daily" && date && (
+                <div className="pb-[9px]">
+                  <p className="text-[10px] text-white/30 uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-poppins)" }}>
+                    Pickup by
+                  </p>
+                  <p className="text-[14px] text-white font-bold" style={{ fontFamily: "var(--font-poppins)" }}>
+                    {fmtShort(addDays(date, quantity))}
+                  </p>
+                </div>
+              )}
+            </div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="flatrate-dates"
+            className="grid grid-cols-2 gap-2"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+          >
+            <div>
+              <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+                Drop-off date{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
+              </label>
+              <input
+                type="date"
+                value={date}
+                min={today}
+                onChange={(e) => { setDate(e.target.value); setPickupDate(""); clearErr("date"); }}
+                className={`${INPUT} ${errors.date ? ERR : ""}`}
+                style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+              />
+            </div>
+            <div>
+              <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+                Pickup date
+              </label>
+              <input
+                type="date"
+                value={pickupDate}
+                min={date || today}
+                max={maxPickup || undefined}
+                onChange={(e) => setPickupDate(e.target.value)}
+                className={INPUT}
+                style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+              />
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Name + WhatsApp */}
       <div className="grid grid-cols-2 gap-2">
@@ -312,10 +431,12 @@ export default function HeroBookingForm() {
         </button>
       </div>
 
-      {/* Divider + total */}
+      {/* Total */}
       <div className="flex items-center justify-between pt-0.5">
         <span className="text-[11.5px] text-white/30" style={{ fontFamily: "var(--font-inter)" }}>
-          {cur.unit === "flat" ? "Total (flat fee)" : "Starting from"}
+          {cur.unit === "flat"
+            ? "Total (flat fee)"
+            : `Total (${quantity} ${plan === "hourly" ? `hr${quantity > 1 ? "s" : ""}` : `day${quantity > 1 ? "s" : ""}`})`}
         </span>
         <span className="text-[21px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>
           {vnd(total)}

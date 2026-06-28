@@ -282,7 +282,7 @@ export default function TrustSafetyPage() {
                 WhatsApp us
               </a>
               <Link
-                href="/book"
+                href="/#booking"
                 className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[14px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#C85E1E] transition-colors"
                 style={{ fontFamily: "var(--font-poppins)" }}
               >

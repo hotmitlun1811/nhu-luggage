@@ -8,7 +8,7 @@ const links = {
     { label: "Pricing", href: "#pricing" },
     { label: "Services", href: "#services" },
     { label: "Location", href: "#location" },
-    { label: "Book Now", href: "/book" },
+    { label: "Book Now", href: "/#booking" },
   ],
   Legal: [
     { label: "Privacy Policy", href: "/privacy-policy" },

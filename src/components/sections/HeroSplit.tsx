@@ -8,6 +8,7 @@ import HeroBookingForm from "@/components/booking/HeroBookingForm";
 export default function HeroSplit() {
   return (
     <section
+      id="booking"
       className="relative w-full overflow-hidden bg-[#0D1829] lg:h-screen"
       style={{ minHeight: "600px" }}
     >
@@ -60,7 +61,7 @@ export default function HeroSplit() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
             >
-              Safe&nbsp;·&nbsp;Easy&nbsp;·&nbsp;Fast
+              Luggage Storage&nbsp;·&nbsp;Da&nbsp;Nang
             </motion.p>
 
             {/* Headline */}
@@ -119,7 +120,7 @@ export default function HeroSplit() {
               </div>
               <div className="flex items-start gap-2 text-[13px] text-white/65">
                 <MapPin size={13} className="text-[#E8742C] flex-shrink-0 mt-0.5" />
-                <span>55 Ba Bang Nhan, Ngu Hanh Son, Da Nang</span>
+                <span>55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng</span>
               </div>
             </motion.div>
           </div>

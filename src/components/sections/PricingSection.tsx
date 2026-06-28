@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { motion } from "framer-motion";
 
 const lane1 = [
@@ -304,13 +303,14 @@ export default function PricingSection() {
 
         {/* ── CTA ── */}
         <div className="flex flex-col sm:flex-row items-center justify-center pt-6 border-t border-[#F0F0EC]">
-          <Link
-            href="/book"
+          <a
+            href="#booking"
+            onClick={(e) => { e.preventDefault(); window.scrollTo({ top: 0, behavior: "smooth" }); }}
             className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[13.5px] font-bold px-7 py-3 rounded-[4px] hover:bg-[#C85E1E] transition-colors tracking-[0.06em] uppercase"
             style={{ fontFamily: "var(--font-poppins)" }}
           >
             Book Your Storage
-          </Link>
+          </a>
           <div className="hidden sm:block w-px h-5 bg-[#E2E2DE] mx-10" />
           <p
             className="text-[13px] text-[#9CA3AF] mt-4 sm:mt-0"

@@ -67,7 +67,7 @@ export default function PrivacyPage() {
       <PrimaryNav />
 
       <div className="bg-[#16243F]" style={{ paddingTop: "72px" }}>
-        <div className="max-w-[1280px] mx-auto px-6 py-14 lg:py-20">
+        <div className="max-w-[1280px] mx-auto px-6" style={{ paddingTop: "56px", paddingBottom: "56px" }}>
           <p
             className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#E8742C] mb-3"
             style={{ fontFamily: "var(--font-poppins)" }}
@@ -87,7 +87,7 @@ export default function PrivacyPage() {
       </div>
 
       <div className="bg-[#F4F4F0] min-h-screen">
-        <div className="max-w-[1280px] mx-auto px-6 py-12 lg:py-16">
+        <div className="max-w-[1280px] mx-auto px-6" style={{ paddingTop: "48px", paddingBottom: "64px" }}>
           <div className="grid grid-cols-1 lg:grid-cols-[200px_1fr] gap-10 items-start">
 
             {/* TOC sidebar — sticky with correct offset below 72px nav */}

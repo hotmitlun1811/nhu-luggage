@@ -15,13 +15,14 @@ const PLANS: Record<PlanKey, {
   duration: string;
   lane: Lane;
   oversizeSurcharge: number;
+  maxDays?: number;
   popular?: boolean;
 }> = {
   hourly:   { name: "By the Hour", price: 15000,  unit: "/ hr",  duration: "Minimum 1 hour, billed per hour", lane: "flexible", oversizeSurcharge: 30000 },
   daily:    { name: "By the Day",  price: 60000,  unit: "/ day", duration: "Up to 24 hours from drop-off",    lane: "flexible", oversizeSurcharge: 30000, popular: true },
-  mini:     { name: "Mini",        price: 150000, unit: "flat",  duration: "Up to 1 week",                    lane: "flatrate", oversizeSurcharge: 50000 },
-  standard: { name: "Standard",    price: 300000, unit: "flat",  duration: "Up to 1 month",                   lane: "flatrate", oversizeSurcharge: 50000, popular: true },
-  longstay: { name: "Long Stay",   price: 500000, unit: "flat",  duration: "Up to 3 months",                  lane: "flatrate", oversizeSurcharge: 50000 },
+  mini:     { name: "Mini",        price: 150000, unit: "flat",  duration: "Up to 1 week",                    lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
+  standard: { name: "Standard",    price: 300000, unit: "flat",  duration: "Up to 1 month",                   lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
+  longstay: { name: "Long Stay",   price: 500000, unit: "flat",  duration: "Up to 3 months",                  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 90 },
 };
 
 const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
@@ -29,6 +30,20 @@ const FLAT_PLANS: PlanKey[] = ["mini", "standard", "longstay"];
 
 function vnd(n: number) {
   return n.toLocaleString("vi-VN") + " ₫";
+}
+
+function addDays(dateStr: string, days: number): string {
+  const d = new Date(dateStr + "T12:00:00");
+  d.setDate(d.getDate() + days);
+  return d.toISOString().split("T")[0];
+}
+
+function fmtDateShort(dateStr: string): string {
+  return new Date(dateStr + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+}
+
+function fmtDateLong(dateStr: string): string {
+  return new Date(dateStr + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
 }
 
 function generateSlots() {
@@ -42,31 +57,65 @@ function generateSlots() {
 }
 const TIME_SLOTS = generateSlots();
 
+const INPUT_CLASS = (err?: boolean) =>
+  `w-full px-5 py-3 rounded-xl border text-[14px] text-[#16243F] bg-[#F9F9F7] focus:outline-none focus:border-[#E8742C] transition-colors ${err ? "border-red-400" : "border-[#EFEFED]"}`;
+
 export default function BookingForm() {
   const today = new Date().toISOString().split("T")[0];
 
-  const [lane, setLane]           = useState<Lane>("flexible");
-  const [plan, setPlan]           = useState<PlanKey>("daily");
-  const [oversized, setOversized] = useState(false);
-  const [date, setDate]           = useState("");
-  const [time, setTime]           = useState("");
-  const [name, setName]           = useState("");
-  const [phone, setPhone]         = useState("");
-  const [consent, setConsent]     = useState(false);
-  const [loading, setLoading]     = useState(false);
-  const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors]       = useState<Record<string, string>>({});
+  const [lane, setLane]             = useState<Lane>("flexible");
+  const [plan, setPlan]             = useState<PlanKey>("daily");
+  const [oversized, setOversized]   = useState(false);
+  const [date, setDate]             = useState(today);
+  const [time, setTime]             = useState("");
+  const [quantity, setQuantity]     = useState(1);   // hours (hourly) or days (daily)
+  const [pickupDate, setPickupDate] = useState("");  // for flat-rate
+  const [name, setName]             = useState("");
+  const [phone, setPhone]           = useState("");
+  const [consent, setConsent]       = useState(false);
+  const [loading, setLoading]       = useState(false);
+  const [submitted, setSubmitted]   = useState(false);
+  const [errors, setErrors]         = useState<Record<string, string>>({});
 
   function switchLane(l: Lane) {
     setLane(l);
     setPlan(l === "flexible" ? "daily" : "standard");
+    setQuantity(1);
+    setPickupDate("");
+    setErrors({});
+  }
+
+  function handlePlanChange(pk: PlanKey) {
+    setPlan(pk);
+    setQuantity(1);
+    setPickupDate("");
+    setErrors({});
   }
 
   const cur = PLANS[plan];
 
   const total = useMemo(() => {
-    return cur.price + (oversized ? cur.oversizeSurcharge : 0);
-  }, [cur, oversized]);
+    const base = (plan === "hourly" || plan === "daily")
+      ? cur.price * quantity
+      : cur.price;
+    return base + (oversized ? cur.oversizeSurcharge : 0);
+  }, [cur, oversized, plan, quantity]);
+
+  function getPickupSummary(): string {
+    if (plan === "hourly" && date && time) {
+      const [hStr, mStr] = time.split(":");
+      const totalHours = parseInt(hStr, 10) + quantity;
+      const extraDays = Math.floor(totalHours / 24);
+      const pickupHour = totalHours % 24;
+      const pickupStr = `${String(pickupHour).padStart(2, "0")}:${mStr}`;
+      return extraDays > 0
+        ? fmtDateShort(addDays(date, extraDays)) + " · " + pickupStr
+        : pickupStr;
+    }
+    if (plan === "daily" && date) return fmtDateShort(addDays(date, quantity));
+    if (lane === "flatrate" && pickupDate) return fmtDateShort(pickupDate);
+    return "—";
+  }
 
   function clearError(key: string) {
     setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
@@ -74,31 +123,41 @@ export default function BookingForm() {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!date)         e.date    = "Select a drop-off date";
-    if (!time)         e.time    = "Select a drop-off time";
-    if (!name.trim())  e.name    = "Enter your name";
-    if (!phone.trim()) e.phone   = "Enter your WhatsApp number";
-    if (!consent)      e.consent = "Please agree to the terms to continue";
+    if (!date)               e.date    = "Select a drop-off date";
+    if (plan === "hourly" && !time) e.time = "Select a drop-off time";
+    if (!name.trim())        e.name    = "Enter your name";
+    if (!phone.trim())       e.phone   = "Enter your WhatsApp number";
+    if (!consent)            e.consent = "Please agree to the terms to continue";
     return e;
   }
 
   function buildMessage() {
-    const dateLabel = date
-      ? new Date(date + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" })
-      : "TBD";
+    const dropLabel = date ? fmtDateLong(date) : "TBD";
+
+    let periodLine = "";
+    if (plan === "hourly" && date) {
+      periodLine = `⏱ Duration: ${quantity} hour${quantity > 1 ? "s" : ""}${time ? ` starting at ${time}` : ""}`;
+    } else if (plan === "daily" && date) {
+      const p = addDays(date, quantity);
+      periodLine = `📅 Period: ${fmtDateShort(date)} → ${fmtDateShort(p)} (${quantity} day${quantity > 1 ? "s" : ""})`;
+    } else if (lane === "flatrate" && pickupDate) {
+      periodLine = `📅 Period: ${fmtDateShort(date)} → ${fmtDateShort(pickupDate)}`;
+    }
+
     return [
       `Hello Stow! 👋 I'd like to book luggage storage.`,
       ``,
       `📦 Plan: ${cur.name} — ${vnd(cur.price)}${cur.unit === "flat" ? " flat fee" : cur.unit}`,
       oversized ? `📏 Item: Oversized (+${vnd(cur.oversizeSurcharge)})` : `📏 Item: Standard size`,
-      `📅 Drop-off: ${dateLabel} at ${time}`,
+      `📅 Drop-off: ${dropLabel}`,
+      periodLine,
       `💰 Total: ${vnd(total)}`,
       ``,
       `👤 Name: ${name}`,
       `📱 WhatsApp: ${phone}`,
       ``,
       `Please confirm my booking. Thank you! 🙏`,
-    ].join("\n");
+    ].filter(Boolean).join("\n");
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -133,12 +192,11 @@ export default function BookingForm() {
           Your details are now in WhatsApp. Here&apos;s what happens next:
         </p>
 
-        {/* What happens next */}
         <div className="flex flex-col gap-3 w-full max-w-sm mb-10 text-left">
           {[
             { step: "1", text: "We reply within 15 minutes to confirm your spot." },
             { step: "2", text: "Walk in at your drop-off time and show your WhatsApp confirmation." },
-            { step: "3", text: "We tag your bag and you’re out in under 3 minutes." },
+            { step: "3", text: "We tag your bag and you're out in under 3 minutes." },
           ].map(({ step, text }) => (
             <div key={step} className="flex items-start gap-3">
               <div className="w-6 h-6 rounded-full bg-[#16243F] flex items-center justify-center flex-shrink-0 mt-0.5">
@@ -169,6 +227,8 @@ export default function BookingForm() {
     );
   }
 
+  const maxPickup = date && cur.maxDays ? addDays(date, cur.maxDays) : "";
+
   return (
     <form onSubmit={handleSubmit} noValidate>
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_360px] gap-8 items-start">
@@ -182,7 +242,6 @@ export default function BookingForm() {
               01 · Choose a plan
             </p>
 
-            {/* Lane — two clearly separate options */}
             <div className="flex gap-1.5 mb-5 p-1 bg-[#F4F4F0] rounded-xl w-fit">
               {(["flexible", "flatrate"] as Lane[]).map((l) => (
                 <button
@@ -199,7 +258,6 @@ export default function BookingForm() {
               ))}
             </div>
 
-            {/* Plan cards */}
             <AnimatePresence mode="wait">
               <motion.div
                 key={lane}
@@ -216,7 +274,7 @@ export default function BookingForm() {
                     <button
                       key={pk}
                       type="button"
-                      onClick={() => setPlan(pk)}
+                      onClick={() => handlePlanChange(pk)}
                       className={`relative flex items-center justify-between px-5 py-3.5 rounded-xl border text-left transition-all ${
                         selected ? "border-[#E8742C] bg-[#FFF8F4]" : "border-[#EFEFED] bg-[#F9F9F7] hover:border-[#E8742C]/40"
                       }`}
@@ -259,51 +317,154 @@ export default function BookingForm() {
                 type="button"
                 onClick={() => setOversized(!oversized)}
                 aria-pressed={oversized}
-                className={`relative w-12 h-6 rounded-full transition-colors flex-shrink-0 ml-4 ${oversized ? "bg-[#E8742C]" : "bg-[#D1D5DB]"}`}
+                className={`relative w-[48px] h-[28px] rounded-full transition-colors flex-shrink-0 ml-4 ${oversized ? "bg-[#E8742C]" : "bg-[#D1D5DB]"}`}
               >
-                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-white shadow-sm transition-all ${oversized ? "left-[calc(100%_-_22px)]" : "left-0.5"}`} />
+                <span className={`absolute top-[3px] w-[22px] h-[22px] rounded-full bg-white shadow-sm transition-all ${oversized ? "left-[23px]" : "left-[3px]"}`} />
               </button>
             </div>
           </div>
 
-          {/* 02 · Drop-off time */}
+          {/* 02 · Storage period */}
           <div className="bg-white rounded-2xl p-7 border border-[#F0F0EC]">
             <p className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#E8742C] mb-5" style={{ fontFamily: "var(--font-poppins)" }}>
-              02 · Drop-off time
+              02 · Storage period
             </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div>
-                <label htmlFor="field-date" className="block text-[12.5px] font-semibold text-[#16243F] mb-2" style={{ fontFamily: "var(--font-poppins)" }}>
-                  Date <span className="text-red-400">*</span>
-                </label>
-                <input
-                  id="field-date"
-                  type="date"
-                  value={date}
-                  min={today}
-                  onChange={(e) => { setDate(e.target.value); clearError("date"); }}
-                  className={`w-full px-5 py-3 rounded-xl border text-[14px] text-[#16243F] bg-[#F9F9F7] focus:outline-none focus:border-[#E8742C] transition-colors ${errors.date ? "border-red-400" : "border-[#EFEFED]"}`}
-                  style={{ fontFamily: "var(--font-inter)" }}
-                />
-                {errors.date && <p className="text-[12px] text-red-500 mt-1.5">{errors.date}</p>}
+
+            {/* By the Hour: date + time + number of hours */}
+            {plan === "hourly" && (
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label htmlFor="field-date" className="block text-[12.5px] font-semibold text-[#16243F] mb-2" style={{ fontFamily: "var(--font-poppins)" }}>
+                    Drop-off date <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    id="field-date"
+                    type="date"
+                    value={date}
+                    min={today}
+                    onChange={(e) => { setDate(e.target.value); clearError("date"); }}
+                    className={INPUT_CLASS(!!errors.date)}
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  />
+                  {errors.date && <p className="text-[12px] text-red-500 mt-1.5">{errors.date}</p>}
+                </div>
+                <div>
+                  <label htmlFor="field-time" className="block text-[12.5px] font-semibold text-[#16243F] mb-2" style={{ fontFamily: "var(--font-poppins)" }}>
+                    Drop-off time <span className="text-red-400">*</span>
+                  </label>
+                  <select
+                    id="field-time"
+                    value={time}
+                    onChange={(e) => { setTime(e.target.value); clearError("time"); }}
+                    className={INPUT_CLASS(!!errors.time)}
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  >
+                    <option value="">Select time…</option>
+                    {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  {errors.time && <p className="text-[12px] text-red-500 mt-1.5">{errors.time}</p>}
+                </div>
+                <div>
+                  <label htmlFor="field-quantity" className="block text-[12.5px] font-semibold text-[#16243F] mb-2" style={{ fontFamily: "var(--font-poppins)" }}>
+                    How many hours?
+                  </label>
+                  <select
+                    id="field-quantity"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className={INPUT_CLASS()}
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  >
+                    {Array.from({ length: 15 }, (_, i) => i + 1).map((h) => (
+                      <option key={h} value={h}>{h} hr{h > 1 ? "s" : ""}</option>
+                    ))}
+                  </select>
+                </div>
               </div>
-              <div>
-                <label htmlFor="field-time" className="block text-[12.5px] font-semibold text-[#16243F] mb-2" style={{ fontFamily: "var(--font-poppins)" }}>
-                  Time <span className="text-red-400">*</span>
-                </label>
-                <select
-                  id="field-time"
-                  value={time}
-                  onChange={(e) => { setTime(e.target.value); clearError("time"); }}
-                  className={`w-full px-5 py-3 rounded-xl border text-[14px] text-[#16243F] bg-[#F9F9F7] focus:outline-none focus:border-[#E8742C] transition-colors ${errors.time ? "border-red-400" : "border-[#EFEFED]"}`}
-                  style={{ fontFamily: "var(--font-inter)" }}
-                >
-                  <option value="">Select time…</option>
-                  {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-                {errors.time && <p className="text-[12px] text-red-500 mt-1.5">{errors.time}</p>}
+            )}
+
+            {/* By the Day: drop-off date + number of days */}
+            {plan === "daily" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="field-date" className="block text-[12.5px] font-semibold text-[#16243F] mb-2" style={{ fontFamily: "var(--font-poppins)" }}>
+                    Drop-off date <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    id="field-date"
+                    type="date"
+                    value={date}
+                    min={today}
+                    onChange={(e) => { setDate(e.target.value); clearError("date"); }}
+                    className={INPUT_CLASS(!!errors.date)}
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  />
+                  {errors.date && <p className="text-[12px] text-red-500 mt-1.5">{errors.date}</p>}
+                </div>
+                <div>
+                  <label htmlFor="field-quantity" className="block text-[12.5px] font-semibold text-[#16243F] mb-2" style={{ fontFamily: "var(--font-poppins)" }}>
+                    How many days?
+                  </label>
+                  <select
+                    id="field-quantity"
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className={INPUT_CLASS()}
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  >
+                    {Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
+                      <option key={d} value={d}>{d} day{d > 1 ? "s" : ""}</option>
+                    ))}
+                  </select>
+                </div>
+                {date && (
+                  <div className="sm:col-span-2">
+                    <p className="text-[12.5px] text-[#6B7280]" style={{ fontFamily: "var(--font-inter)" }}>
+                      Pickup by: <strong className="text-[#16243F]">{fmtDateShort(addDays(date, quantity))}</strong>
+                    </p>
+                  </div>
+                )}
               </div>
-            </div>
+            )}
+
+            {/* Flat Rate: drop-off date + estimated pickup date */}
+            {lane === "flatrate" && (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label htmlFor="field-date" className="block text-[12.5px] font-semibold text-[#16243F] mb-2" style={{ fontFamily: "var(--font-poppins)" }}>
+                    Drop-off date <span className="text-red-400">*</span>
+                  </label>
+                  <input
+                    id="field-date"
+                    type="date"
+                    value={date}
+                    min={today}
+                    onChange={(e) => { setDate(e.target.value); setPickupDate(""); clearError("date"); }}
+                    className={INPUT_CLASS(!!errors.date)}
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  />
+                  {errors.date && <p className="text-[12px] text-red-500 mt-1.5">{errors.date}</p>}
+                </div>
+                <div>
+                  <label htmlFor="field-pickup" className="block text-[12.5px] font-semibold text-[#16243F] mb-2" style={{ fontFamily: "var(--font-poppins)" }}>
+                    Estimated pickup date
+                  </label>
+                  <input
+                    id="field-pickup"
+                    type="date"
+                    value={pickupDate}
+                    min={date || today}
+                    max={maxPickup || undefined}
+                    onChange={(e) => setPickupDate(e.target.value)}
+                    className={INPUT_CLASS()}
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  />
+                  <p className="text-[11.5px] text-[#9CA3AF] mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
+                    Flat fee applies — pick up any time within the plan.
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* 03 · Contact info */}
@@ -323,7 +484,7 @@ export default function BookingForm() {
                   value={name}
                   autoComplete="name"
                   onChange={(e) => { setName(e.target.value); clearError("name"); }}
-                  className={`w-full px-4 py-3 rounded-xl border text-[14px] text-[#16243F] bg-[#F9F9F7] placeholder-[#C4C4BC] focus:outline-none focus:border-[#E8742C] transition-colors ${errors.name ? "border-red-400" : "border-[#EFEFED]"}`}
+                  className={INPUT_CLASS(!!errors.name)}
                   style={{ fontFamily: "var(--font-inter)" }}
                 />
                 {errors.name && <p className="text-[12px] text-red-500 mt-1.5">{errors.name}</p>}
@@ -339,7 +500,7 @@ export default function BookingForm() {
                   value={phone}
                   autoComplete="tel"
                   onChange={(e) => { setPhone(e.target.value); clearError("phone"); }}
-                  className={`w-full px-4 py-3 rounded-xl border text-[14px] text-[#16243F] bg-[#F9F9F7] placeholder-[#C4C4BC] focus:outline-none focus:border-[#E8742C] transition-colors ${errors.phone ? "border-red-400" : "border-[#EFEFED]"}`}
+                  className={INPUT_CLASS(!!errors.phone)}
                   style={{ fontFamily: "var(--font-inter)" }}
                 />
                 {errors.phone && <p className="text-[12px] text-red-500 mt-1.5">{errors.phone}</p>}
@@ -368,13 +529,9 @@ export default function BookingForm() {
             </div>
             <span className="text-[13px] text-[#6B7280] leading-relaxed" style={{ fontFamily: "var(--font-inter)" }}>
               By submitting this form I confirm that I have read and agree to Stow&apos;s{" "}
-              <a href="#trust-safety" className="text-[#E8742C] underline underline-offset-2 hover:text-[#C85E1E]">
-                Terms of Service
-              </a>{" "}
+              <a href="/terms-of-service" className="text-[#E8742C] underline underline-offset-2 hover:text-[#C85E1E]">Terms of Service</a>{" "}
               and{" "}
-              <a href="#trust-safety" className="text-[#E8742C] underline underline-offset-2 hover:text-[#C85E1E]">
-                Privacy Policy
-              </a>
+              <a href="/privacy-policy" className="text-[#E8742C] underline underline-offset-2 hover:text-[#C85E1E]">Privacy Policy</a>
               , including the item acceptance policy and liability terms.
             </span>
           </label>
@@ -401,12 +558,13 @@ export default function BookingForm() {
         </div>
 
         {/* ── Right: sticky summary ── */}
-        <div className="hidden lg:flex flex-col gap-4 sticky top-24">
+        <div className="hidden lg:flex flex-col gap-4" style={{ position: "sticky", top: "88px" }}>
           <div className="bg-[#16243F] rounded-2xl p-7 text-white">
             <p className="text-[11px] font-bold uppercase tracking-[0.12em] text-white/35 mb-5" style={{ fontFamily: "var(--font-poppins)" }}>
               Booking summary
             </p>
 
+            {/* Plan row */}
             <div className="flex items-start justify-between pb-5 border-b border-white/10 mb-5">
               <div>
                 <p className="text-[15px] font-semibold text-white" style={{ fontFamily: "var(--font-poppins)" }}>{cur.name}</p>
@@ -418,13 +576,35 @@ export default function BookingForm() {
               </div>
             </div>
 
+            {/* Date/period details */}
             <div className="flex flex-col gap-3 pb-5 border-b border-white/10 mb-5">
+              {/* Drop-off */}
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-white/45" style={{ fontFamily: "var(--font-inter)" }}>Drop-off</span>
                 <span className="text-[13px] text-white" style={{ fontFamily: "var(--font-inter)" }}>
-                  {date ? new Date(date + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" }) : "—"}{time ? ` · ${time}` : ""}
+                  {date ? fmtDateShort(date) : "—"}{plan === "hourly" && time ? ` · ${time}` : ""}
                 </span>
               </div>
+
+              {/* Duration or pickup */}
+              {(plan === "hourly" || plan === "daily") && (
+                <div className="flex items-center justify-between">
+                  <span className="text-[13px] text-white/45" style={{ fontFamily: "var(--font-inter)" }}>
+                    {plan === "hourly" ? "Duration" : "Days"}
+                  </span>
+                  <span className="text-[13px] text-white" style={{ fontFamily: "var(--font-inter)" }}>
+                    {plan === "hourly" ? `${quantity} hr${quantity > 1 ? "s" : ""}` : `${quantity} day${quantity > 1 ? "s" : ""}`}
+                  </span>
+                </div>
+              )}
+
+              {/* Pickup estimate */}
+              <div className="flex items-center justify-between">
+                <span className="text-[13px] text-white/45" style={{ fontFamily: "var(--font-inter)" }}>Pickup (est.)</span>
+                <span className="text-[13px] text-white" style={{ fontFamily: "var(--font-inter)" }}>{getPickupSummary()}</span>
+              </div>
+
+              {/* Item size */}
               <div className="flex items-center justify-between">
                 <span className="text-[13px] text-white/45" style={{ fontFamily: "var(--font-inter)" }}>Item size</span>
                 <span className="text-[13px] text-white" style={{ fontFamily: "var(--font-inter)" }}>{oversized ? "Oversized" : "Standard"}</span>
@@ -437,9 +617,10 @@ export default function BookingForm() {
               )}
             </div>
 
+            {/* Total */}
             <div className="flex items-center justify-between mb-6">
               <span className="text-[14px] font-semibold text-white" style={{ fontFamily: "var(--font-poppins)" }}>
-                {cur.unit === "flat" ? "Total" : "Starting from"}
+                {cur.unit === "flat" ? "Total" : `Total (${quantity} ${plan === "hourly" ? `hr${quantity > 1 ? "s" : ""}` : `day${quantity > 1 ? "s" : ""}`})`}
               </span>
               <span className="text-[24px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>{vnd(total)}</span>
             </div>
@@ -465,13 +646,9 @@ export default function BookingForm() {
               </div>
               <span className="text-[12px] text-white/45 leading-relaxed" style={{ fontFamily: "var(--font-inter)" }}>
                 I agree to Stow&apos;s{" "}
-                <a href="#trust-safety" className="text-white/70 underline underline-offset-2 hover:text-white">
-                  Terms of Service
-                </a>{" "}
+                <a href="/terms-of-service" className="text-white/70 underline underline-offset-2 hover:text-white">Terms of Service</a>{" "}
                 &amp;{" "}
-                <a href="#trust-safety" className="text-white/70 underline underline-offset-2 hover:text-white">
-                  Privacy Policy
-                </a>
+                <a href="/privacy-policy" className="text-white/70 underline underline-offset-2 hover:text-white">Privacy Policy</a>
                 , including the item acceptance and liability terms.
               </span>
             </label>

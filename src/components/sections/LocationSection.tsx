@@ -78,7 +78,7 @@ export default function LocationSection() {
                     className="text-[13px] text-white font-medium mb-0.5"
                     style={{ fontFamily: "var(--font-inter)" }}
                   >
-                    55 Ba Bang Nhan, Ngu Hanh Son, Da Nang
+                    55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng
                   </p>
                   <p
                     className="text-[12px] text-white/45 mb-2"
