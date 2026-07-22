@@ -236,7 +236,7 @@ export default function IntakeForm() {
             {[
               { label: "Plan",      value: `${confirmed.planName} — ${confirmed.planDuration}` },
               { label: "Lane",      value: confirmed.lane === "flexible" ? "Lane 1 — Flexible" : "Lane 2 — Flat Rate" },
-              { label: "Pax",       value: `${confirmed.pax} ${confirmed.pax === 1 ? "person" : "people"}` },
+              { label: "Pax",       value: `${confirmed.pax} ${confirmed.pax === 1 ? "bag" : "bags"}` },
               { label: "Item size", value: confirmed.oversized ? "Oversized" : "Standard" },
               { label: "Drop-off",  value: `${dateLabel} · ${confirmed.time}` },
               { label: "Customer",  value: `${confirmed.name}` },
@@ -395,7 +395,7 @@ export default function IntakeForm() {
           style={{ fontFamily: "var(--font-inter)" }}
         />
         <p className="text-[11px] text-white/30 mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
-          Prices are per pax — total scales with how many people are storing together.
+          Prices are per pax — each bag or item counts as one pax.
         </p>
       </div>
 

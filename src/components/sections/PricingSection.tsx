@@ -102,7 +102,7 @@ export default function PricingSection() {
               className="text-[13px] text-[#9CA3AF]"
               style={{ fontFamily: "var(--font-inter)" }}
             >
-              Prices are per pax (one person, any number of bags). Traveling as a group? WhatsApp us and we&apos;ll sort it together.
+              Prices are per pax — each bag or item stored counts as one pax. Storing several bags? WhatsApp us and we&apos;ll sort it together.
             </p>
           </motion.div>
         </div>

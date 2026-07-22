@@ -216,8 +216,9 @@ export default function TermsPage() {
 
               <Section id="pricing" title="6. Pricing and payment">
                 <P>
-                  All prices are in Vietnamese Dong (VND) and apply per pax (one person, any number of
-                  bags). No hidden fees. Payment is cash at the store. We do not process online payments.
+                  All prices are in Vietnamese Dong (VND) and apply per pax — each bag or item stored
+                  counts as one pax. No hidden fees. Payment is cash at the store. We do not process
+                  online payments.
                 </P>
                 <P><strong>Lane 1 (Flexible):</strong></P>
                 <Ul items={[

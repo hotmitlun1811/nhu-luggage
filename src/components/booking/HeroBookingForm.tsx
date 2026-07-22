@@ -12,16 +12,17 @@ const PLANS: Record<PlanKey, {
   name: string;
   price: number;
   unit: string;
+  duration: string;
   lane: Lane;
   oversizeSurcharge: number;
   maxDays?: number;
   popular?: boolean;
 }> = {
-  hourly:   { name: "By the Hour", price: 15000,  unit: "/ hr",  lane: "flexible", oversizeSurcharge: 30000 },
-  daily:    { name: "By the Day",  price: 60000,  unit: "/ day", lane: "flexible", oversizeSurcharge: 30000, popular: true },
-  mini:     { name: "Mini",        price: 150000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
-  strand:   { name: "Strand",      price: 300000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
-  longstay: { name: "Long Stay",   price: 1000000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 120 },
+  hourly:   { name: "By the Hour", price: 15000,  unit: "/ hr",  duration: "Min 1 hr",     lane: "flexible", oversizeSurcharge: 30000 },
+  daily:    { name: "By the Day",  price: 60000,  unit: "/ day", duration: "Up to 24 hrs", lane: "flexible", oversizeSurcharge: 30000, popular: true },
+  mini:     { name: "Mini",        price: 150000, unit: "flat",  duration: "Up to 1 week",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
+  strand:   { name: "Strand",      price: 300000, unit: "flat",  duration: "Up to 1 month", lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
+  longstay: { name: "Long Stay",   price: 1000000, unit: "flat", duration: "Up to 4 months", lane: "flatrate", oversizeSurcharge: 50000, maxDays: 120 },
 };
 
 const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
@@ -145,7 +146,7 @@ export default function HeroBookingForm() {
       ``,
       `📋 Ref: ${ref}`,
       `📦 Plan: ${cur.name} — ${vnd(cur.price)}${cur.unit === "flat" ? " flat fee" : cur.unit} / pax`,
-      `👥 Pax: ${pax}`,
+      `🧳 Pax (bags): ${pax}`,
       oversized ? `📏 Item: Oversized (+${vnd(cur.oversizeSurcharge)})` : `📏 Item: Standard size`,
       `📅 Drop-off: ${date ? fmtLong(date) : "TBD"}${(plan === "hourly" || lane === "flatrate") && time ? ` at ${time}` : ""}`,
       periodLine,
@@ -171,7 +172,7 @@ export default function HeroBookingForm() {
           name: name.trim(),
           ref,
           planName: cur.name,
-          planDuration: cur.unit === "flat" ? undefined : cur.unit,
+          planDuration: cur.duration,
           lane,
         }),
       });
@@ -339,6 +340,12 @@ export default function HeroBookingForm() {
                   >
                     {vnd(p.price)}<span className="font-medium opacity-70"> / pax</span>
                   </p>
+                  <p
+                    className={`text-[10px] mt-0.5 ${sel ? "text-white/60" : "text-white/35"}`}
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  >
+                    {p.duration}
+                  </p>
                 </button>
               );
             })}
@@ -395,8 +402,8 @@ export default function HeroBookingForm() {
               </div>
             </div>
 
-            {/* Row 2: Quantity + pickup summary */}
-            <div className="grid grid-cols-2 gap-2 items-end">
+            {/* Row 2: Quantity + Pax */}
+            <div className="grid grid-cols-2 gap-2">
               <div>
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                   {plan === "hourly" ? "How many hours?" : "How many days?"}
@@ -417,17 +424,27 @@ export default function HeroBookingForm() {
                   }
                 </select>
               </div>
-              {plan === "daily" && date && (
-                <div className="pb-[9px]">
-                  <p className="text-[10px] text-white/30 uppercase tracking-[0.1em] mb-1" style={{ fontFamily: "var(--font-poppins)" }}>
-                    Pickup by
-                  </p>
-                  <p className="text-[14px] text-white font-bold" style={{ fontFamily: "var(--font-poppins)" }}>
-                    {fmtShort(addDays(date, quantity))}
-                  </p>
-                </div>
-              )}
+              <div>
+                <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+                  Pax{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
+                </label>
+                <input
+                  type="number"
+                  min={1}
+                  step={1}
+                  value={pax}
+                  onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearErr("pax"); }}
+                  className={`${INPUT} ${errors.pax ? ERR : ""}`}
+                  style={{ fontFamily: "var(--font-inter)" }}
+                />
+              </div>
             </div>
+
+            {plan === "daily" && date && (
+              <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
+                Pickup by <span className="text-white font-semibold">{fmtShort(addDays(date, quantity))}</span>
+              </p>
+            )}
           </motion.div>
         ) : (
           <motion.div
@@ -529,22 +546,29 @@ export default function HeroBookingForm() {
         </div>
       </div>
 
-      {/* Pax + Oversized */}
-      <div className="grid grid-cols-2 gap-2">
-        <div>
-          <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            Pax{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
-          </label>
-          <input
-            type="number"
-            min={1}
-            step={1}
-            value={pax}
-            onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearErr("pax"); }}
-            className={`${INPUT} ${errors.pax ? ERR : ""}`}
-            style={{ fontFamily: "var(--font-inter)" }}
-          />
-        </div>
+      {/* Pax (flat rate only — flexible has it next to "how many days") + Oversized */}
+      <div className={`grid gap-2 items-stretch ${lane === "flatrate" ? "grid-cols-2" : "grid-cols-1"}`}>
+        {lane === "flatrate" && (
+          <div className={`flex items-center justify-between px-3 py-2.5 bg-white/[0.05] rounded-lg border ${errors.pax ? ERR : "border-white/[0.09]"}`}>
+            <div className="min-w-0 mr-3">
+              <label className="text-[12.5px] font-semibold text-white/80 leading-none block" style={{ fontFamily: "var(--font-poppins)" }}>
+                Pax{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
+              </label>
+              <p className="text-[11px] text-white/28 mt-1 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
+                How many bags
+              </p>
+            </div>
+            <input
+              type="number"
+              min={1}
+              step={1}
+              value={pax}
+              onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearErr("pax"); }}
+              className="w-[44px] flex-shrink-0 bg-transparent border-0 text-white text-[18px] font-bold text-right focus:outline-none"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            />
+          </div>
+        )}
 
         <div className="flex items-center justify-between px-3 py-2.5 bg-white/[0.05] rounded-lg border border-white/[0.09]">
           <div className="min-w-0 mr-3">
