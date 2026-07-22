@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { Inter, Poppins, Geist_Mono, Playfair_Display } from "next/font/google";
+import { GoogleAnalytics } from "@next/third-parties/google";
 import "./globals.css";
 
 const inter = Inter({
@@ -116,6 +117,7 @@ export default function RootLayout({
       className={`${inter.variable} ${poppins.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
     >
       <body>{children}</body>
+      <GoogleAnalytics gaId="G-FCXSCK0ZCH" />
     </html>
   );
 }

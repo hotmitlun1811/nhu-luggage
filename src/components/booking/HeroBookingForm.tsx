@@ -83,6 +83,7 @@ export default function HeroBookingForm() {
   const [errors, setErrors]         = useState<Record<string, string>>({});
   const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
   const [emailError, setEmailError]   = useState("");
+  const [bookingRef, setBookingRef]   = useState("");
 
   function switchLane(l: Lane) {
     setLane(l);
@@ -122,7 +123,13 @@ export default function HeroBookingForm() {
     return e;
   }
 
-  function buildMessage() {
+  function generateRef() {
+    const d = (date || today).replace(/-/g, "").slice(2); // YYMMDD
+    const n = Math.floor(Math.random() * 9000 + 1000);
+    return `STW-${d}-${n}`;
+  }
+
+  function buildMessage(ref: string) {
     let periodLine = "";
     if (plan === "hourly" && date) {
       periodLine = `⏱ Duration: ${quantity} hour${quantity > 1 ? "s" : ""}${time ? ` starting at ${time}` : ""}`;
@@ -136,6 +143,7 @@ export default function HeroBookingForm() {
     return [
       `Hello Stow! 👋 I'd like to book luggage storage.`,
       ``,
+      `📋 Ref: ${ref}`,
       `📦 Plan: ${cur.name} — ${vnd(cur.price)}${cur.unit === "flat" ? " flat fee" : cur.unit} / pax`,
       `👥 Pax: ${pax}`,
       oversized ? `📏 Item: Oversized (+${vnd(cur.oversizeSurcharge)})` : `📏 Item: Standard size`,
@@ -151,7 +159,7 @@ export default function HeroBookingForm() {
     ].filter(Boolean).join("\n");
   }
 
-  async function sendAgreementEmail() {
+  async function sendAgreementEmail(ref: string) {
     setEmailStatus("sending");
     setEmailError("");
     try {
@@ -161,6 +169,7 @@ export default function HeroBookingForm() {
         body: JSON.stringify({
           to: email.trim(),
           name: name.trim(),
+          ref,
           planName: cur.name,
           planDuration: cur.unit === "flat" ? undefined : cur.unit,
           lane,
@@ -183,8 +192,10 @@ export default function HeroBookingForm() {
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
     setLoading(true);
-    window.open(`https://wa.me/84905955161?text=${encodeURIComponent(buildMessage())}`, "_blank", "noopener,noreferrer");
-    sendAgreementEmail();
+    const ref = generateRef();
+    setBookingRef(ref);
+    window.open(`https://wa.me/84905955161?text=${encodeURIComponent(buildMessage(ref))}`, "_blank", "noopener,noreferrer");
+    sendAgreementEmail(ref);
     setTimeout(() => { setLoading(false); setSubmitted(true); }, 600);
   }
 
@@ -203,8 +214,11 @@ export default function HeroBookingForm() {
         <p className="text-white/45 text-[13px] leading-snug mb-1" style={{ fontFamily: "var(--font-inter)" }}>
           Your details are now in WhatsApp.
         </p>
-        <p className="text-white/30 text-[12px] mb-5" style={{ fontFamily: "var(--font-inter)" }}>
+        <p className="text-white/30 text-[12px] mb-1" style={{ fontFamily: "var(--font-inter)" }}>
           We reply within 15 minutes.
+        </p>
+        <p className="text-white/25 text-[11px] mb-5 tracking-wide" style={{ fontFamily: "var(--font-poppins)" }}>
+          Ref: {bookingRef}
         </p>
 
         <div className="flex items-center justify-between w-full max-w-xs px-3 py-2.5 mb-6 bg-white/[0.05] rounded-lg border border-white/[0.09]">
@@ -222,7 +236,7 @@ export default function HeroBookingForm() {
           {emailStatus === "error" ? (
             <button
               type="button"
-              onClick={sendAgreementEmail}
+              onClick={() => sendAgreementEmail(bookingRef)}
               className="flex-shrink-0 text-[11px] font-semibold text-[#E8742C] px-2.5 py-1.5 rounded-md border border-[#E8742C]/40"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
@@ -279,6 +293,9 @@ export default function HeroBookingForm() {
             </button>
           ))}
         </div>
+        <p className="text-[11px] text-white/30 mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
+          {lane === "flexible" ? "For tourists & walk-ins" : "For expats & digital nomads"}
+        </p>
       </div>
 
       {/* Plan */}
@@ -415,7 +432,7 @@ export default function HeroBookingForm() {
         ) : (
           <motion.div
             key="flatrate-dates"
-            className="grid grid-cols-3 gap-2"
+            className="grid grid-cols-2 lg:grid-cols-3 gap-2"
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
@@ -448,7 +465,7 @@ export default function HeroBookingForm() {
                 {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
-            <div>
+            <div className="col-span-2 lg:col-span-1">
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                 Pickup
               </label>
@@ -467,7 +484,7 @@ export default function HeroBookingForm() {
       </AnimatePresence>
 
       {/* Name + WhatsApp + Email */}
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
         <div>
           <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
             Name{errors.name && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.name})</span>}
@@ -496,7 +513,7 @@ export default function HeroBookingForm() {
             style={{ fontFamily: "var(--font-inter)" }}
           />
         </div>
-        <div>
+        <div className="col-span-2 lg:col-span-1">
           <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
             Email{errors.email && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.email})</span>}
           </label>
@@ -513,7 +530,7 @@ export default function HeroBookingForm() {
       </div>
 
       {/* Pax + Oversized */}
-      <div className="grid grid-cols-[110px_1fr] gap-2">
+      <div className="grid grid-cols-2 gap-2">
         <div>
           <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
             Pax{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
