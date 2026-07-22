@@ -7,7 +7,7 @@ const lane1 = [
     id: "hourly",
     name: "By the Hour",
     price: "15,000",
-    unit: "₫ / hour",
+    unit: "₫ / hour / pax",
     duration: "Minimum 1 hour, billed per hour",
     tag: null,
     featured: false,
@@ -16,7 +16,7 @@ const lane1 = [
     id: "daily",
     name: "By the Day",
     price: "60,000",
-    unit: "₫ / day",
+    unit: "₫ / day / pax",
     duration: "Up to 24 hours from drop-off",
     tag: "Best value",
     featured: false,
@@ -28,16 +28,16 @@ const lane2 = [
     id: "mini",
     name: "Mini",
     price: "150,000",
-    unit: "₫ flat",
+    unit: "₫ flat / pax",
     duration: "Up to 1 week",
     tag: null,
     featured: false,
   },
   {
-    id: "standard",
-    name: "Standard",
+    id: "strand",
+    name: "Strand",
     price: "300,000",
-    unit: "₫ flat",
+    unit: "₫ flat / pax",
     duration: "Up to 1 month",
     tag: "Most popular",
     featured: true,
@@ -46,8 +46,8 @@ const lane2 = [
     id: "longstay",
     name: "Long Stay",
     price: "1,000,000",
-    unit: "₫ flat",
-    duration: "Up to 3 months",
+    unit: "₫ flat / pax",
+    duration: "Up to 4 months",
     tag: null,
     featured: false,
   },
@@ -102,7 +102,7 @@ export default function PricingSection() {
               className="text-[13px] text-[#9CA3AF]"
               style={{ fontFamily: "var(--font-inter)" }}
             >
-              Prices are per bag. Storing 2 or more? WhatsApp us and we&apos;ll sort it together.
+              Prices are per pax (one person, any number of bags). Traveling as a group? WhatsApp us and we&apos;ll sort it together.
             </p>
           </motion.div>
         </div>

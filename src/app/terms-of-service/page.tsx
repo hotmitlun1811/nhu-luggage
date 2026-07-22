@@ -155,7 +155,7 @@ export default function TermsPage() {
                 <P>Two lanes:</P>
                 <Ul items={[
                   "Lane 1 (Flexible): 15,000 VND per hour or 60,000 VND for the day. For tourists, day-trippers, and walk-ins.",
-                  "Lane 2 (Flat Rate): fixed-price plans from one week to three months. For expats, digital nomads, and visa runners.",
+                  "Lane 2 (Flat Rate): fixed-price plans from one week to four months. For expats, digital nomads, and visa runners.",
                 ]} />
                 <P>
                   Each item gets a unique ID tag and a condition photo at drop-off. Lane 2 items go into a
@@ -216,8 +216,8 @@ export default function TermsPage() {
 
               <Section id="pricing" title="6. Pricing and payment">
                 <P>
-                  All prices are in Vietnamese Dong (VND). No hidden fees. Payment is cash at the store.
-                  We do not process online payments.
+                  All prices are in Vietnamese Dong (VND) and apply per pax (one person, any number of
+                  bags). No hidden fees. Payment is cash at the store. We do not process online payments.
                 </P>
                 <P><strong>Lane 1 (Flexible):</strong></P>
                 <Ul items={[
@@ -228,8 +228,8 @@ export default function TermsPage() {
                 <P><strong>Lane 2 (Flat Rate):</strong></P>
                 <Ul items={[
                   "Mini: 150,000 VND, up to one week.",
-                  "Standard: 300,000 VND, up to one month.",
-                  "Long Stay: 500,000 VND, up to three months.",
+                  "Strand: 300,000 VND, up to one month.",
+                  "Long Stay: 1,000,000 VND, up to four months.",
                   "Oversized surcharge: +50,000 VND.",
                 ]} />
                 <P>

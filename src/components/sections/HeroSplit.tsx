@@ -49,7 +49,7 @@ export default function HeroSplit() {
 
       {/* ── Content layer ── */}
       <div className="relative z-10 max-w-[1280px] mx-auto px-6 lg:h-full lg:flex lg:items-center">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_400px] gap-8 items-start pt-28 pb-14 lg:items-center lg:py-32">
+        <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_500px] gap-8 items-start pt-28 pb-14 lg:items-center lg:py-32">
 
           {/* ── Left — editorial text ── */}
           <div>

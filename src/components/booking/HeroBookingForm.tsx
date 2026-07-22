@@ -6,7 +6,7 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 
 type Lane = "flexible" | "flatrate";
-type PlanKey = "hourly" | "daily" | "mini" | "standard" | "longstay";
+type PlanKey = "hourly" | "daily" | "mini" | "strand" | "longstay";
 
 const PLANS: Record<PlanKey, {
   name: string;
@@ -20,12 +20,12 @@ const PLANS: Record<PlanKey, {
   hourly:   { name: "By the Hour", price: 15000,  unit: "/ hr",  lane: "flexible", oversizeSurcharge: 30000 },
   daily:    { name: "By the Day",  price: 60000,  unit: "/ day", lane: "flexible", oversizeSurcharge: 30000, popular: true },
   mini:     { name: "Mini",        price: 150000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
-  standard: { name: "Standard",    price: 300000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
-  longstay: { name: "Long Stay",   price: 1000000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 90 },
+  strand:   { name: "Strand",      price: 300000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
+  longstay: { name: "Long Stay",   price: 1000000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 120 },
 };
 
 const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
-const FLAT_PLANS: PlanKey[] = ["mini", "standard", "longstay"];
+const FLAT_PLANS: PlanKey[] = ["mini", "strand", "longstay"];
 
 function vnd(n: number) {
   return n.toLocaleString("vi-VN") + " ₫";
@@ -59,27 +59,34 @@ const TIME_SLOTS = generateSlots();
 const LABEL = "block text-[10px] font-bold uppercase tracking-[0.12em] text-white/30 mb-1.5";
 const INPUT  = "w-full bg-white/[0.07] border border-white/[0.12] rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/25 focus:outline-none focus:border-[#E8742C]/70 transition-colors";
 const ERR    = "border-red-400/70";
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+
+type EmailStatus = "idle" | "sending" | "sent" | "error";
 
 export default function HeroBookingForm() {
   const today = new Date().toISOString().split("T")[0];
 
   const [lane, setLane]             = useState<Lane>("flatrate");
-  const [plan, setPlan]             = useState<PlanKey>("standard");
+  const [plan, setPlan]             = useState<PlanKey>("strand");
   const [oversized, setOversized]   = useState(false);
   const [date, setDate]             = useState("");
   const [time, setTime]             = useState("");
   const [quantity, setQuantity]     = useState(1);
+  const [pax, setPax]               = useState(1);
   const [pickupDate, setPickupDate] = useState("");
   const [name, setName]             = useState("");
   const [phone, setPhone]           = useState("");
+  const [email, setEmail]           = useState("");
   const [consent, setConsent]       = useState(false);
   const [loading, setLoading]       = useState(false);
   const [submitted, setSubmitted]   = useState(false);
   const [errors, setErrors]         = useState<Record<string, string>>({});
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
+  const [emailError, setEmailError]   = useState("");
 
   function switchLane(l: Lane) {
     setLane(l);
-    setPlan(l === "flexible" ? "daily" : "standard");
+    setPlan(l === "flexible" ? "daily" : "strand");
     setQuantity(1);
     setPickupDate("");
   }
@@ -99,15 +106,18 @@ export default function HeroBookingForm() {
 
   const total = useMemo(() => {
     const base = (plan === "hourly" || plan === "daily") ? cur.price * quantity : cur.price;
-    return base + (oversized ? cur.oversizeSurcharge : 0);
-  }, [cur, oversized, plan, quantity]);
+    return base * pax + (oversized ? cur.oversizeSurcharge : 0);
+  }, [cur, oversized, plan, quantity, pax]);
 
   function validate() {
     const e: Record<string, string> = {};
     if (!date)          e.date    = "Required";
-    if (plan === "hourly" && !time) e.time = "Required";
+    if ((plan === "hourly" || lane === "flatrate") && !time) e.time = "Required";
     if (!name.trim())   e.name    = "Required";
     if (!phone.trim())  e.phone   = "Required";
+    if (!email.trim())  e.email   = "Required";
+    else if (!EMAIL_RE.test(email.trim())) e.email = "Invalid email";
+    if (!pax || pax < 1) e.pax    = "Required";
     if (!consent)       e.consent = "Required";
     return e;
   }
@@ -126,17 +136,45 @@ export default function HeroBookingForm() {
     return [
       `Hello Stow! 👋 I'd like to book luggage storage.`,
       ``,
-      `📦 Plan: ${cur.name} — ${vnd(cur.price)}${cur.unit === "flat" ? " flat fee" : cur.unit}`,
+      `📦 Plan: ${cur.name} — ${vnd(cur.price)}${cur.unit === "flat" ? " flat fee" : cur.unit} / pax`,
+      `👥 Pax: ${pax}`,
       oversized ? `📏 Item: Oversized (+${vnd(cur.oversizeSurcharge)})` : `📏 Item: Standard size`,
-      `📅 Drop-off: ${date ? fmtLong(date) : "TBD"}${plan === "hourly" && time ? ` at ${time}` : ""}`,
+      `📅 Drop-off: ${date ? fmtLong(date) : "TBD"}${(plan === "hourly" || lane === "flatrate") && time ? ` at ${time}` : ""}`,
       periodLine,
       `💰 Total: ${vnd(total)}`,
       ``,
       `👤 Name: ${name}`,
       `📱 WhatsApp: ${phone}`,
+      `✉️ Email: ${email}`,
       ``,
       `Please confirm my booking. Thank you! 🙏`,
     ].filter(Boolean).join("\n");
+  }
+
+  async function sendAgreementEmail() {
+    setEmailStatus("sending");
+    setEmailError("");
+    try {
+      const res = await fetch("/api/send-agreement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: email.trim(),
+          name: name.trim(),
+          planName: cur.name,
+          planDuration: cur.unit === "flat" ? undefined : cur.unit,
+          lane,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to send email");
+      }
+      setEmailStatus("sent");
+    } catch (err) {
+      setEmailStatus("error");
+      setEmailError(err instanceof Error ? err.message : "Failed to send email");
+    }
   }
 
   function handleSubmit(e: React.FormEvent) {
@@ -146,6 +184,7 @@ export default function HeroBookingForm() {
     setErrors({});
     setLoading(true);
     window.open(`https://wa.me/84905955161?text=${encodeURIComponent(buildMessage())}`, "_blank", "noopener,noreferrer");
+    sendAgreementEmail();
     setTimeout(() => { setLoading(false); setSubmitted(true); }, 600);
   }
 
@@ -164,9 +203,40 @@ export default function HeroBookingForm() {
         <p className="text-white/45 text-[13px] leading-snug mb-1" style={{ fontFamily: "var(--font-inter)" }}>
           Your details are now in WhatsApp.
         </p>
-        <p className="text-white/30 text-[12px] mb-7" style={{ fontFamily: "var(--font-inter)" }}>
+        <p className="text-white/30 text-[12px] mb-5" style={{ fontFamily: "var(--font-inter)" }}>
           We reply within 15 minutes.
         </p>
+
+        <div className="flex items-center justify-between w-full max-w-xs px-3 py-2.5 mb-6 bg-white/[0.05] rounded-lg border border-white/[0.09]">
+          <div className="text-left min-w-0 mr-3">
+            <p className="text-[11.5px] font-semibold text-white/70" style={{ fontFamily: "var(--font-poppins)" }}>
+              Policy &amp; agreement email
+            </p>
+            <p className="text-[11px] text-white/35 mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
+              {emailStatus === "sending" && `Sending to ${email}…`}
+              {emailStatus === "sent" && `Sent to ${email}`}
+              {emailStatus === "error" && (emailError || "Failed to send")}
+              {emailStatus === "idle" && `Will send to ${email}`}
+            </p>
+          </div>
+          {emailStatus === "error" ? (
+            <button
+              type="button"
+              onClick={sendAgreementEmail}
+              className="flex-shrink-0 text-[11px] font-semibold text-[#E8742C] px-2.5 py-1.5 rounded-md border border-[#E8742C]/40"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            >
+              Retry
+            </button>
+          ) : (
+            <CheckCircle2
+              size={16}
+              strokeWidth={2}
+              className={`flex-shrink-0 ${emailStatus === "sent" ? "text-emerald-400" : "text-white/20"}`}
+            />
+          )}
+        </div>
+
         <div className="flex gap-2 flex-wrap justify-center">
           <Link
             href="/"
@@ -250,7 +320,7 @@ export default function HeroBookingForm() {
                     className={`text-[11px] font-bold mt-0.5 ${sel ? "text-white/70" : "text-[#E8742C]"}`}
                     style={{ fontFamily: "var(--font-poppins)" }}
                   >
-                    {vnd(p.price)}
+                    {vnd(p.price)}<span className="font-medium opacity-70"> / pax</span>
                   </p>
                 </button>
               );
@@ -345,7 +415,7 @@ export default function HeroBookingForm() {
         ) : (
           <motion.div
             key="flatrate-dates"
-            className="grid grid-cols-2 gap-2"
+            className="grid grid-cols-3 gap-2"
             initial={{ opacity: 0, y: 4 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -4 }}
@@ -353,7 +423,7 @@ export default function HeroBookingForm() {
           >
             <div>
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                Drop-off date{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
+                Drop-off{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
               </label>
               <input
                 type="date"
@@ -366,7 +436,21 @@ export default function HeroBookingForm() {
             </div>
             <div>
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                Pickup date
+                Bring at{errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
+              </label>
+              <select
+                value={time}
+                onChange={(e) => { setTime(e.target.value); clearErr("time"); }}
+                className={`${INPUT} ${errors.time ? ERR : ""}`}
+                style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+              >
+                <option value="">Select…</option>
+                {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+                Pickup
               </label>
               <input
                 type="date"
@@ -382,8 +466,8 @@ export default function HeroBookingForm() {
         )}
       </AnimatePresence>
 
-      {/* Name + WhatsApp */}
-      <div className="grid grid-cols-2 gap-2">
+      {/* Name + WhatsApp + Email */}
+      <div className="grid grid-cols-3 gap-2">
         <div>
           <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
             Name{errors.name && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.name})</span>}
@@ -412,30 +496,61 @@ export default function HeroBookingForm() {
             style={{ fontFamily: "var(--font-inter)" }}
           />
         </div>
+        <div>
+          <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+            Email{errors.email && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.email})</span>}
+          </label>
+          <input
+            type="email"
+            placeholder="you@example.com"
+            value={email}
+            autoComplete="email"
+            onChange={(e) => { setEmail(e.target.value); clearErr("email"); }}
+            className={`${INPUT} ${errors.email ? ERR : ""}`}
+            style={{ fontFamily: "var(--font-inter)" }}
+          />
+        </div>
       </div>
 
-      {/* Oversized toggle */}
-      <div className="flex items-center justify-between px-3 py-2.5 bg-white/[0.05] rounded-lg border border-white/[0.09]">
-        <div className="min-w-0 mr-3">
-          <p className="text-[12.5px] font-semibold text-white/80 leading-none" style={{ fontFamily: "var(--font-poppins)" }}>
-            Oversized?
-          </p>
-          <p className="text-[11px] text-white/28 mt-1 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
-            28″+ suitcase, bike, surfboard · +{vnd(cur.oversizeSurcharge)}
-          </p>
-        </div>
-        <button
-          type="button"
-          onClick={() => setOversized(!oversized)}
-          aria-pressed={oversized}
-          className={`relative w-9 h-[19px] rounded-full transition-colors flex-shrink-0 ${oversized ? "bg-[#E8742C]" : "bg-white/15"}`}
-        >
-          <span
-            className={`absolute top-[2px] w-[15px] h-[15px] rounded-full bg-white shadow-sm transition-all ${
-              oversized ? "left-[calc(100%_-_17px)]" : "left-[2px]"
-            }`}
+      {/* Pax + Oversized */}
+      <div className="grid grid-cols-[110px_1fr] gap-2">
+        <div>
+          <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+            Pax{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
+          </label>
+          <input
+            type="number"
+            min={1}
+            step={1}
+            value={pax}
+            onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearErr("pax"); }}
+            className={`${INPUT} ${errors.pax ? ERR : ""}`}
+            style={{ fontFamily: "var(--font-inter)" }}
           />
-        </button>
+        </div>
+
+        <div className="flex items-center justify-between px-3 py-2.5 bg-white/[0.05] rounded-lg border border-white/[0.09]">
+          <div className="min-w-0 mr-3">
+            <p className="text-[12.5px] font-semibold text-white/80 leading-none" style={{ fontFamily: "var(--font-poppins)" }}>
+              Oversized?
+            </p>
+            <p className="text-[11px] text-white/28 mt-1 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
+              28″+, bike, surfboard · +{vnd(cur.oversizeSurcharge)}
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setOversized(!oversized)}
+            aria-pressed={oversized}
+            className={`relative w-9 h-[19px] rounded-full transition-colors flex-shrink-0 ${oversized ? "bg-[#E8742C]" : "bg-white/15"}`}
+          >
+            <span
+              className={`absolute top-[2px] w-[15px] h-[15px] rounded-full bg-white shadow-sm transition-all ${
+                oversized ? "left-[calc(100%_-_17px)]" : "left-[2px]"
+              }`}
+            />
+          </button>
+        </div>
       </div>
 
       {/* Total */}
@@ -444,6 +559,7 @@ export default function HeroBookingForm() {
           {cur.unit === "flat"
             ? "Total (flat fee)"
             : `Total (${quantity} ${plan === "hourly" ? `hr${quantity > 1 ? "s" : ""}` : `day${quantity > 1 ? "s" : ""}`})`}
+          {pax > 1 ? ` · ${pax} pax` : ""}
         </span>
         <span className="text-[21px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>
           {vnd(total)}

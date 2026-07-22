@@ -4,7 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { CheckCircle2, Send, RotateCcw } from "lucide-react";
 
 type Lane = "flexible" | "flatrate";
-type PlanKey = "hourly" | "daily" | "mini" | "standard" | "longstay";
+type PlanKey = "hourly" | "daily" | "mini" | "strand" | "longstay";
 
 const PLANS: Record<PlanKey, {
   name: string;
@@ -17,12 +17,12 @@ const PLANS: Record<PlanKey, {
   hourly:   { name: "By the Hour", price: 15000,  unit: "/ hr",  duration: "Min 1 hr, billed per hr",  lane: "flexible", oversizeSurcharge: 30000 },
   daily:    { name: "By the Day",  price: 60000,  unit: "/ day", duration: "Up to 24 hrs from drop-off", lane: "flexible", oversizeSurcharge: 30000 },
   mini:     { name: "Mini",        price: 150000, unit: "flat",  duration: "Up to 1 week",              lane: "flatrate", oversizeSurcharge: 50000 },
-  standard: { name: "Standard",    price: 300000, unit: "flat",  duration: "Up to 1 month",             lane: "flatrate", oversizeSurcharge: 50000 },
-  longstay: { name: "Long Stay",   price: 500000, unit: "flat",  duration: "Up to 3 months",            lane: "flatrate", oversizeSurcharge: 50000 },
+  strand:   { name: "Strand",      price: 300000, unit: "flat",  duration: "Up to 1 month",             lane: "flatrate", oversizeSurcharge: 50000 },
+  longstay: { name: "Long Stay",   price: 1000000, unit: "flat", duration: "Up to 4 months",            lane: "flatrate", oversizeSurcharge: 50000 },
 };
 
 const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
-const FLAT_PLANS: PlanKey[] = ["mini", "standard", "longstay"];
+const FLAT_PLANS: PlanKey[] = ["mini", "strand", "longstay"];
 
 function vnd(n: number) {
   return n.toLocaleString("vi-VN") + " ₫";
@@ -49,19 +49,29 @@ type Confirmed = {
   time: string;
   name: string;
   phone: string;
+  email: string;
+  pax: number;
   total: number;
 };
 
+type EmailStatus = "idle" | "sending" | "sent" | "error";
+
+const EMAIL_RE = /^\S+@\S+\.\S+$/;
+
 export default function IntakeForm() {
-  const [lane, setLane]           = useState<Lane>("flexible");
-  const [plan, setPlan]           = useState<PlanKey>("daily");
-  const [oversized, setOversized] = useState(false);
-  const [date, setDate]           = useState("");
-  const [time, setTime]           = useState("");
-  const [name, setName]           = useState("");
-  const [phone, setPhone]         = useState("");
-  const [errors, setErrors]       = useState<Record<string, string>>({});
-  const [confirmed, setConfirmed] = useState<Confirmed | null>(null);
+  const [lane, setLane]             = useState<Lane>("flexible");
+  const [plan, setPlan]             = useState<PlanKey>("daily");
+  const [oversized, setOversized]   = useState(false);
+  const [date, setDate]             = useState("");
+  const [time, setTime]             = useState("");
+  const [name, setName]             = useState("");
+  const [phone, setPhone]           = useState("");
+  const [email, setEmail]           = useState("");
+  const [pax, setPax]               = useState(1);
+  const [errors, setErrors]         = useState<Record<string, string>>({});
+  const [confirmed, setConfirmed]   = useState<Confirmed | null>(null);
+  const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
+  const [emailError, setEmailError]   = useState("");
 
   // Auto-fill date and time to now on mount
   useEffect(() => {
@@ -74,14 +84,14 @@ export default function IntakeForm() {
 
   function switchLane(l: Lane) {
     setLane(l);
-    setPlan(l === "flexible" ? "daily" : "standard");
+    setPlan(l === "flexible" ? "daily" : "strand");
   }
 
   const cur = PLANS[plan];
 
   const total = useMemo(() => {
-    return cur.price + (oversized ? cur.oversizeSurcharge : 0);
-  }, [cur, oversized]);
+    return cur.price * pax + (oversized ? cur.oversizeSurcharge : 0);
+  }, [cur, oversized, pax]);
 
   function clearError(key: string) {
     setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });
@@ -89,10 +99,13 @@ export default function IntakeForm() {
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!date)         e.date  = "Required";
-    if (!time)         e.time  = "Required";
-    if (!name.trim())  e.name  = "Required";
-    if (!phone.trim()) e.phone = "Required";
+    if (!date)              e.date  = "Required";
+    if (!time)              e.time  = "Required";
+    if (!name.trim())       e.name  = "Required";
+    if (!phone.trim())      e.phone = "Required";
+    if (!email.trim())      e.email = "Required";
+    else if (!EMAIL_RE.test(email.trim())) e.email = "Invalid email";
+    if (!pax || pax < 1)    e.pax   = "Required";
     return e;
   }
 
@@ -102,6 +115,33 @@ export default function IntakeForm() {
     return `STW-${d}-${n}`;
   }
 
+  async function sendAgreementEmail(booking: Confirmed) {
+    setEmailStatus("sending");
+    setEmailError("");
+    try {
+      const res = await fetch("/api/send-agreement", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          to: booking.email,
+          name: booking.name,
+          ref: booking.ref,
+          planName: booking.planName,
+          planDuration: booking.planDuration,
+          lane: booking.lane,
+        }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        throw new Error(body.error || "Failed to send email");
+      }
+      setEmailStatus("sent");
+    } catch (err) {
+      setEmailStatus("error");
+      setEmailError(err instanceof Error ? err.message : "Failed to send email");
+    }
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs = validate();
@@ -109,7 +149,7 @@ export default function IntakeForm() {
       setErrors(errs);
       return;
     }
-    setConfirmed({
+    const booking: Confirmed = {
       ref: generateRef(),
       lane,
       planName: cur.name,
@@ -119,8 +159,12 @@ export default function IntakeForm() {
       time,
       name: name.trim(),
       phone: phone.trim(),
+      email: email.trim(),
+      pax,
       total,
-    });
+    };
+    setConfirmed(booking);
+    sendAgreementEmail(booking);
   }
 
   function handleReset() {
@@ -134,8 +178,12 @@ export default function IntakeForm() {
     setTime(`${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`);
     setName("");
     setPhone("");
+    setEmail("");
+    setPax(1);
     setErrors({});
     setConfirmed(null);
+    setEmailStatus("idle");
+    setEmailError("");
   }
 
   // ── Confirmation screen ──
@@ -188,10 +236,12 @@ export default function IntakeForm() {
             {[
               { label: "Plan",      value: `${confirmed.planName} — ${confirmed.planDuration}` },
               { label: "Lane",      value: confirmed.lane === "flexible" ? "Lane 1 — Flexible" : "Lane 2 — Flat Rate" },
+              { label: "Pax",       value: `${confirmed.pax} ${confirmed.pax === 1 ? "person" : "people"}` },
               { label: "Item size", value: confirmed.oversized ? "Oversized" : "Standard" },
               { label: "Drop-off",  value: `${dateLabel} · ${confirmed.time}` },
               { label: "Customer",  value: `${confirmed.name}` },
               { label: "Phone",     value: confirmed.phone },
+              { label: "Email",     value: confirmed.email },
             ].map(({ label, value }) => (
               <div key={label} className="flex items-start justify-between gap-4">
                 <span className="text-[13px] text-white/40 flex-shrink-0 w-20" style={{ fontFamily: "var(--font-inter)" }}>{label}</span>
@@ -204,6 +254,37 @@ export default function IntakeForm() {
               <span className="text-[22px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>{vnd(confirmed.total)}</span>
             </div>
           </div>
+        </div>
+
+        {/* Policy & agreement email status */}
+        <div className="flex items-center justify-between bg-[#1E3356] rounded-xl px-5 py-3.5 border border-white/10 mb-4">
+          <div className="min-w-0 mr-3">
+            <p className="text-[13px] font-semibold text-white" style={{ fontFamily: "var(--font-poppins)" }}>
+              Policy &amp; agreement email
+            </p>
+            <p className="text-[12px] text-white/40 mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
+              {emailStatus === "sending" && `Sending to ${confirmed.email}…`}
+              {emailStatus === "sent" && `Sent to ${confirmed.email}`}
+              {emailStatus === "error" && (emailError || "Failed to send")}
+              {emailStatus === "idle" && `Will send to ${confirmed.email}`}
+            </p>
+          </div>
+          {emailStatus === "error" ? (
+            <button
+              type="button"
+              onClick={() => sendAgreementEmail(confirmed)}
+              className="flex-shrink-0 text-[12px] font-semibold text-[#E8742C] px-3 py-2 rounded-lg border border-[#E8742C]/40"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            >
+              Retry
+            </button>
+          ) : (
+            <CheckCircle2
+              size={18}
+              strokeWidth={2}
+              className={`flex-shrink-0 ${emailStatus === "sent" ? "text-emerald-400" : "text-white/20"}`}
+            />
+          )}
         </div>
 
         {/* Actions */}
@@ -298,6 +379,26 @@ export default function IntakeForm() {
         </div>
       </div>
 
+      {/* Pax quantity */}
+      <div>
+        <label htmlFor="i-pax" className={labelCls} style={{ fontFamily: "var(--font-poppins)" }}>
+          Pax {errors.pax && <span className="text-red-400 normal-case tracking-normal ml-1">{errors.pax}</span>}
+        </label>
+        <input
+          id="i-pax"
+          type="number"
+          min={1}
+          step={1}
+          value={pax}
+          onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearError("pax"); }}
+          className={inputCls(errors.pax)}
+          style={{ fontFamily: "var(--font-inter)" }}
+        />
+        <p className="text-[11px] text-white/30 mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
+          Prices are per pax — total scales with how many people are storing together.
+        </p>
+      </div>
+
       {/* Oversized toggle */}
       <div className="flex items-center justify-between bg-[#1E3356] rounded-xl px-5 py-3.5 border border-white/10">
         <div>
@@ -333,7 +434,7 @@ export default function IntakeForm() {
         </div>
         <div>
           <label htmlFor="i-time" className={labelCls} style={{ fontFamily: "var(--font-poppins)" }}>
-            Time {errors.time && <span className="text-red-400 normal-case tracking-normal ml-1">{errors.time}</span>}
+            {lane === "flatrate" ? "Time to bring the luggage" : "Time"} {errors.time && <span className="text-red-400 normal-case tracking-normal ml-1">{errors.time}</span>}
           </label>
           <select
             id="i-time"
@@ -379,10 +480,28 @@ export default function IntakeForm() {
         />
       </div>
 
+      <div>
+        <label htmlFor="i-email" className={labelCls} style={{ fontFamily: "var(--font-poppins)" }}>
+          Email {errors.email && <span className="text-red-400 normal-case tracking-normal ml-1">{errors.email}</span>}
+        </label>
+        <input
+          id="i-email"
+          type="email"
+          placeholder="name@example.com"
+          value={email}
+          onChange={(e) => { setEmail(e.target.value); clearError("email"); }}
+          className={inputCls(errors.email)}
+          style={{ fontFamily: "var(--font-inter)" }}
+        />
+        <p className="text-[11px] text-white/30 mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
+          We&apos;ll email the storage policy &amp; agreement here once the booking is recorded.
+        </p>
+      </div>
+
       {/* Live total */}
       <div className="flex items-center justify-between bg-[#1E3356] rounded-xl px-5 py-3.5 border border-white/10">
         <span className="text-[14px] font-semibold text-white/60" style={{ fontFamily: "var(--font-poppins)" }}>
-          {cur.unit === "flat" ? "Total" : "Starting from"}
+          {cur.unit === "flat" ? "Total" : "Starting from"}{pax > 1 ? ` · ${pax} pax` : ""}
         </span>
         <span className="text-[28px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>
           {vnd(total)}
