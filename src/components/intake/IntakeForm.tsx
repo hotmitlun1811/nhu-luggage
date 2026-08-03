@@ -432,7 +432,7 @@ export default function IntakeForm() {
 
       {/* Date + Time */}
       <div className="grid grid-cols-2 gap-3">
-        <div>
+        <div className="min-w-0">
           <label htmlFor="i-date" className={labelCls} style={{ fontFamily: "var(--font-poppins)" }}>
             Date {errors.date && <span className="text-red-400 normal-case tracking-normal ml-1">{errors.date}</span>}
           </label>
@@ -445,7 +445,7 @@ export default function IntakeForm() {
             style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
           />
         </div>
-        <div>
+        <div className="min-w-0">
           <label htmlFor="i-time" className={labelCls} style={{ fontFamily: "var(--font-poppins)" }}>
             {lane === "flatrate" ? "Time to bring the luggage" : "Time"} {errors.time && <span className="text-red-400 normal-case tracking-normal ml-1">{errors.time}</span>}
           </label>

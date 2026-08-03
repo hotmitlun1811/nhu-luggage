@@ -374,7 +374,7 @@ export default function HeroBookingForm() {
           >
             {/* Row 1: Date + Time */}
             <div className="grid grid-cols-2 gap-2">
-              <div>
+              <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                   Drop-off date{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
                 </label>
@@ -387,7 +387,7 @@ export default function HeroBookingForm() {
                   style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                 />
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                   Time{plan === "hourly" && errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
                 </label>
@@ -405,7 +405,7 @@ export default function HeroBookingForm() {
 
             {/* Row 2: Quantity + Pax */}
             <div className="grid grid-cols-2 gap-2">
-              <div>
+              <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                   {plan === "hourly" ? "How many hours?" : "How many days?"}
                 </label>
@@ -425,7 +425,7 @@ export default function HeroBookingForm() {
                   }
                 </select>
               </div>
-              <div>
+              <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                   Pax{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
                 </label>
@@ -467,7 +467,7 @@ export default function HeroBookingForm() {
             exit={{ opacity: 0, y: -4 }}
             transition={{ duration: 0.15 }}
           >
-            <div>
+            <div className="min-w-0">
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                 Drop-off{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
               </label>
@@ -480,7 +480,7 @@ export default function HeroBookingForm() {
                 style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
               />
             </div>
-            <div>
+            <div className="min-w-0">
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                 Bring at{errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
               </label>
@@ -494,7 +494,7 @@ export default function HeroBookingForm() {
                 {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
               </select>
             </div>
-            <div className="col-span-2 lg:col-span-1">
+            <div className="col-span-2 lg:col-span-1 min-w-0">
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                 Pickup
               </label>
