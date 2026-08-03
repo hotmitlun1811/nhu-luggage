@@ -434,6 +434,7 @@ export default function HeroBookingForm() {
                   step={1}
                   value={pax}
                   onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearErr("pax"); }}
+                  onFocus={(e) => e.target.select()}
                   className={`${INPUT} ${errors.pax ? ERR : ""}`}
                   style={{ fontFamily: "var(--font-inter)" }}
                 />
@@ -564,6 +565,7 @@ export default function HeroBookingForm() {
               step={1}
               value={pax}
               onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearErr("pax"); }}
+              onFocus={(e) => e.target.select()}
               className="w-[44px] flex-shrink-0 bg-transparent border-0 text-white text-[18px] font-bold text-right focus:outline-none"
               style={{ fontFamily: "var(--font-poppins)" }}
             />

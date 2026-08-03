@@ -391,6 +391,7 @@ export default function IntakeForm() {
           step={1}
           value={pax}
           onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearError("pax"); }}
+          onFocus={(e) => e.target.select()}
           className={inputCls(errors.pax)}
           style={{ fontFamily: "var(--font-inter)" }}
         />

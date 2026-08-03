@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
 
 // Absolute URL is required because these links go out in an email, not a page.
-const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://nhu-luggage.vercel.app").replace(/\/$/, "");
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://stow-vn.vercel.app").replace(/\/$/, "");
 
 // Gmail SMTP relay: authenticates as GMAIL_USER via an app password, so the
 // "from" address must match the authenticated account (Gmail rewrites/rejects
