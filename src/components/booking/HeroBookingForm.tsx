@@ -74,6 +74,7 @@ export default function HeroBookingForm() {
   const [time, setTime]             = useState("");
   const [quantity, setQuantity]     = useState(1);
   const [pax, setPax]               = useState(1);
+  const [paxInput, setPaxInput]     = useState("1");
   const [pickupDate, setPickupDate] = useState("");
   const [name, setName]             = useState("");
   const [phone, setPhone]           = useState("");
@@ -432,8 +433,18 @@ export default function HeroBookingForm() {
                   type="text"
                   inputMode="numeric"
                   pattern="[0-9]*"
-                  value={pax}
-                  onChange={(e) => { const digits = e.target.value.replace(/\D/g, ""); setPax(digits ? Math.max(1, parseInt(digits, 10)) : 1); clearErr("pax"); }}
+                  value={paxInput}
+                  onChange={(e) => {
+                    const digits = e.target.value.replace(/\D/g, "");
+                    setPaxInput(digits);
+                    if (digits) setPax(Math.max(1, parseInt(digits, 10)));
+                    clearErr("pax");
+                  }}
+                  onBlur={() => {
+                    const n = paxInput ? Math.max(1, parseInt(paxInput, 10)) : 1;
+                    setPaxInput(String(n));
+                    setPax(n);
+                  }}
                   onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
                   className={`${INPUT} ${errors.pax ? ERR : ""}`}
                   style={{ fontFamily: "var(--font-inter)" }}
@@ -563,8 +574,18 @@ export default function HeroBookingForm() {
               type="text"
               inputMode="numeric"
               pattern="[0-9]*"
-              value={pax}
-              onChange={(e) => { const digits = e.target.value.replace(/\D/g, ""); setPax(digits ? Math.max(1, parseInt(digits, 10)) : 1); clearErr("pax"); }}
+              value={paxInput}
+              onChange={(e) => {
+                const digits = e.target.value.replace(/\D/g, "");
+                setPaxInput(digits);
+                if (digits) setPax(Math.max(1, parseInt(digits, 10)));
+                clearErr("pax");
+              }}
+              onBlur={() => {
+                const n = paxInput ? Math.max(1, parseInt(paxInput, 10)) : 1;
+                setPaxInput(String(n));
+                setPax(n);
+              }}
               onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
               className="w-[44px] flex-shrink-0 bg-transparent border-0 text-white text-[18px] font-bold text-right focus:outline-none"
               style={{ fontFamily: "var(--font-poppins)" }}

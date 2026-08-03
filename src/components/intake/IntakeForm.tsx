@@ -68,6 +68,7 @@ export default function IntakeForm() {
   const [phone, setPhone]           = useState("");
   const [email, setEmail]           = useState("");
   const [pax, setPax]               = useState(1);
+  const [paxInput, setPaxInput]     = useState("1");
   const [errors, setErrors]         = useState<Record<string, string>>({});
   const [confirmed, setConfirmed]   = useState<Confirmed | null>(null);
   const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
@@ -180,6 +181,7 @@ export default function IntakeForm() {
     setPhone("");
     setEmail("");
     setPax(1);
+    setPaxInput("1");
     setErrors({});
     setConfirmed(null);
     setEmailStatus("idle");
@@ -389,8 +391,18 @@ export default function IntakeForm() {
           type="text"
           inputMode="numeric"
           pattern="[0-9]*"
-          value={pax}
-          onChange={(e) => { const digits = e.target.value.replace(/\D/g, ""); setPax(digits ? Math.max(1, parseInt(digits, 10)) : 1); clearError("pax"); }}
+          value={paxInput}
+          onChange={(e) => {
+            const digits = e.target.value.replace(/\D/g, "");
+            setPaxInput(digits);
+            if (digits) setPax(Math.max(1, parseInt(digits, 10)));
+            clearError("pax");
+          }}
+          onBlur={() => {
+            const n = paxInput ? Math.max(1, parseInt(paxInput, 10)) : 1;
+            setPaxInput(String(n));
+            setPax(n);
+          }}
           onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
           className={inputCls(errors.pax)}
           style={{ fontFamily: "var(--font-inter)" }}
