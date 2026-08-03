@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { CheckCircle2, Send, RotateCcw } from "lucide-react";
+import { CheckCircle2, Send, RotateCcw, ChevronDown } from "lucide-react";
 
 type Lane = "flexible" | "flatrate";
 type PlanKey = "hourly" | "daily" | "mini" | "strand" | "longstay";
@@ -316,9 +316,12 @@ export default function IntakeForm() {
 
   // ── Intake form ──
   const inputCls = (err?: string) =>
-    `w-full px-5 py-3 rounded-xl border text-[15px] text-white bg-[#1E3356] placeholder-white/25 focus:outline-none focus:border-[#E8742C] transition-colors ${
+    `w-full appearance-none px-5 py-3 rounded-xl border text-[15px] text-white bg-[#1E3356] placeholder-white/25 focus:outline-none focus:border-[#E8742C] transition-colors ${
       err ? "border-red-400" : "border-white/10"
     }`;
+  // iOS Safari draws its own light native chrome over <select> unless appearance is
+  // reset, which also removes the native arrow — selectCls adds room + a custom one back.
+  const selectCls = (err?: string) => `${inputCls(err)} pr-[44px]`;
 
   const labelCls = "block text-[12px] font-bold uppercase tracking-[0.1em] text-white/50 mb-2";
 
@@ -449,16 +452,19 @@ export default function IntakeForm() {
           <label htmlFor="i-time" className={labelCls} style={{ fontFamily: "var(--font-poppins)" }}>
             {lane === "flatrate" ? "Time to bring the luggage" : "Time"} {errors.time && <span className="text-red-400 normal-case tracking-normal ml-1">{errors.time}</span>}
           </label>
-          <select
-            id="i-time"
-            value={time}
-            onChange={(e) => { setTime(e.target.value); clearError("time"); }}
-            className={inputCls(errors.time)}
-            style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-          >
-            <option value="">—</option>
-            {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
-          </select>
+          <div className="relative">
+            <select
+              id="i-time"
+              value={time}
+              onChange={(e) => { setTime(e.target.value); clearError("time"); }}
+              className={selectCls(errors.time)}
+              style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+            >
+              <option value="">—</option>
+              {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-[16px] top-1/2 -translate-y-1/2 w-[16px] h-[16px] text-white/40" />
+          </div>
         </div>
       </div>
 

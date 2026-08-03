@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Send, CheckCircle2 } from "lucide-react";
+import { Send, CheckCircle2, ChevronDown } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 
@@ -58,7 +58,10 @@ function generateSlots() {
 const TIME_SLOTS = generateSlots();
 
 const LABEL = "block text-[10px] font-bold uppercase tracking-[0.12em] text-white/30 mb-1.5";
-const INPUT  = "w-full bg-white/[0.07] border border-white/[0.12] rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/25 focus:outline-none focus:border-[#E8742C]/70 transition-colors";
+const INPUT  = "w-full appearance-none bg-white/[0.07] border border-white/[0.12] rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/25 focus:outline-none focus:border-[#E8742C]/70 transition-colors";
+// iOS Safari draws its own light native chrome over <select> unless appearance is
+// reset, which also removes the native arrow — SELECT adds room + a custom one back.
+const SELECT = `${INPUT} pr-[32px]`;
 const ERR    = "border-red-400/70";
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
@@ -391,15 +394,18 @@ export default function HeroBookingForm() {
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                   Time{plan === "hourly" && errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
                 </label>
-                <select
-                  value={time}
-                  onChange={(e) => { setTime(e.target.value); clearErr("time"); }}
-                  className={`${INPUT} ${plan === "hourly" && errors.time ? ERR : ""}`}
-                  style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-                >
-                  <option value="">Select…</option>
-                  {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
+                <div className="relative">
+                  <select
+                    value={time}
+                    onChange={(e) => { setTime(e.target.value); clearErr("time"); }}
+                    className={`${SELECT} ${plan === "hourly" && errors.time ? ERR : ""}`}
+                    style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+                  >
+                    <option value="">Select…</option>
+                    {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                </div>
               </div>
             </div>
 
@@ -409,21 +415,24 @@ export default function HeroBookingForm() {
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                   {plan === "hourly" ? "How many hours?" : "How many days?"}
                 </label>
-                <select
-                  value={quantity}
-                  onChange={(e) => setQuantity(Number(e.target.value))}
-                  className={INPUT}
-                  style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-                >
-                  {plan === "hourly"
-                    ? Array.from({ length: 15 }, (_, i) => i + 1).map((h) => (
-                        <option key={h} value={h}>{h} hr{h > 1 ? "s" : ""}</option>
-                      ))
-                    : Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
-                        <option key={d} value={d}>{d} day{d > 1 ? "s" : ""}</option>
-                      ))
-                  }
-                </select>
+                <div className="relative">
+                  <select
+                    value={quantity}
+                    onChange={(e) => setQuantity(Number(e.target.value))}
+                    className={SELECT}
+                    style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+                  >
+                    {plan === "hourly"
+                      ? Array.from({ length: 15 }, (_, i) => i + 1).map((h) => (
+                          <option key={h} value={h}>{h} hr{h > 1 ? "s" : ""}</option>
+                        ))
+                      : Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
+                          <option key={d} value={d}>{d} day{d > 1 ? "s" : ""}</option>
+                        ))
+                    }
+                  </select>
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                </div>
               </div>
               <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
@@ -484,15 +493,18 @@ export default function HeroBookingForm() {
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                 Bring at{errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
               </label>
-              <select
-                value={time}
-                onChange={(e) => { setTime(e.target.value); clearErr("time"); }}
-                className={`${INPUT} ${errors.time ? ERR : ""}`}
-                style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-              >
-                <option value="">Select…</option>
-                {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
-              </select>
+              <div className="relative">
+                <select
+                  value={time}
+                  onChange={(e) => { setTime(e.target.value); clearErr("time"); }}
+                  className={`${SELECT} ${errors.time ? ERR : ""}`}
+                  style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+                >
+                  <option value="">Select…</option>
+                  {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+              </div>
             </div>
             <div className="col-span-2 lg:col-span-1 min-w-0">
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
