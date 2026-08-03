@@ -391,7 +391,7 @@ export default function IntakeForm() {
           pattern="[0-9]*"
           value={pax}
           onChange={(e) => { const digits = e.target.value.replace(/\D/g, ""); setPax(digits ? Math.max(1, parseInt(digits, 10)) : 1); clearError("pax"); }}
-          onFocus={(e) => e.target.select()}
+          onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
           className={inputCls(errors.pax)}
           style={{ fontFamily: "var(--font-inter)" }}
         />

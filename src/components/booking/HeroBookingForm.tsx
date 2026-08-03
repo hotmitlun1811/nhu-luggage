@@ -434,7 +434,7 @@ export default function HeroBookingForm() {
                   pattern="[0-9]*"
                   value={pax}
                   onChange={(e) => { const digits = e.target.value.replace(/\D/g, ""); setPax(digits ? Math.max(1, parseInt(digits, 10)) : 1); clearErr("pax"); }}
-                  onFocus={(e) => e.target.select()}
+                  onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
                   className={`${INPUT} ${errors.pax ? ERR : ""}`}
                   style={{ fontFamily: "var(--font-inter)" }}
                 />
@@ -565,7 +565,7 @@ export default function HeroBookingForm() {
               pattern="[0-9]*"
               value={pax}
               onChange={(e) => { const digits = e.target.value.replace(/\D/g, ""); setPax(digits ? Math.max(1, parseInt(digits, 10)) : 1); clearErr("pax"); }}
-              onFocus={(e) => e.target.select()}
+              onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
               className="w-[44px] flex-shrink-0 bg-transparent border-0 text-white text-[18px] font-bold text-right focus:outline-none"
               style={{ fontFamily: "var(--font-poppins)" }}
             />
