@@ -429,11 +429,11 @@ export default function HeroBookingForm() {
                   Pax{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
                 </label>
                 <input
-                  type="number"
-                  min={1}
-                  step={1}
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
                   value={pax}
-                  onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearErr("pax"); }}
+                  onChange={(e) => { const digits = e.target.value.replace(/\D/g, ""); setPax(digits ? Math.max(1, parseInt(digits, 10)) : 1); clearErr("pax"); }}
                   onFocus={(e) => e.target.select()}
                   className={`${INPUT} ${errors.pax ? ERR : ""}`}
                   style={{ fontFamily: "var(--font-inter)" }}
@@ -560,11 +560,11 @@ export default function HeroBookingForm() {
               </p>
             </div>
             <input
-              type="number"
-              min={1}
-              step={1}
+              type="text"
+              inputMode="numeric"
+              pattern="[0-9]*"
               value={pax}
-              onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearErr("pax"); }}
+              onChange={(e) => { const digits = e.target.value.replace(/\D/g, ""); setPax(digits ? Math.max(1, parseInt(digits, 10)) : 1); clearErr("pax"); }}
               onFocus={(e) => e.target.select()}
               className="w-[44px] flex-shrink-0 bg-transparent border-0 text-white text-[18px] font-bold text-right focus:outline-none"
               style={{ fontFamily: "var(--font-poppins)" }}

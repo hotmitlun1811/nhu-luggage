@@ -386,11 +386,11 @@ export default function IntakeForm() {
         </label>
         <input
           id="i-pax"
-          type="number"
-          min={1}
-          step={1}
+          type="text"
+          inputMode="numeric"
+          pattern="[0-9]*"
           value={pax}
-          onChange={(e) => { setPax(Math.max(1, Math.floor(Number(e.target.value)) || 1)); clearError("pax"); }}
+          onChange={(e) => { const digits = e.target.value.replace(/\D/g, ""); setPax(digits ? Math.max(1, parseInt(digits, 10)) : 1); clearError("pax"); }}
           onFocus={(e) => e.target.select()}
           className={inputCls(errors.pax)}
           style={{ fontFamily: "var(--font-inter)" }}
