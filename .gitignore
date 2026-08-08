@@ -10,6 +10,13 @@
 !.yarn/releases
 !.yarn/versions
 
+# local AI agent tooling (Claude Code / Lark CLI skills) — dev-only, not app code
+/.agents
+/.agents-tmp
+/.claude
+/agent
+/skills-lock.json
+
 # testing
 /coverage
 

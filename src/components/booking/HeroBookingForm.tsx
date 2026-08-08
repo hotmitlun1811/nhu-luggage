@@ -200,6 +200,40 @@ export default function HeroBookingForm() {
     ].filter(Boolean).join("\n");
   }
 
+  function sendLarkBooking(ref: string) {
+    const isHourly = plan === "hourly";
+    const duration = isHourly
+      ? `${hourlyQuantity} hour${hourlyQuantity > 1 ? "s" : ""}`
+      : plan === "daily"
+      ? `${dailyQuantity} day${dailyQuantity > 1 ? "s" : ""}`
+      : cur.duration;
+    // Fire-and-forget — the WhatsApp handoff below is the customer's actual
+    // confirmation path, so a Lark hiccup must never block or delay it.
+    fetch("/api/lark/booking", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        source: "Booking Form",
+        reference: ref,
+        lane,
+        planName: cur.name,
+        oversized,
+        dropOffDate: date,
+        dropOffTime: time,
+        duration,
+        // Hourly has no separate pickup-date input (same-day, per the app's
+        // own quantity math) — daily/flatrate use their explicit date field.
+        pickupDate: isHourly ? date : pickupDate,
+        pickupTime: isHourly ? pickupTime : undefined,
+        name: name.trim(),
+        phone: phone.trim(),
+        email: email.trim(),
+        pax,
+        total,
+      }),
+    }).catch(() => {});
+  }
+
   async function sendAgreementEmail(ref: string) {
     setEmailStatus("sending");
     setEmailError("");
@@ -237,6 +271,7 @@ export default function HeroBookingForm() {
     setLoading(true);
     const ref = generateRef();
     setBookingRef(ref);
+    sendLarkBooking(ref);
     window.open(`https://wa.me/84905955161?text=${encodeURIComponent(buildMessage(ref))}`, "_blank", "noopener,noreferrer");
     sendAgreementEmail(ref);
     setTimeout(() => { setLoading(false); setSubmitted(true); }, 600);

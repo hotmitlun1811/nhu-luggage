@@ -143,6 +143,32 @@ export default function IntakeForm() {
     }
   }
 
+  async function sendLarkBooking(booking: Confirmed) {
+    try {
+      await fetch("/api/lark/booking", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          source: "Intake",
+          reference: booking.ref,
+          lane: booking.lane,
+          planName: booking.planName,
+          oversized: booking.oversized,
+          dropOffDate: booking.date,
+          dropOffTime: booking.time,
+          duration: booking.planDuration,
+          name: booking.name,
+          phone: booking.phone,
+          email: booking.email,
+          pax: booking.pax,
+          total: booking.total,
+        }),
+      });
+    } catch {
+      // best-effort — a Lark hiccup should never block a front-desk booking
+    }
+  }
+
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     const errs = validate();
@@ -166,6 +192,7 @@ export default function IntakeForm() {
     };
     setConfirmed(booking);
     sendAgreementEmail(booking);
+    sendLarkBooking(booking);
   }
 
   function handleReset() {
