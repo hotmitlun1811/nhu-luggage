@@ -38,6 +38,18 @@ function addDays(dateStr: string, days: number): string {
   return d.toISOString().split("T")[0];
 }
 
+function diffDays(fromStr: string, toStr: string): number {
+  const from = new Date(fromStr + "T12:00:00");
+  const to   = new Date(toStr + "T12:00:00");
+  return Math.round((to.getTime() - from.getTime()) / 86400000);
+}
+
+function diffMinutes(fromStr: string, toStr: string): number {
+  const [fh, fm] = fromStr.split(":").map(Number);
+  const [th, tm] = toStr.split(":").map(Number);
+  return (th * 60 + tm) - (fh * 60 + fm);
+}
+
 function fmtShort(dateStr: string): string {
   return new Date(dateStr + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
 }
@@ -75,10 +87,10 @@ export default function HeroBookingForm() {
   const [oversized, setOversized]   = useState(false);
   const [date, setDate]             = useState("");
   const [time, setTime]             = useState("");
-  const [quantity, setQuantity]     = useState(1);
   const [pax, setPax]               = useState(1);
   const [paxInput, setPaxInput]     = useState("1");
   const [pickupDate, setPickupDate] = useState("");
+  const [pickupTime, setPickupTime] = useState("");
   const [name, setName]             = useState("");
   const [phone, setPhone]           = useState("");
   const [email, setEmail]           = useState("");
@@ -93,14 +105,14 @@ export default function HeroBookingForm() {
   function switchLane(l: Lane) {
     setLane(l);
     setPlan(l === "flexible" ? "daily" : "strand");
-    setQuantity(1);
     setPickupDate("");
+    setPickupTime("");
   }
 
   function switchPlan(pk: PlanKey) {
     setPlan(pk);
-    setQuantity(1);
     setPickupDate("");
+    setPickupTime("");
   }
 
   function clearErr(k: string) {
@@ -110,15 +122,24 @@ export default function HeroBookingForm() {
   const cur = PLANS[plan];
   const maxPickup = date && cur.maxDays ? addDays(date, cur.maxDays) : "";
 
+  // "By the Day" bills per calendar day between drop-off and pick-up, and
+  // "By the Hour" bills per hour between drop-off and pick-up time — the
+  // customer picks both ends directly instead of choosing a count.
+  const dailyQuantity  = plan === "daily"  && date && pickupDate ? Math.max(1, diffDays(date, pickupDate)) : 1;
+  const hourlyQuantity = plan === "hourly" && time && pickupTime ? Math.max(1, Math.ceil(diffMinutes(time, pickupTime) / 60)) : 1;
+  const effectiveQuantity = plan === "daily" ? dailyQuantity : plan === "hourly" ? hourlyQuantity : 1;
+
   const total = useMemo(() => {
-    const base = (plan === "hourly" || plan === "daily") ? cur.price * quantity : cur.price;
+    const base = (plan === "hourly" || plan === "daily") ? cur.price * effectiveQuantity : cur.price;
     return base * pax + (oversized ? cur.oversizeSurcharge : 0);
-  }, [cur, oversized, plan, quantity, pax]);
+  }, [cur, oversized, plan, effectiveQuantity, pax]);
 
   function validate() {
     const e: Record<string, string> = {};
     if (!date)          e.date    = "Required";
     if ((plan === "hourly" || lane === "flatrate") && !time) e.time = "Required";
+    if (plan === "daily" && !pickupDate) e.pickupDate = "Required";
+    if (plan === "hourly" && !pickupTime) e.pickupTime = "Required";
     if (!name.trim())   e.name    = "Required";
     if (!phone.trim())  e.phone   = "Required";
     if (!email.trim())  e.email   = "Required";
@@ -136,11 +157,10 @@ export default function HeroBookingForm() {
 
   function buildMessage(ref: string) {
     let periodLine = "";
-    if (plan === "hourly" && date) {
-      periodLine = `⏱ Duration: ${quantity} hour${quantity > 1 ? "s" : ""}${time ? ` starting at ${time}` : ""}`;
-    } else if (plan === "daily" && date) {
-      const pickup = addDays(date, quantity);
-      periodLine = `📅 Period: ${fmtShort(date)} → ${fmtShort(pickup)} (${quantity} day${quantity > 1 ? "s" : ""})`;
+    if (plan === "hourly" && date && time && pickupTime) {
+      periodLine = `⏱ Duration: ${effectiveQuantity} hour${effectiveQuantity > 1 ? "s" : ""} (${time} → ${pickupTime})`;
+    } else if (plan === "daily" && date && pickupDate) {
+      periodLine = `📅 Period: ${fmtShort(date)} → ${fmtShort(pickupDate)} (${effectiveQuantity} day${effectiveQuantity > 1 ? "s" : ""})`;
     } else if (lane === "flatrate" && date && pickupDate) {
       periodLine = `📅 Period: ${fmtShort(date)} → ${fmtShort(pickupDate)}`;
     }
@@ -149,8 +169,8 @@ export default function HeroBookingForm() {
       `Hello Stow! 👋 I'd like to book luggage storage.`,
       ``,
       `📋 Ref: ${ref}`,
-      `📦 Plan: ${cur.name} — ${vnd(cur.price)}${cur.unit === "flat" ? " flat fee" : cur.unit} / pax`,
-      `🧳 Pax (bags): ${pax}`,
+      `📦 Plan: ${cur.name} — ${vnd(cur.price)}${cur.unit === "flat" ? " flat fee" : cur.unit} / bag`,
+      `🧳 Bags: ${pax}`,
       oversized ? `📏 Item: Oversized (+${vnd(cur.oversizeSurcharge)})` : `📏 Item: Standard size`,
       `📅 Drop-off: ${date ? fmtLong(date) : "TBD"}${(plan === "hourly" || lane === "flatrate") && time ? ` at ${time}` : ""}`,
       periodLine,
@@ -342,7 +362,7 @@ export default function HeroBookingForm() {
                     className={`text-[11px] font-bold mt-0.5 ${sel ? "text-white/70" : "text-[#E8742C]"}`}
                     style={{ fontFamily: "var(--font-poppins)" }}
                   >
-                    {vnd(p.price)}<span className="font-medium opacity-70"> / pax</span>
+                    {vnd(p.price)}<span className="font-medium opacity-70"> / bag</span>
                   </p>
                   <p
                     className={`text-[10px] mt-0.5 ${sel ? "text-white/60" : "text-white/35"}`}
@@ -385,7 +405,7 @@ export default function HeroBookingForm() {
                   type="date"
                   value={date}
                   min={today}
-                  onChange={(e) => { setDate(e.target.value); clearErr("date"); }}
+                  onChange={(e) => { setDate(e.target.value); setPickupDate(""); clearErr("date"); }}
                   className={`${INPUT} ${errors.date ? ERR : ""}`}
                   style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                 />
@@ -397,7 +417,12 @@ export default function HeroBookingForm() {
                 <div className="relative">
                   <select
                     value={time}
-                    onChange={(e) => { setTime(e.target.value); clearErr("time"); }}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setTime(v);
+                      if (pickupTime && pickupTime <= v) setPickupTime("");
+                      clearErr("time");
+                    }}
                     className={`${SELECT} ${plan === "hourly" && errors.time ? ERR : ""}`}
                     style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                   >
@@ -409,34 +434,42 @@ export default function HeroBookingForm() {
               </div>
             </div>
 
-            {/* Row 2: Quantity + Pax */}
+            {/* Row 2: Pick-up time (hourly) / Pick-up date (daily) + Pax */}
             <div className="grid grid-cols-2 gap-2">
               <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  {plan === "hourly" ? "How many hours?" : "How many days?"}
+                  {plan === "hourly"
+                    ? <>Pick-up time{errors.pickupTime && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupTime})</span>}</>
+                    : <>Pick-up date{errors.pickupDate && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupDate})</span>}</>}
                 </label>
-                <div className="relative">
-                  <select
-                    value={quantity}
-                    onChange={(e) => setQuantity(Number(e.target.value))}
-                    className={SELECT}
+                {plan === "hourly" ? (
+                  <div className="relative">
+                    <select
+                      value={pickupTime}
+                      onChange={(e) => { setPickupTime(e.target.value); clearErr("pickupTime"); }}
+                      className={`${SELECT} ${errors.pickupTime ? ERR : ""}`}
+                      style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+                    >
+                      <option value="">Select…</option>
+                      {TIME_SLOTS.filter((t) => !time || t > time).map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                  </div>
+                ) : (
+                  <input
+                    type="date"
+                    value={pickupDate}
+                    min={date || today}
+                    max={date ? addDays(date, 30) : undefined}
+                    onChange={(e) => { setPickupDate(e.target.value); clearErr("pickupDate"); }}
+                    className={`${INPUT} ${errors.pickupDate ? ERR : ""}`}
                     style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-                  >
-                    {plan === "hourly"
-                      ? Array.from({ length: 15 }, (_, i) => i + 1).map((h) => (
-                          <option key={h} value={h}>{h} hr{h > 1 ? "s" : ""}</option>
-                        ))
-                      : Array.from({ length: 30 }, (_, i) => i + 1).map((d) => (
-                          <option key={d} value={d}>{d} day{d > 1 ? "s" : ""}</option>
-                        ))
-                    }
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                </div>
+                  />
+                )}
               </div>
               <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  Pax{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
+                  Bags{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
                 </label>
                 <input
                   type="text"
@@ -460,10 +493,18 @@ export default function HeroBookingForm() {
                 />
               </div>
             </div>
+            <p className="text-[10.5px] text-white/25 -mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
+              Bags = items stored, not number of people
+            </p>
 
-            {plan === "daily" && date && (
+            {plan === "daily" && date && pickupDate && (
               <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
-                Pickup by <span className="text-white font-semibold">{fmtShort(addDays(date, quantity))}</span>
+                <span className="text-white font-semibold">{dailyQuantity} day{dailyQuantity > 1 ? "s" : ""}</span> · {fmtShort(date)} → {fmtShort(pickupDate)}
+              </p>
+            )}
+            {plan === "hourly" && time && pickupTime && (
+              <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
+                <span className="text-white font-semibold">{hourlyQuantity} hour{hourlyQuantity > 1 ? "s" : ""}</span> · {time} → {pickupTime}
               </p>
             )}
           </motion.div>
@@ -576,10 +617,10 @@ export default function HeroBookingForm() {
           <div className={`flex items-center justify-between px-3 py-2.5 bg-white/[0.05] rounded-lg border ${errors.pax ? ERR : "border-white/[0.09]"}`}>
             <div className="min-w-0 mr-3">
               <label className="text-[12.5px] font-semibold text-white/80 leading-none block" style={{ fontFamily: "var(--font-poppins)" }}>
-                Pax{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
+                Bags{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
               </label>
               <p className="text-[11px] text-white/28 mt-1 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
-                How many bags
+                Items stored, not people
               </p>
             </div>
             <input
@@ -634,8 +675,8 @@ export default function HeroBookingForm() {
         <span className="text-[11.5px] text-white/30" style={{ fontFamily: "var(--font-inter)" }}>
           {cur.unit === "flat"
             ? "Total (flat fee)"
-            : `Total (${quantity} ${plan === "hourly" ? `hr${quantity > 1 ? "s" : ""}` : `day${quantity > 1 ? "s" : ""}`})`}
-          {pax > 1 ? ` · ${pax} pax` : ""}
+            : `Total (${effectiveQuantity} ${plan === "hourly" ? `hr${effectiveQuantity > 1 ? "s" : ""}` : `day${effectiveQuantity > 1 ? "s" : ""}`})`}
+          {pax > 1 ? ` · ${pax} bags` : ""}
         </span>
         <span className="text-[21px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>
           {vnd(total)}

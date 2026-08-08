@@ -238,7 +238,7 @@ export default function IntakeForm() {
             {[
               { label: "Plan",      value: `${confirmed.planName} — ${confirmed.planDuration}` },
               { label: "Lane",      value: confirmed.lane === "flexible" ? "Lane 1 — Flexible" : "Lane 2 — Flat Rate" },
-              { label: "Pax",       value: `${confirmed.pax} ${confirmed.pax === 1 ? "bag" : "bags"}` },
+              { label: "Bags",      value: `${confirmed.pax} ${confirmed.pax === 1 ? "bag" : "bags"}` },
               { label: "Item size", value: confirmed.oversized ? "Oversized" : "Standard" },
               { label: "Drop-off",  value: `${dateLabel} · ${confirmed.time}` },
               { label: "Customer",  value: `${confirmed.name}` },
@@ -384,10 +384,10 @@ export default function IntakeForm() {
         </div>
       </div>
 
-      {/* Pax quantity */}
+      {/* Bag quantity */}
       <div>
         <label htmlFor="i-pax" className={labelCls} style={{ fontFamily: "var(--font-poppins)" }}>
-          Pax {errors.pax && <span className="text-red-400 normal-case tracking-normal ml-1">{errors.pax}</span>}
+          Bags {errors.pax && <span className="text-red-400 normal-case tracking-normal ml-1">{errors.pax}</span>}
         </label>
         <input
           id="i-pax"
@@ -411,7 +411,7 @@ export default function IntakeForm() {
           style={{ fontFamily: "var(--font-inter)" }}
         />
         <p className="text-[11px] text-white/30 mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
-          Prices are per pax — each bag or item counts as one pax.
+          Prices are per bag, not per person — each bag or item counts as one.
         </p>
       </div>
 
@@ -520,7 +520,7 @@ export default function IntakeForm() {
       {/* Live total */}
       <div className="flex items-center justify-between bg-[#1E3356] rounded-xl px-5 py-3.5 border border-white/10">
         <span className="text-[14px] font-semibold text-white/60" style={{ fontFamily: "var(--font-poppins)" }}>
-          {cur.unit === "flat" ? "Total" : "Starting from"}{pax > 1 ? ` · ${pax} pax` : ""}
+          {cur.unit === "flat" ? "Total" : "Starting from"}{pax > 1 ? ` · ${pax} bags` : ""}
         </span>
         <span className="text-[28px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>
           {vnd(total)}
