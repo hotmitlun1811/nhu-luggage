@@ -18,6 +18,8 @@ type Body = {
   planName?: string;
   planDuration?: string;
   lane?: "flexible" | "flatrate";
+  consentAt?: string | null;
+  legalVersion?: string;
 };
 
 function escapeHtml(s: string) {
@@ -26,7 +28,7 @@ function escapeHtml(s: string) {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Body;
-  const { to, name, ref, planName, planDuration, lane } = body;
+  const { to, name, ref, planName, planDuration, lane, consentAt, legalVersion } = body;
 
   if (!to) {
     return NextResponse.json({ error: "Missing recipient email" }, { status: 400 });
@@ -41,6 +43,14 @@ export async function POST(request: Request) {
 
   const laneLabel = lane === "flexible" ? "Lane 1 — Flexible" : "Lane 2 — Flat Rate";
 
+  // Evidence trail for the scrollwrap consent step (booking form requires
+  // scrolling both documents in full before this timestamp gets set) —
+  // recorded here, in the customer's own inbox, in case it's ever disputed.
+  const consentDate = consentAt ? new Date(consentAt) : null;
+  const consentLine = consentDate && !isNaN(consentDate.getTime())
+    ? `<p>You reviewed <strong>Terms of Service</strong> and <strong>Privacy Policy</strong> (Effective ${escapeHtml(legalVersion || "")}) in full and agreed to them on ${escapeHtml(consentDate.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit", timeZone: "Asia/Ho_Chi_Minh" }))} (Vietnam time):</p>`
+    : `<p>By dropping off your luggage with us, you agree to our:</p>`;
+
   const html = `
     <div style="font-family: Arial, sans-serif; max-width: 480px; margin: 0 auto; color: #0D1829;">
       <h2 style="margin-bottom: 4px;">Hi ${escapeHtml(name || "there")},</h2>
@@ -50,7 +60,7 @@ export async function POST(request: Request) {
         <tr><td style="padding: 4px 0; color: #666;">Plan</td><td style="padding: 4px 0; font-weight: bold;">${escapeHtml(planName || "—")}${planDuration ? ` — ${escapeHtml(planDuration)}` : ""}</td></tr>
         <tr><td style="padding: 4px 0; color: #666;">Lane</td><td style="padding: 4px 0; font-weight: bold;">${laneLabel}</td></tr>
       </table>
-      <p>By dropping off your luggage with us, you agree to our:</p>
+      ${consentLine}
       <ul>
         <li><a href="${SITE_URL}/terms-of-service">Terms of Service</a></li>
         <li><a href="${SITE_URL}/privacy-policy">Privacy Policy</a></li>

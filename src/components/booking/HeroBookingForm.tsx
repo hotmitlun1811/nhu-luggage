@@ -1,9 +1,16 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { Send, CheckCircle2, ChevronDown } from "lucide-react";
+import { Send, CheckCircle2, ChevronDown, ChevronRight } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
+import dynamic from "next/dynamic";
+import { EFFECTIVE as LEGAL_EFFECTIVE } from "@/components/legal/LegalShared";
+
+// Client-only: renders via a document.body portal, which has no server
+// equivalent — skipping SSR avoids a hydration mismatch entirely instead of
+// papering over it with a mounted-after-effect gate.
+const ConsentModal = dynamic(() => import("./ConsentModal"), { ssr: false });
 
 type Lane = "flexible" | "flatrate";
 type PlanKey = "hourly" | "daily" | "mini" | "strand" | "longstay";
@@ -48,6 +55,12 @@ function diffMinutes(fromStr: string, toStr: string): number {
   const [fh, fm] = fromStr.split(":").map(Number);
   const [th, tm] = toStr.split(":").map(Number);
   return (th * 60 + tm) - (fh * 60 + fm);
+}
+
+// Evidence trail for the scrollwrap consent: when they actually clicked
+// "I Agree" and which version of the documents that was.
+function fmtDateTime(d: Date): string {
+  return d.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 
 function fmtShort(dateStr: string): string {
@@ -95,6 +108,8 @@ export default function HeroBookingForm() {
   const [phone, setPhone]           = useState("");
   const [email, setEmail]           = useState("");
   const [consent, setConsent]       = useState(false);
+  const [consentAt, setConsentAt]   = useState<Date | null>(null);
+  const [showConsentModal, setShowConsentModal] = useState(false);
   const [loading, setLoading]       = useState(false);
   const [submitted, setSubmitted]   = useState(false);
   const [errors, setErrors]         = useState<Record<string, string>>({});
@@ -180,6 +195,7 @@ export default function HeroBookingForm() {
       `📱 WhatsApp: ${phone}`,
       `✉️ Email: ${email}`,
       ``,
+      consentAt ? `✅ Agreed to Terms of Service & Privacy Policy (Effective ${LEGAL_EFFECTIVE}) — read in full at ${fmtDateTime(consentAt)}` : "",
       `Please confirm my booking. Thank you! 🙏`,
     ].filter(Boolean).join("\n");
   }
@@ -198,6 +214,8 @@ export default function HeroBookingForm() {
           planName: cur.name,
           planDuration: cur.duration,
           lane,
+          consentAt: consentAt ? consentAt.toISOString() : null,
+          legalVersion: LEGAL_EFFECTIVE,
         }),
       });
       if (!res.ok) {
@@ -683,41 +701,56 @@ export default function HeroBookingForm() {
         </span>
       </div>
 
-      {/* Consent */}
-      <label className="flex items-start gap-2.5 cursor-pointer select-none">
-        <div className="flex-shrink-0 mt-0.5">
-          <input
-            type="checkbox"
-            checked={consent}
-            onChange={(e) => { setConsent(e.target.checked); clearErr("consent"); }}
-            className="sr-only"
-          />
-          <div className={`w-5 h-5 rounded-md border-2 flex items-center justify-center transition-colors flex-shrink-0 ${
-            consent
-              ? "bg-[#E8742C] border-[#E8742C]"
-              : errors.consent
-              ? "border-red-400/70 bg-white/5"
-              : "border-white/20 bg-white/5"
-          }`}>
-            {consent && (
-              <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none">
-                <path d="M2 6l3 3 5-5" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
-              </svg>
-            )}
+      {/* Consent — must scroll through both documents in the popup before it can be accepted */}
+      {consent ? (
+        <div className="flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border border-emerald-500/25 bg-emerald-500/[0.06]">
+          <div className="flex items-center gap-2 min-w-0">
+            <CheckCircle2 size={15} className="text-emerald-400 flex-shrink-0" />
+            <span className="text-[11.5px] text-white/70 leading-snug truncate" style={{ fontFamily: "var(--font-inter)" }}>
+              Agreed to Terms of Service &amp; Privacy Policy
+            </span>
           </div>
+          <button
+            type="button"
+            onClick={() => { setConsent(false); setConsentAt(null); }}
+            className="flex-shrink-0 text-[11px] text-white/35 hover:text-white/70 underline underline-offset-2 transition-colors"
+            style={{ fontFamily: "var(--font-inter)" }}
+          >
+            Change
+          </button>
         </div>
-        <span className={`text-[11px] leading-relaxed ${errors.consent ? "text-red-400/80" : "text-white/35"}`} style={{ fontFamily: "var(--font-inter)" }}>
-          By submitting I agree to Stow&apos;s{" "}
-          <a href="/terms-of-service" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 text-white/55 hover:text-white transition-colors">
-            Terms of Service
-          </a>{" "}
-          &amp;{" "}
-          <a href="/privacy-policy" target="_blank" rel="noopener noreferrer" className="underline underline-offset-2 text-white/55 hover:text-white transition-colors">
-            Privacy Policy
-          </a>
-          {errors.consent && " — please tick to continue"}
-        </span>
-      </label>
+      ) : (
+        <div>
+          <button
+            type="button"
+            onClick={() => setShowConsentModal(true)}
+            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border text-left transition-colors ${
+              errors.consent ? "border-red-400/70 bg-red-400/5" : "border-white/[0.12] bg-white/[0.05] hover:border-white/25"
+            }`}
+          >
+            <span className="text-[11.5px] text-white/60 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
+              Review &amp; accept Stow&apos;s <span className="text-white font-semibold">Terms of Service</span> &amp; <span className="text-white font-semibold">Privacy Policy</span> to continue
+            </span>
+            <ChevronRight size={15} className="flex-shrink-0 text-white/30" />
+          </button>
+          {errors.consent && (
+            <p className="text-[11px] text-red-400/80 mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
+              Please review and accept to continue
+            </p>
+          )}
+        </div>
+      )}
+
+      <ConsentModal
+        open={showConsentModal}
+        onClose={() => setShowConsentModal(false)}
+        onAgree={() => {
+          setConsent(true);
+          setConsentAt(new Date());
+          setShowConsentModal(false);
+          clearErr("consent");
+        }}
+      />
 
       {/* Submit */}
       <button
