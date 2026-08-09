@@ -3,6 +3,7 @@ import HeroSplit from "@/components/sections/HeroSplit";
 import HowItWorks from "@/components/sections/HowItWorks";
 import ServicesSection from "@/components/sections/ServicesSection";
 import PricingSection from "@/components/sections/PricingSection";
+import ForExpats from "@/components/sections/ForExpats";
 import WhyStow from "@/components/sections/WhyStow";
 import FAQSection from "@/components/sections/FAQSection";
 import TrustSafety from "@/components/sections/TrustSafety";
@@ -23,6 +24,7 @@ export default function Home() {
       <HowItWorks />
       <ServicesSection />
       <PricingSection />
+      <ForExpats />
       <WhyStow />
       <FAQSection />
       <TrustSafety />

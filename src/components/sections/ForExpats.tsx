@@ -63,7 +63,7 @@ export default function ForExpats() {
             </p>
 
             <Link
-              href="/pricing"
+              href="#pricing"
               className="inline-flex items-center gap-2 bg-[#16243F] text-white text-[14px] font-semibold px-6 py-3 rounded-xl hover:bg-[#0D1829] transition-colors"
               style={{ fontFamily: "var(--font-poppins)" }}
             >

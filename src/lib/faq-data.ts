@@ -64,6 +64,10 @@ export const faqGroups = [
         q: "How long does drop-off and pickup take?",
         a: "Drop-off is designed to take under 3 minutes — tag the item, take the photo, done. Pickup is designed to take under 2 minutes with your booking confirmation or ID tag.",
       },
+      {
+        q: "What makes Stow different from app-based storage marketplaces?",
+        a: "Marketplaces like Stasher or Nannybag connect you to a network of partner shops and hotels — quality varies by host. Stow is one dedicated, staffed storefront at a single fixed address: the same trained team tags and photographs every item, in the same CCTV-monitored space, every time.",
+      },
     ],
   },
   {
