@@ -243,6 +243,54 @@ Two real search phrases woven in as plain sentences ("Safe Luggage Storage in Da
 
 ---
 
+## Second follow-up pass (2026-08-09) — verified copy gaps + the Korean/Chinese blind spot
+
+Requested by the owner: audit whether the target phrases actually made it into live copy yet (not just this doc), and go broader — the biggest source markets weren't covered at all.
+
+### What's actually shipped vs. still just planned
+
+Checked by grepping the real component files, not assuming from this doc:
+
+| Target phrase | Status | Where |
+|---|---|---|
+| "luggage storage in Da Nang" | **Thin** — 1 occurrence, in the Footer tagline; not in any heading | `Footer.tsx` |
+| "bag storage" | **Was missing entirely** — fixed today | `Footer.tsx` now reads "luggage and bag storage" |
+| "trustworthy" | **Was missing entirely** — fixed today | FAQ question reworded to "Is Stow a trustworthy, safe place to store luggage in Da Nang?" (`faq-data.ts`) |
+| "Ngũ Hành Sơn" / Marble Mountains | **Present** | `LocationSection.tsx`, `HeroSplit.tsx`, `HowItWorks.tsx`, plus a dedicated FAQ entry |
+
+**The honest takeaway:** the entity/topical/keyword research has been ahead of the actual copy all day — this doc correctly identified "trustworthy" as a gap in the first follow-up pass and it stayed unfixed until this second pass. Research alone doesn't move rankings; only what's actually rendered does. Re-audit this table any time new copy ships.
+
+### The blind spot: Korean and Chinese searchers
+
+Every cluster so far assumed English or Vietnamese searchers. That's wrong for Da Nang specifically — [South Korea and China are Vietnam's two largest inbound tourism source markets in 2026](https://www.travelandtourworld.com/news/article/f14ux4y9903u/) (nearly 490,000 South Korean arrivals in January alone; China retook the #1 spot with 482,000 in March), and [Da Nang is repeatedly named as one of the top coastal destinations Korean travelers choose specifically](https://danangfantasticity.com/en/vietnam-tourism-trends-2026-da-nang-shaping-its-position-amid-shifting-international-travel-flows), alongside Nha Trang and Phu Quoc. A meaningful share of Stow's actual tourist foot traffic is very likely searching in Korean or Chinese, not English — a gap this big shouldn't stay unaddressed just because it's outside the two languages already covered.
+
+**Confidence caveat, stated plainly:** the phrases below are directionally correct (common travel-service phrasing, and 五行山 is the actual Chinese name matching Ngũ Hành Sơn's meaning) but this is not native-level fluency in either language. **Do not publish any of this anywhere — GBP, social captions, signage — without a native speaker or professional translator reviewing it first.** The stakes are real: wrong phrasing under the Stow name is more visible and more damaging with these audiences specifically than a typo in English would be.
+
+**Korean (한국어) — tourist-intent, not visa-run (Korean visitors to Vietnam are overwhelmingly short-stay tourists, not long-term expats):**
+- 다낭 짐 보관 *(Da Nang luggage storage — the head term)*
+- 다낭 캐리어 보관 *(Da Nang suitcase storage)*
+- 다낭 공항 짐 보관 *(Da Nang airport luggage storage)*
+- 다낭 마블마운틴 근처 짐 보관 *(luggage storage near Marble Mountains)*
+- 다낭 짐 보관소 *(Da Nang luggage-storage place/facility)*
+
+**Chinese, Simplified (简体中文) — mainland tourist-intent:**
+- 岘港行李寄存 *(Da Nang luggage storage — the head term)*
+- 岘港寄存行李的地方 *(a place to store luggage in Da Nang)*
+- 岘港机场行李寄存 *(Da Nang airport luggage storage)*
+- 岘港五行山附近行李寄存 *(luggage storage near Ngũ Hành Sơn/Marble Mountains — 五行山 is the real Chinese name, same "five element mountains" meaning as the Vietnamese)*
+- 岘港美溪海滩寄存行李 *(luggage storage near My Khe Beach)*
+
+**Where this actually belongs — not the English website.** Language-mixing an English site with Korean/Chinese phrases would read as broken, not helpful. The real channels, in priority order: (1) Google Business Profile — Google auto-translates the description, but exact-phrase content in the visitor's own language still outperforms machine translation for AI answer engines and local-pack relevance; (2) occasional Korean/Chinese captions on Instagram/Facebook posts, given the tourist volume; (3) a translated one-page flyer for the physical storefront (a trust/conversion signal more than an SEO one, but real). This is a bigger call than a code change — it needs either a native-speaking team member or a small translation budget, not something to scaffold unilaterally. Flagging it as a decision for the owner, not shipping placeholder translations.
+
+### A few more English-language gaps worth closing
+
+- **Landmark pairings not yet covered:** luggage storage near Dragon Bridge, luggage storage near Han Market — both already used as attraction names in `HowItWorks.tsx` copy ("Hit My Khe Beach, grab coffee at Han Market... Marble Mountains") but never paired with a storage keyword in the same sentence, the same gap the Marble Mountains connection had before the FAQ entry fixed it.
+- **Group/multi-item intent:** store multiple bags Da Nang, family luggage storage Da Nang — real (pricing is already per-bag, not per-person, and the site says so) but not yet phrased as a searchable question.
+- **Seasonal:** Tet holiday luggage storage Da Nang — Tet is Vietnam's biggest domestic travel spike; worth one FAQ entry or a seasonal GBP Post when the date approaches, not evergreen copy.
+- **Direct booking-intent:** book luggage storage Da Nang online, reserve luggage storage Da Nang — already true (the homepage booking form does exactly this) but never stated as a direct-answer sentence anywhere.
+
+---
+
 ## Sources checked
 
 - [Locafy — Entity SEO for Local Businesses](https://locafy.com/blog/entity-seo-local-businesses) — Knowledge Graph query share, entity-connection mechanics

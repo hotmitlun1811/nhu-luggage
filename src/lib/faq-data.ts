@@ -53,7 +53,7 @@ export const faqGroups = [
     cluster: "Trust & safety",
     items: [
       {
-        q: "Is it safe to store luggage in Da Nang with Stow?",
+        q: "Is Stow a trustworthy, safe place to store luggage in Da Nang?",
         a: "Every item gets a unique ID tag and a photo receipt at drop-off. Storage areas run on constant CCTV, and flat-rate items go into a separate locked zone. Only authorized staff release items, and they verify ID at pickup.",
       },
       {

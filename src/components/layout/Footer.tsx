@@ -39,7 +39,7 @@ export default function Footer() {
               className="text-[14px] text-white/50 leading-relaxed mb-6 max-w-[200px]"
               style={{ fontFamily: "var(--font-inter)" }}
             >
-              Safe, simple luggage storage in Da Nang. By the hour, day, or month. We&apos;re open 7am–10pm, every day.
+              Safe, simple luggage and bag storage in Da Nang. By the hour, day, or month. We&apos;re open 7am–10pm, every day.
             </p>
 
             {/* Social links */}
