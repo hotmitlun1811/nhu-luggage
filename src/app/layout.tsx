@@ -62,7 +62,7 @@ export const metadata: Metadata = {
   creator: "Stow Da Nang",
 
   /* ── Replace with your real domain once live ── */
-  metadataBase: new URL("https://stowdanang.com"),
+  metadataBase: new URL("https://www.stowdanang.com"),
 
   alternates: {
     canonical: "/",
@@ -76,7 +76,7 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     locale: "en_US",
-    url: "https://stowdanang.com",
+    url: "https://www.stowdanang.com",
     siteName: "Stow — Luggage Storage Da Nang",
     title: "Luggage Storage Da Nang | Stow",
     description:

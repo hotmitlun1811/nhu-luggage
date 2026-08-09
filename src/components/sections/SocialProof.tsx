@@ -44,8 +44,12 @@ export default function SocialProof() {
                 <Star key={i} size={18} className="text-[#E8742C] fill-[#E8742C]" />
               ))}
             </div>
+            {/* TODO: swap for the GBP review-page share link (business.google.com → "Get more reviews")
+                once the Google Business Profile is live — this text-search URL returns no result
+                since the profile isn't indexed on Maps yet. Using the same address link as
+                LocationSection's "Get directions" in the meantime so it resolves to something real. */}
             <a
-              href="https://www.google.com/maps/search/Stow+Da+Nang+luggage+storage"
+              href="https://maps.app.goo.gl/wVmkxJ1DgLUJeBAWA"
               target="_blank"
               rel="noopener noreferrer"
               className="text-[13px] text-[#9CA3AF] hover:text-[#E8742C] transition-colors underline underline-offset-2 decoration-dotted"

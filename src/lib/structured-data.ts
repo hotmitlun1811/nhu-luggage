@@ -30,7 +30,7 @@
  * May 2026, so this is no longer a quick win either way).
  */
 
-const BASE_URL = "https://stowdanang.com";
+const BASE_URL = "https://www.stowdanang.com";
 const BUSINESS_ID = `${BASE_URL}/#business`;
 const SERVICE_ID = `${BASE_URL}/#service`;
 

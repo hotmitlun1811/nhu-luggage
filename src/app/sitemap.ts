@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://stowdanang.com";
+const BASE_URL = "https://www.stowdanang.com";
 
 /* /intake is excluded — staff-only walk-in form, already `robots: noindex`
    on the page itself (src/app/intake/page.tsx). Keeping it out of the

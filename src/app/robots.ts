@@ -1,6 +1,6 @@
 import type { MetadataRoute } from "next";
 
-const BASE_URL = "https://stowdanang.com";
+const BASE_URL = "https://www.stowdanang.com";
 
 /* ── AEO note ──
    These 10 UAs are the ones AI answer engines actually crawl/browse with

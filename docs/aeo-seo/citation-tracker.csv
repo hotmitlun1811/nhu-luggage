@@ -1,0 +1,16 @@
+# CANONICAL NAP — Stow — locked 2026-08-09 — Display: "Stow" (recommend, confirm vs signage) | Full: "Stow — Luggage Storage Da Nang" | Addr: 55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng 550000, VN (storefront, confirm dedicated/staffed) | Phone: +84 905 955 161 | Site: https://stowdanang.com (confirm apex vs www) | Email: stowdanang@gmail.com
+tier,platform,found,name_shown,address_shown,phone_shown,category,status,url,notes
+1,Google Business Profile,N,,,,,Missing,,"P0 — does not exist. Site's own Get Directions link resolves to a raw address pin (no business name attached), confirming no claimed listing. Create storefront profile; category ~'Luggage Storage Facility'."
+1,Facebook Page,N,,,,,Missing,,"Not found in public search under 'Stow Da Nang' / 'stowdanang'. Create with canonical NAP."
+1,Instagram,Y,STOW,not shown,not shown,Luggage storage service,Mismatch,https://www.instagram.com/stowdanang/,"2 followers. Bio website link is the OLD Vercel URL 'stow-vn.vercel.app' — not stowdanang.com. Fix immediately; add phone to bio."
+1,Zalo Official Account,N,,,,,Missing,,"Not found. Zalo is the default VN local-business surface; number is already Zalo-enabled per project notes — fast, high-relevance create."
+2,Bing Places,N,,,,,Missing,,"Create — import from GBP once it exists. Feeds Bing + Copilot."
+2,Apple Business Connect,N,,,,,Missing,,"Create — check on iPhone/Mac. Feeds Apple Maps + Siri; relevant to tourist segment."
+2,TripAdvisor,N,,,,,Missing,,"Tourist-facing; list under Things to Do / local services in Da Nang."
+2,Stasher (host marketplace),N,,,,,Missing,,"Vertical flagship directory + live booking channel. Competing Da Nang spots already listed."
+2,Nannybag (host marketplace),N,,,,,Missing,,"Same as Stasher — 12+ Da Nang locations listed, Stow not among them."
+2,Radical Storage (host marketplace),N,,,,,Missing,,"Same as Stasher — Da Nang locations listed, Stow not among them."
+3,Expats in Da Nang City (Facebook group),N,,,,,Missing,,"Not a formal citation, but a high-intent community for the expat/visa-run segment (primary revenue driver per project brief). Presence/posting, not a listing."
+3,Da Nang tourism directories,N,,,,,Missing,,"e.g. official Da Nang tourism sites — lower priority, volume tier."
+3,TikTok,N,,,,,Missing,,"Optional — younger-tourist reach, not NAP-critical."
+n/a,Easy Storage Da Nang,Y,Easy Storage Da Nang,"Hana's Coworking, 69 Bui Ta Han, Khue My Ward, Ngu Hanh Son",unknown,Storage,Competitor — do not list,https://hanacoworkingdanang.com/storage-in-da-nang/,"Direct local competitor, same district. Track their GBP/reviews as the benchmark, not a Stow citation target."
