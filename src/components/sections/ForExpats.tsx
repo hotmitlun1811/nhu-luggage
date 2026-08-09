@@ -3,15 +3,9 @@
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { motion } from "framer-motion";
+import type { Dictionary } from "@/content/types";
 
-const cycle = [
-  { n: "1", label: "Visa expires",          sub: "Every 1–3 months",                         highlight: false },
-  { n: "2", label: "Leave for a visa run",  sub: "Bangkok · Kuala Lumpur · Singapore",        highlight: false },
-  { n: "3", label: "Stow holds everything", sub: "Locked zone · CCTV · Unique ID tag",        highlight: true  },
-  { n: "4", label: "You come back",         sub: "Everything exactly as you left it",          highlight: false },
-];
-
-export default function ForExpats() {
+export default function ForExpats({ dict }: { dict: Dictionary["expats"] }) {
   return (
     <section className="w-full bg-[#F4F4F0] py-48 lg:py-80">
       <div className="max-w-[1280px] mx-auto px-6">
@@ -28,7 +22,7 @@ export default function ForExpats() {
               className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8742C] mb-6"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              For expats &amp; digital nomads
+              {dict.eyebrow}
             </p>
 
             <h2
@@ -39,27 +33,23 @@ export default function ForExpats() {
                 letterSpacing: "-0.03em",
               }}
             >
-              Da Nang is home.{" "}
-              <span className="text-[#E8742C]">Visa runs</span>{" "}
-              are part of the rhythm.
+              {dict.headlinePre}
+              {dict.headlineHighlight && <span className="text-[#E8742C]">{dict.headlineHighlight}</span>}
+              {dict.headlinePost}
             </h2>
 
             <p
               className="text-[15px] leading-relaxed text-[#4B5563] mb-5 max-w-md"
               style={{ fontFamily: "var(--font-inter)" }}
             >
-              Thousands of foreigners live and work in Da Nang long-term. Every
-              few months, the visa expires. The question is always the same:{" "}
-              <span className="text-[#16243F] font-medium">where do I leave my things?</span>
+              {dict.paragraph1}
             </p>
 
             <p
               className="text-[15px] leading-relaxed text-[#4B5563] mb-10 max-w-md"
               style={{ fontFamily: "var(--font-inter)" }}
             >
-              No one wants to pay rent on an empty room just to hold a spot. Not
-              everyone has a friend they trust with a laptop and a bike for weeks.
-              Stow exists to solve exactly that.
+              {dict.paragraph2}
             </p>
 
             <Link
@@ -67,7 +57,7 @@ export default function ForExpats() {
               className="inline-flex items-center gap-2 bg-[#16243F] text-white text-[14px] font-semibold px-6 py-3 rounded-xl hover:bg-[#0D1829] transition-colors"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              See Flat Rate Plans
+              {dict.cta}
               <ArrowRight size={15} strokeWidth={2} />
             </Link>
           </motion.div>
@@ -84,49 +74,50 @@ export default function ForExpats() {
               className="text-[11px] font-bold uppercase tracking-[0.12em] text-[#9CA3AF] mb-8"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              The visa run cycle
+              {dict.cycleLabel}
             </p>
 
             {/* Steps */}
             <div className="flex flex-col">
-              {cycle.map((step, i) => (
-                <div key={step.label} className="flex items-start gap-5">
-                  {/* Number + line */}
-                  <div className="flex flex-col items-center flex-shrink-0">
-                    <div
-                      className={`w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold transition-colors ${
-                        step.highlight
-                          ? "bg-[#E8742C] text-white"
-                          : "bg-white border border-[#E2E2DE] text-[#9CA3AF]"
-                      }`}
-                      style={{ fontFamily: "var(--font-poppins)" }}
-                    >
-                      {step.n}
+              {dict.cycle.map((step, i) => {
+                const highlight = i === 2; // "Stow holds everything" — structural, not translatable
+                return (
+                  <div key={step.label} className="flex items-start gap-5">
+                    {/* Number + line */}
+                    <div className="flex flex-col items-center flex-shrink-0">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-[12px] font-bold transition-colors ${
+                          highlight ? "bg-[#E8742C] text-white" : "bg-white border border-[#E2E2DE] text-[#9CA3AF]"
+                        }`}
+                        style={{ fontFamily: "var(--font-poppins)" }}
+                      >
+                        {i + 1}
+                      </div>
+                      {i < dict.cycle.length - 1 && (
+                        <div className="w-px flex-1 min-h-[28px] bg-[#E2E2DE] my-1.5" />
+                      )}
                     </div>
-                    {i < cycle.length - 1 && (
-                      <div className="w-px flex-1 min-h-[28px] bg-[#E2E2DE] my-1.5" />
-                    )}
-                  </div>
 
-                  {/* Content */}
-                  <div className="pb-7">
-                    <p
-                      className={`text-[15px] font-semibold leading-snug mb-1 ${
-                        step.highlight ? "text-[#E8742C]" : "text-[#16243F]"
-                      }`}
-                      style={{ fontFamily: "var(--font-poppins)" }}
-                    >
-                      {step.label}
-                    </p>
-                    <p
-                      className="text-[13px] text-[#9CA3AF]"
-                      style={{ fontFamily: "var(--font-inter)" }}
-                    >
-                      {step.sub}
-                    </p>
+                    {/* Content */}
+                    <div className="pb-7">
+                      <p
+                        className={`text-[15px] font-semibold leading-snug mb-1 ${
+                          highlight ? "text-[#E8742C]" : "text-[#16243F]"
+                        }`}
+                        style={{ fontFamily: "var(--font-poppins)" }}
+                      >
+                        {step.label}
+                      </p>
+                      <p
+                        className="text-[13px] text-[#9CA3AF]"
+                        style={{ fontFamily: "var(--font-inter)" }}
+                      >
+                        {step.sub}
+                      </p>
+                    </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
 
             {/* Pricing callout */}
@@ -135,9 +126,9 @@ export default function ForExpats() {
                 className="text-[13.5px] text-[#6B7280] leading-relaxed"
                 style={{ fontFamily: "var(--font-inter)" }}
               >
-                Flat Rate plans start at{" "}
-                <span className="font-semibold text-[#16243F]">150,000 ₫ for 1 week</span>{" "}
-                — one fixed fee, no daily rate, no early-pickup penalty.
+                {dict.pricingCalloutPre}
+                <span className="font-semibold text-[#16243F]">{dict.pricingCalloutHighlight}</span>
+                {dict.pricingCalloutPost}
               </p>
             </div>
           </motion.div>

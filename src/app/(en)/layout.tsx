@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Poppins, Geist_Mono, Playfair_Display } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { localBusinessJsonLd } from "@/lib/structured-data";
+import { getDictionary } from "@/content/dictionary";
 import "../globals.css";
 
 const inter = Inter({
@@ -115,11 +116,13 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const dict = await getDictionary("en");
+
   return (
     <html
       lang="en"
@@ -130,7 +133,7 @@ export default function RootLayout({
         <script
           type="application/ld+json"
           // eslint-disable-next-line react/no-danger
-          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd(dict)) }}
         />
       </body>
       <GoogleAnalytics gaId="G-FCXSCK0ZCH" />

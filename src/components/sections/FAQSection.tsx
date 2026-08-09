@@ -1,9 +1,9 @@
 "use client";
 
 import { motion } from "framer-motion";
-import { faqGroups } from "@/lib/faq-data";
+import type { Dictionary } from "@/content/types";
 
-export default function FAQSection() {
+export default function FAQSection({ dict }: { dict: Dictionary["faq"] }) {
   return (
     <section id="faq" className="w-full bg-[#F4F4F0] py-16 lg:py-80">
       <div className="max-w-[1280px] mx-auto px-6">
@@ -21,7 +21,7 @@ export default function FAQSection() {
               className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8742C] mb-4"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              Common Questions
+              {dict.eyebrow}
             </p>
             <h2
               className="text-[#0D1829] font-bold leading-[1.06] mb-5"
@@ -31,19 +31,24 @@ export default function FAQSection() {
                 letterSpacing: "-0.03em",
               }}
             >
-              Airports, visa runs,<br />and everything else.
+              {dict.headlineLines.map((line, i) => (
+                <span key={line}>
+                  {line}
+                  {i < dict.headlineLines.length - 1 && <br />}
+                </span>
+              ))}
             </h2>
             <p
               className="text-[14px] text-[#6B7280] leading-relaxed max-w-[260px]"
               style={{ fontFamily: "var(--font-inter)" }}
             >
-              The questions tourists and expats actually ask, answered straight.
+              {dict.subhead}
             </p>
           </motion.div>
 
           {/* ── Right — grouped Q&A, fully visible (no accordion) ── */}
           <div className="flex flex-col gap-10">
-            {faqGroups.map((group, gi) => (
+            {dict.groups.map((group, gi) => (
               <motion.div
                 key={group.cluster}
                 initial={{ opacity: 0, y: 16 }}

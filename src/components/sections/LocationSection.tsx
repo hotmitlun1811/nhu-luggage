@@ -2,6 +2,7 @@
 
 import { MapPin, Clock, Mail, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
+import type { Dictionary } from "@/content/types";
 
 const WA_ICON = (
   <svg className="w-[15px] h-[15px] flex-shrink-0" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true">
@@ -16,7 +17,7 @@ const IG_ICON = (
   </svg>
 );
 
-export default function LocationSection() {
+export default function LocationSection({ dict }: { dict: Dictionary["location"] }) {
   return (
     <section id="location" className="w-full bg-[#0D1829] py-16 lg:py-80">
       <div className="max-w-[1280px] mx-auto px-6">
@@ -54,7 +55,7 @@ export default function LocationSection() {
               className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8742C] mb-4"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              Find Us
+              {dict.label}
             </p>
             <h2
               className="text-white font-bold leading-[1.06] mb-10"
@@ -64,7 +65,12 @@ export default function LocationSection() {
                 letterSpacing: "-0.03em",
               }}
             >
-              Near Marble Mountains,<br />Da Nang.
+              {dict.headlineLines.map((line, i) => (
+                <span key={line}>
+                  {line}
+                  {i < dict.headlineLines.length - 1 && <br />}
+                </span>
+              ))}
             </h2>
 
             {/* Contact rows */}
@@ -78,13 +84,13 @@ export default function LocationSection() {
                     className="text-[13px] text-white font-medium mb-0.5"
                     style={{ fontFamily: "var(--font-inter)" }}
                   >
-                    55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng
+                    {dict.address}
                   </p>
                   <p
                     className="text-[12px] text-white/45 mb-2"
                     style={{ fontFamily: "var(--font-inter)" }}
                   >
-                    Near Marble Mountains · 10 min from Da Nang Airport
+                    {dict.addressSub}
                   </p>
                   <a
                     href="https://share.google/4fTTPlY1pwqbLAvmB"
@@ -93,7 +99,7 @@ export default function LocationSection() {
                     className="inline-flex items-center gap-1.5 text-[12px] text-[#E8742C] hover:text-white transition-colors"
                     style={{ fontFamily: "var(--font-inter)" }}
                   >
-                    Get directions <ExternalLink size={11} />
+                    {dict.getDirections} <ExternalLink size={11} />
                   </a>
                 </div>
               </div>
@@ -106,13 +112,13 @@ export default function LocationSection() {
                     className="text-[13px] text-white font-semibold mb-0.5"
                     style={{ fontFamily: "var(--font-poppins)" }}
                   >
-                    7:00 AM – 10:00 PM
+                    {dict.hours}
                   </p>
                   <p
                     className="text-[12px] text-white/45"
                     style={{ fontFamily: "var(--font-inter)" }}
                   >
-                    Every day · Public holidays included
+                    {dict.hoursSub}
                   </p>
                 </div>
               </div>
@@ -127,7 +133,7 @@ export default function LocationSection() {
                   className="text-[13px] text-white/80 hover:text-white transition-colors"
                   style={{ fontFamily: "var(--font-inter)" }}
                 >
-                  +84 905 955 161 <span className="text-white/35">(WhatsApp / Zalo)</span>
+                  +84 905 955 161 <span className="text-white/35">{dict.whatsappZaloSuffix}</span>
                 </a>
               </div>
 
@@ -167,7 +173,7 @@ export default function LocationSection() {
                   style={{ fontFamily: "var(--font-poppins)" }}
                 >
                   {WA_ICON}
-                  Chat to book
+                  {dict.chatToBook}
                 </a>
               </div>
 

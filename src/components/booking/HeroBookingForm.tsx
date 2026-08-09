@@ -15,30 +15,14 @@ import {
   type PlanKey,
   type Lane,
 } from "@/lib/plans";
-import { formatDateTime, formatShortDate, formatLongDate } from "@/lib/format";
+import { formatDateTime, formatShortDate, formatLongDate, pluralizeWord } from "@/lib/format";
+import type { Dictionary } from "@/content/types";
+import type { AppLocale } from "@/content/locales";
 
 // Client-only: renders via a document.body portal, which has no server
 // equivalent — skipping SSR avoids a hydration mismatch entirely instead of
 // papering over it with a mounted-after-effect gate.
 const ConsentModal = dynamic(() => import("./ConsentModal"), { ssr: false });
-
-/* English display text (name/duration) — src/lib/plans.ts holds the shared
-   numeric facts (price, surcharge, lane) both forms use; this component's
-   own display copy stays local for now and moves into a locale dictionary
-   in Phase 1 of the i18n build. Merged into PLANS below so every existing
-   `PLANS[plan].name` / `.duration` call site is unchanged. */
-const PLAN_DISPLAY: Record<PlanKey, { name: string; duration: string }> = {
-  hourly:   { name: "By the Hour", duration: "Min 1 hr" },
-  daily:    { name: "By the Day",  duration: "Up to 24 hrs" },
-  mini:     { name: "Mini",        duration: "Up to 1 week" },
-  strand:   { name: "Strand",      duration: "Up to 1 month" },
-  longstay: { name: "Long Stay",   duration: "Up to 4 months" },
-};
-
-const PLANS: Record<PlanKey, typeof PLAN_FACTS[PlanKey] & { name: string; duration: string }> =
-  Object.fromEntries(
-    (Object.keys(PLAN_FACTS) as PlanKey[]).map((k) => [k, { ...PLAN_FACTS[k], ...PLAN_DISPLAY[k] }])
-  ) as Record<PlanKey, typeof PLAN_FACTS[PlanKey] & { name: string; duration: string }>;
 
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -58,23 +42,6 @@ function diffMinutes(fromStr: string, toStr: string): number {
   return (th * 60 + tm) - (fh * 60 + fm);
 }
 
-// Evidence trail for the scrollwrap consent: when they actually clicked
-// "I Agree" and which version of the documents that was. Thin wrappers
-// around src/lib/format.ts's locale-aware formatters — default "en" keeps
-// today's behavior identical; Phase 1 of the i18n build passes the active
-// page locale through instead.
-function fmtDateTime(d: Date): string {
-  return formatDateTime(d);
-}
-
-function fmtShort(dateStr: string): string {
-  return formatShortDate(dateStr);
-}
-
-function fmtLong(dateStr: string): string {
-  return formatLongDate(dateStr);
-}
-
 const TIME_SLOTS = generateTimeSlots();
 
 const LABEL = "block text-[10px] font-bold uppercase tracking-[0.12em] text-white/30 mb-1.5";
@@ -87,8 +54,15 @@ const EMAIL_RE = /^\S+@\S+\.\S+$/;
 
 type EmailStatus = "idle" | "sending" | "sent" | "error";
 
-export default function HeroBookingForm() {
+export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["booking"]; locale: AppLocale }) {
   const today = new Date().toISOString().split("T")[0];
+
+  // Evidence trail for the scrollwrap consent + the daily/hourly period
+  // summaries — locale-aware via src/lib/format.ts, defaulting to English
+  // formatting until a real locale is passed in from a translated page.
+  const fmtDateTime = (d: Date) => formatDateTime(d, locale);
+  const fmtShort = (dateStr: string) => formatShortDate(dateStr, locale);
+  const fmtLong = (dateStr: string) => formatLongDate(dateStr, locale);
 
   const [lane, setLane]             = useState<Lane>("flatrate");
   const [plan, setPlan]             = useState<PlanKey>("strand");
@@ -129,8 +103,13 @@ export default function HeroBookingForm() {
     setErrors(p => { const n = { ...p }; delete n[k]; return n; });
   }
 
-  const cur = PLANS[plan];
-  const maxPickup = date && cur.maxDays ? addDays(date, cur.maxDays) : "";
+  // Facts (price/lane/surcharge — locale-invariant) vs. display text
+  // (translated, from the dictionary). buildMessage()/sendLarkBooking()
+  // below deliberately use `curFacts.canonicalName`/`canonicalDuration`,
+  // never `curText` — see plans.ts's note on why those two network
+  // boundaries must always stay English regardless of site locale.
+  const curFacts = PLAN_FACTS[plan];
+  const maxPickup = date && curFacts.maxDays ? addDays(date, curFacts.maxDays) : "";
 
   // "By the Day" bills per calendar day between drop-off and pick-up, and
   // "By the Hour" bills per hour between drop-off and pick-up time — the
@@ -140,22 +119,22 @@ export default function HeroBookingForm() {
   const effectiveQuantity = plan === "daily" ? dailyQuantity : plan === "hourly" ? hourlyQuantity : 1;
 
   const total = useMemo(() => {
-    const base = (plan === "hourly" || plan === "daily") ? cur.price * effectiveQuantity : cur.price;
-    return base * pax + (oversized ? cur.oversizeSurcharge : 0);
-  }, [cur, oversized, plan, effectiveQuantity, pax]);
+    const base = (plan === "hourly" || plan === "daily") ? curFacts.price * effectiveQuantity : curFacts.price;
+    return base * pax + (oversized ? curFacts.oversizeSurcharge : 0);
+  }, [curFacts, oversized, plan, effectiveQuantity, pax]);
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!date)          e.date    = "Required";
-    if ((plan === "hourly" || lane === "flatrate") && !time) e.time = "Required";
-    if (plan === "daily" && !pickupDate) e.pickupDate = "Required";
-    if (plan === "hourly" && !pickupTime) e.pickupTime = "Required";
-    if (!name.trim())   e.name    = "Required";
-    if (!phone.trim())  e.phone   = "Required";
-    if (!email.trim())  e.email   = "Required";
-    else if (!EMAIL_RE.test(email.trim())) e.email = "Invalid email";
-    if (!pax || pax < 1) e.pax    = "Required";
-    if (!consent)       e.consent = "Required";
+    if (!date)          e.date    = dict.required;
+    if ((plan === "hourly" || lane === "flatrate") && !time) e.time = dict.required;
+    if (plan === "daily" && !pickupDate) e.pickupDate = dict.required;
+    if (plan === "hourly" && !pickupTime) e.pickupTime = dict.required;
+    if (!name.trim())   e.name    = dict.required;
+    if (!phone.trim())  e.phone   = dict.required;
+    if (!email.trim())  e.email   = dict.required;
+    else if (!EMAIL_RE.test(email.trim())) e.email = dict.invalidEmail;
+    if (!pax || pax < 1) e.pax    = dict.required;
+    if (!consent)       e.consent = dict.required;
     return e;
   }
 
@@ -165,24 +144,29 @@ export default function HeroBookingForm() {
     return `STW-${d}-${n}`;
   }
 
+  // Business-facing WhatsApp message — deliberately hardcoded English
+  // regardless of site locale (i18n plan decision #4). Staff read this on
+  // the business's own WhatsApp number; a translated message they can't
+  // action defeats the point. Uses curFacts.canonicalName/plain English
+  // pluralization, never the (possibly Korean/Chinese) dict/curText.
   function buildMessage(ref: string) {
     let periodLine = "";
     if (plan === "hourly" && date && time && pickupTime) {
       periodLine = `⏱ Duration: ${effectiveQuantity} hour${effectiveQuantity > 1 ? "s" : ""} (${time} → ${pickupTime})`;
     } else if (plan === "daily" && date && pickupDate) {
-      periodLine = `📅 Period: ${fmtShort(date)} → ${fmtShort(pickupDate)} (${effectiveQuantity} day${effectiveQuantity > 1 ? "s" : ""})`;
+      periodLine = `📅 Period: ${formatShortDate(date, "en")} → ${formatShortDate(pickupDate, "en")} (${effectiveQuantity} day${effectiveQuantity > 1 ? "s" : ""})`;
     } else if (lane === "flatrate" && date && pickupDate) {
-      periodLine = `📅 Period: ${fmtShort(date)} → ${fmtShort(pickupDate)}`;
+      periodLine = `📅 Period: ${formatShortDate(date, "en")} → ${formatShortDate(pickupDate, "en")}`;
     }
 
     return [
       `Hello Stow! 👋 I'd like to book luggage storage.`,
       ``,
       `📋 Ref: ${ref}`,
-      `📦 Plan: ${cur.name} — ${vnd(cur.price)}${cur.unit === "flat" ? " flat fee" : cur.unit} / bag`,
+      `📦 Plan: ${curFacts.canonicalName} — ${vnd(curFacts.price)}${curFacts.unit === "flat" ? " flat fee" : curFacts.unit} / bag`,
       `🧳 Bags: ${pax}`,
-      oversized ? `📏 Item: Oversized (+${vnd(cur.oversizeSurcharge)})` : `📏 Item: Standard size`,
-      `📅 Drop-off: ${date ? fmtLong(date) : "TBD"}${(plan === "hourly" || lane === "flatrate") && time ? ` at ${time}` : ""}`,
+      oversized ? `📏 Item: Oversized (+${vnd(curFacts.oversizeSurcharge)})` : `📏 Item: Standard size`,
+      `📅 Drop-off: ${date ? formatLongDate(date, "en") : "TBD"}${(plan === "hourly" || lane === "flatrate") && time ? ` at ${time}` : ""}`,
       periodLine,
       `💰 Total: ${vnd(total)}`,
       ``,
@@ -190,18 +174,20 @@ export default function HeroBookingForm() {
       `📱 WhatsApp: ${phone}`,
       `✉️ Email: ${email}`,
       ``,
-      consentAt ? `✅ Agreed to Terms of Service & Privacy Policy (Effective ${LEGAL_EFFECTIVE}) — read in full at ${fmtDateTime(consentAt)}` : "",
+      consentAt ? `✅ Agreed to Terms of Service & Privacy Policy (Effective ${LEGAL_EFFECTIVE}) — read in full at ${formatDateTime(consentAt, "en")}` : "",
       `Please confirm my booking. Thank you! 🙏`,
     ].filter(Boolean).join("\n");
   }
 
   function sendLarkBooking(ref: string) {
     const isHourly = plan === "hourly";
+    // English regardless of locale — same reasoning as buildMessage() above,
+    // this crosses into the ops team's Lark Base table.
     const duration = isHourly
       ? `${hourlyQuantity} hour${hourlyQuantity > 1 ? "s" : ""}`
       : plan === "daily"
       ? `${dailyQuantity} day${dailyQuantity > 1 ? "s" : ""}`
-      : cur.duration;
+      : curFacts.canonicalDuration;
     // Fire-and-forget — the WhatsApp handoff below is the customer's actual
     // confirmation path, so a Lark hiccup must never block or delay it.
     fetch("/api/lark/booking", {
@@ -211,7 +197,7 @@ export default function HeroBookingForm() {
         source: "Booking Form",
         reference: ref,
         lane,
-        planName: cur.name,
+        planName: curFacts.canonicalName,
         oversized,
         dropOffDate: date,
         dropOffTime: time,
@@ -240,8 +226,8 @@ export default function HeroBookingForm() {
           to: email.trim(),
           name: name.trim(),
           ref,
-          planName: cur.name,
-          planDuration: cur.duration,
+          planName: curFacts.canonicalName,
+          planDuration: curFacts.canonicalDuration,
           lane,
           consentAt: consentAt ? consentAt.toISOString() : null,
           legalVersion: LEGAL_EFFECTIVE,
@@ -249,12 +235,12 @@ export default function HeroBookingForm() {
       });
       if (!res.ok) {
         const body = await res.json().catch(() => ({}));
-        throw new Error(body.error || "Failed to send email");
+        throw new Error(body.error || dict.emailFailedFallback);
       }
       setEmailStatus("sent");
     } catch (err) {
       setEmailStatus("error");
-      setEmailError(err instanceof Error ? err.message : "Failed to send email");
+      setEmailError(err instanceof Error ? err.message : dict.emailFailedFallback);
     }
   }
 
@@ -282,28 +268,28 @@ export default function HeroBookingForm() {
           <CheckCircle2 size={22} className="text-emerald-400" strokeWidth={1.75} />
         </div>
         <p className="text-white font-bold text-[17px] mb-1.5" style={{ fontFamily: "var(--font-poppins)" }}>
-          Request sent!
+          {dict.successTitle}
         </p>
         <p className="text-white/45 text-[13px] leading-snug mb-1" style={{ fontFamily: "var(--font-inter)" }}>
-          Your details are now in WhatsApp.
+          {dict.successSubtitle}
         </p>
         <p className="text-white/30 text-[12px] mb-1" style={{ fontFamily: "var(--font-inter)" }}>
-          We reply within 15 minutes.
+          {dict.successReplyTime}
         </p>
         <p className="text-white/25 text-[11px] mb-5 tracking-wide" style={{ fontFamily: "var(--font-poppins)" }}>
-          Ref: {bookingRef}
+          {dict.successRefPrefix}{bookingRef}
         </p>
 
         <div className="flex items-center justify-between w-full max-w-xs px-3 py-2.5 mb-6 bg-white/[0.05] rounded-lg border border-white/[0.09]">
           <div className="text-left min-w-0 mr-3">
             <p className="text-[11.5px] font-semibold text-white/70" style={{ fontFamily: "var(--font-poppins)" }}>
-              Policy &amp; agreement email
+              {dict.policyEmailLabel}
             </p>
             <p className="text-[11px] text-white/35 mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
-              {emailStatus === "sending" && `Sending to ${email}…`}
-              {emailStatus === "sent" && `Sent to ${email}`}
-              {emailStatus === "error" && (emailError || "Failed to send")}
-              {emailStatus === "idle" && `Will send to ${email}`}
+              {emailStatus === "sending" && `${dict.emailSendingPrefix}${email}…`}
+              {emailStatus === "sent" && `${dict.emailSentPrefix}${email}`}
+              {emailStatus === "error" && (emailError || dict.emailFailedFallback)}
+              {emailStatus === "idle" && `${dict.emailWillSendPrefix}${email}`}
             </p>
           </div>
           {emailStatus === "error" ? (
@@ -313,7 +299,7 @@ export default function HeroBookingForm() {
               className="flex-shrink-0 text-[11px] font-semibold text-[#E8742C] px-2.5 py-1.5 rounded-md border border-[#E8742C]/40"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              Retry
+              {dict.retryLabel}
             </button>
           ) : (
             <CheckCircle2
@@ -330,14 +316,14 @@ export default function HeroBookingForm() {
             className="text-[13px] bg-[#E8742C] text-white font-semibold px-5 py-2.5 rounded-lg hover:bg-[#C85E1E] transition-colors"
             style={{ fontFamily: "var(--font-poppins)" }}
           >
-            Back to home
+            {dict.backToHome}
           </Link>
           <button
             onClick={() => setSubmitted(false)}
             className="text-[13px] border border-white/12 text-white/45 px-5 py-2.5 rounded-lg hover:text-white/80 transition-colors"
             style={{ fontFamily: "var(--font-inter)" }}
           >
-            Book again
+            {dict.bookAgain}
           </button>
         </div>
       </div>
@@ -350,7 +336,7 @@ export default function HeroBookingForm() {
 
       {/* Lane */}
       <div>
-        <p className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>Lane</p>
+        <p className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>{dict.laneLabel}</p>
         <div className="flex p-[3px] bg-white/[0.06] rounded-lg border border-white/[0.08] gap-[3px]">
           {(["flatrate", "flexible"] as Lane[]).map((l) => (
             <button
@@ -362,18 +348,18 @@ export default function HeroBookingForm() {
               }`}
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              {l === "flexible" ? "Flexible" : "Flat Rate"}
+              {l === "flexible" ? dict.laneFlexible : dict.laneFlatRate}
             </button>
           ))}
         </div>
         <p className="text-[11px] text-white/30 mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
-          {lane === "flexible" ? "For tourists & walk-ins" : "For expats & digital nomads"}
+          {lane === "flexible" ? dict.laneFlexibleSub : dict.laneFlatRateSub}
         </p>
       </div>
 
       {/* Plan */}
       <div>
-        <p className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>Plan</p>
+        <p className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>{dict.planLabel}</p>
         <AnimatePresence mode="wait">
           <motion.div
             key={lane}
@@ -384,7 +370,7 @@ export default function HeroBookingForm() {
             transition={{ duration: 0.15 }}
           >
             {plans.map((pk) => {
-              const p   = PLANS[pk];
+              const facts = PLAN_FACTS[pk];
               const sel = plan === pk;
               return (
                 <button
@@ -395,28 +381,28 @@ export default function HeroBookingForm() {
                     sel ? "bg-[#E8742C] border-[#E8742C]" : "bg-white/[0.05] border-white/[0.10] hover:border-white/20"
                   }`}
                 >
-                  {p.popular && (
+                  {facts.popular && (
                     <span
                       className="absolute -top-1.5 right-2 bg-white text-[#E8742C] text-[8px] font-bold px-1.5 rounded-full leading-[1.6]"
                       style={{ fontFamily: "var(--font-poppins)" }}
                     >
-                      TOP
+                      {dict.planTopBadge}
                     </span>
                   )}
                   <p className="text-[12px] font-semibold text-white leading-snug" style={{ fontFamily: "var(--font-poppins)" }}>
-                    {p.name}
+                    {dict.planNames[pk]}
                   </p>
                   <p
                     className={`text-[11px] font-bold mt-0.5 ${sel ? "text-white/70" : "text-[#E8742C]"}`}
                     style={{ fontFamily: "var(--font-poppins)" }}
                   >
-                    {vnd(p.price)}<span className="font-medium opacity-70"> / bag</span>
+                    {vnd(facts.price)}<span className="font-medium opacity-70"> / {dict.bagUnit.singular}</span>
                   </p>
                   <p
                     className={`text-[10px] mt-0.5 ${sel ? "text-white/60" : "text-white/35"}`}
                     style={{ fontFamily: "var(--font-inter)" }}
                   >
-                    {p.duration}
+                    {dict.planDurations[pk]}
                   </p>
                 </button>
               );
@@ -428,7 +414,7 @@ export default function HeroBookingForm() {
       {/* Laptop notice for flexible plans */}
       {lane === "flexible" && (
         <p className="text-[11px] text-white/35 -mt-1" style={{ fontFamily: "var(--font-inter)" }}>
-          Laptops and electronics accepted on flexible plans.
+          {dict.laptopNotice}
         </p>
       )}
 
@@ -447,7 +433,7 @@ export default function HeroBookingForm() {
             <div className="grid grid-cols-2 gap-2">
               <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  Drop-off date{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
+                  {dict.dropOffDateLabel}{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
                 </label>
                 <input
                   type="date"
@@ -460,7 +446,7 @@ export default function HeroBookingForm() {
               </div>
               <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  Time{plan === "hourly" && errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
+                  {dict.timeLabel}{plan === "hourly" && errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
                 </label>
                 <div className="relative">
                   <select
@@ -474,7 +460,7 @@ export default function HeroBookingForm() {
                     className={`${SELECT} ${plan === "hourly" && errors.time ? ERR : ""}`}
                     style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                   >
-                    <option value="">Select…</option>
+                    <option value="">{dict.selectPlaceholder}</option>
                     {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
@@ -487,8 +473,8 @@ export default function HeroBookingForm() {
               <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
                   {plan === "hourly"
-                    ? <>Pick-up time{errors.pickupTime && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupTime})</span>}</>
-                    : <>Pick-up date{errors.pickupDate && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupDate})</span>}</>}
+                    ? <>{dict.pickupTimeLabel}{errors.pickupTime && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupTime})</span>}</>
+                    : <>{dict.pickupDateLabel}{errors.pickupDate && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupDate})</span>}</>}
                 </label>
                 {plan === "hourly" ? (
                   <div className="relative">
@@ -498,7 +484,7 @@ export default function HeroBookingForm() {
                       className={`${SELECT} ${errors.pickupTime ? ERR : ""}`}
                       style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                     >
-                      <option value="">Select…</option>
+                      <option value="">{dict.selectPlaceholder}</option>
                       {TIME_SLOTS.filter((t) => !time || t > time).map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
@@ -517,7 +503,7 @@ export default function HeroBookingForm() {
               </div>
               <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  Bags{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
+                  {dict.bagsLabel}{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
                 </label>
                 <input
                   type="text"
@@ -542,17 +528,17 @@ export default function HeroBookingForm() {
               </div>
             </div>
             <p className="text-[10.5px] text-white/25 -mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
-              Bags = items stored, not number of people
+              {dict.bagsHelp}
             </p>
 
             {plan === "daily" && date && pickupDate && (
               <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
-                <span className="text-white font-semibold">{dailyQuantity} day{dailyQuantity > 1 ? "s" : ""}</span> · {fmtShort(date)} → {fmtShort(pickupDate)}
+                <span className="text-white font-semibold">{dailyQuantity} {pluralizeWord(dailyQuantity, dict.dayUnit)}</span> · {fmtShort(date)} → {fmtShort(pickupDate)}
               </p>
             )}
             {plan === "hourly" && time && pickupTime && (
               <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
-                <span className="text-white font-semibold">{hourlyQuantity} hour{hourlyQuantity > 1 ? "s" : ""}</span> · {time} → {pickupTime}
+                <span className="text-white font-semibold">{hourlyQuantity} {pluralizeWord(hourlyQuantity, dict.hourUnit)}</span> · {time} → {pickupTime}
               </p>
             )}
           </motion.div>
@@ -567,7 +553,7 @@ export default function HeroBookingForm() {
           >
             <div className="min-w-0">
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                Drop-off{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
+                {dict.dropOffLabel}{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
               </label>
               <input
                 type="date"
@@ -580,7 +566,7 @@ export default function HeroBookingForm() {
             </div>
             <div className="min-w-0">
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                Bring at{errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
+                {dict.bringAtLabel}{errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
               </label>
               <div className="relative">
                 <select
@@ -589,7 +575,7 @@ export default function HeroBookingForm() {
                   className={`${SELECT} ${errors.time ? ERR : ""}`}
                   style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                 >
-                  <option value="">Select…</option>
+                  <option value="">{dict.selectPlaceholder}</option>
                   {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
@@ -597,7 +583,7 @@ export default function HeroBookingForm() {
             </div>
             <div className="col-span-2 lg:col-span-1 min-w-0">
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                Pickup
+                {dict.pickupLabel}
               </label>
               <input
                 type="date"
@@ -617,11 +603,11 @@ export default function HeroBookingForm() {
       <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
         <div>
           <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            Name{errors.name && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.name})</span>}
+            {dict.nameLabel}{errors.name && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.name})</span>}
           </label>
           <input
             type="text"
-            placeholder="Your name"
+            placeholder={dict.namePlaceholder}
             value={name}
             autoComplete="name"
             onChange={(e) => { setName(e.target.value); clearErr("name"); }}
@@ -631,11 +617,11 @@ export default function HeroBookingForm() {
         </div>
         <div>
           <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            WhatsApp{errors.phone && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.phone})</span>}
+            {dict.whatsappLabel}{errors.phone && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.phone})</span>}
           </label>
           <input
             type="tel"
-            placeholder="+84 or local"
+            placeholder={dict.whatsappPlaceholder}
             value={phone}
             autoComplete="tel"
             onChange={(e) => { setPhone(e.target.value); clearErr("phone"); }}
@@ -645,11 +631,11 @@ export default function HeroBookingForm() {
         </div>
         <div className="col-span-2 lg:col-span-1">
           <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            Email{errors.email && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.email})</span>}
+            {dict.emailLabel}{errors.email && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.email})</span>}
           </label>
           <input
             type="email"
-            placeholder="you@example.com"
+            placeholder={dict.emailPlaceholder}
             value={email}
             autoComplete="email"
             onChange={(e) => { setEmail(e.target.value); clearErr("email"); }}
@@ -665,10 +651,10 @@ export default function HeroBookingForm() {
           <div className={`flex items-center justify-between px-3 py-2.5 bg-white/[0.05] rounded-lg border ${errors.pax ? ERR : "border-white/[0.09]"}`}>
             <div className="min-w-0 mr-3">
               <label className="text-[12.5px] font-semibold text-white/80 leading-none block" style={{ fontFamily: "var(--font-poppins)" }}>
-                Bags{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
+                {dict.bagsLabel}{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
               </label>
               <p className="text-[11px] text-white/28 mt-1 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
-                Items stored, not people
+                {dict.bagsInlineHelp}
               </p>
             </div>
             <input
@@ -697,10 +683,10 @@ export default function HeroBookingForm() {
         <div className="flex items-center justify-between px-3 py-2.5 bg-white/[0.05] rounded-lg border border-white/[0.09]">
           <div className="min-w-0 mr-3">
             <p className="text-[12.5px] font-semibold text-white/80 leading-none" style={{ fontFamily: "var(--font-poppins)" }}>
-              Oversized?
+              {dict.oversizedLabel}
             </p>
             <p className="text-[11px] text-white/28 mt-1 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
-              28″+, bike, surfboard · +{vnd(cur.oversizeSurcharge)}
+              {dict.oversizedHelpPrefix}{vnd(curFacts.oversizeSurcharge)}
             </p>
           </div>
           <button
@@ -721,10 +707,10 @@ export default function HeroBookingForm() {
       {/* Total */}
       <div className="flex items-center justify-between pt-0.5">
         <span className="text-[11.5px] text-white/30" style={{ fontFamily: "var(--font-inter)" }}>
-          {cur.unit === "flat"
-            ? "Total (flat fee)"
-            : `Total (${effectiveQuantity} ${plan === "hourly" ? `hr${effectiveQuantity > 1 ? "s" : ""}` : `day${effectiveQuantity > 1 ? "s" : ""}`})`}
-          {pax > 1 ? ` · ${pax} bags` : ""}
+          {curFacts.unit === "flat"
+            ? dict.totalFlatFee
+            : `${dict.totalPrefix}${effectiveQuantity} ${plan === "hourly" ? pluralizeWord(effectiveQuantity, dict.hourUnit) : pluralizeWord(effectiveQuantity, dict.dayUnit)}${dict.totalSuffix}`}
+          {pax > 1 ? ` · ${pax} ${dict.bagUnit.plural}` : ""}
         </span>
         <span className="text-[21px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>
           {vnd(total)}
@@ -737,7 +723,7 @@ export default function HeroBookingForm() {
           <div className="flex items-center gap-2 min-w-0">
             <CheckCircle2 size={15} className="text-emerald-400 flex-shrink-0" />
             <span className="text-[11.5px] text-white/70 leading-snug truncate" style={{ fontFamily: "var(--font-inter)" }}>
-              Agreed to Terms of Service &amp; Privacy Policy
+              {dict.consentAgreedText}
             </span>
           </div>
           <button
@@ -746,7 +732,7 @@ export default function HeroBookingForm() {
             className="flex-shrink-0 text-[11px] text-white/35 hover:text-white/70 underline underline-offset-2 transition-colors"
             style={{ fontFamily: "var(--font-inter)" }}
           >
-            Change
+            {dict.changeLabel}
           </button>
         </div>
       ) : (
@@ -759,13 +745,17 @@ export default function HeroBookingForm() {
             }`}
           >
             <span className="text-[11.5px] text-white/60 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
-              Review &amp; accept Stow&apos;s <span className="text-white font-semibold">Terms of Service</span> &amp; <span className="text-white font-semibold">Privacy Policy</span> to continue
+              {dict.consentPromptPre}
+              <span className="text-white font-semibold">{dict.consentPromptTos}</span>
+              {dict.consentPromptAnd}
+              <span className="text-white font-semibold">{dict.consentPromptPrivacy}</span>
+              {dict.consentPromptPost}
             </span>
             <ChevronRight size={15} className="flex-shrink-0 text-white/30" />
           </button>
           {errors.consent && (
             <p className="text-[11px] text-red-400/80 mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
-              Please review and accept to continue
+              {dict.consentErrorText}
             </p>
           )}
         </div>
@@ -792,12 +782,12 @@ export default function HeroBookingForm() {
         {loading ? (
           <>
             <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-            Opening WhatsApp…
+            {dict.submitLoading}
           </>
         ) : (
           <>
             <Send size={14} />
-            Confirm via WhatsApp
+            {dict.submitIdle}
           </>
         )}
       </button>

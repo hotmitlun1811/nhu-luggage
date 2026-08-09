@@ -1,6 +1,7 @@
 import { Clock, Phone } from "lucide-react";
+import type { Dictionary } from "@/content/types";
 
-export default function AnnouncementBar() {
+export default function AnnouncementBar({ dict }: { dict: Dictionary["announcement"] }) {
   return (
     <div className="w-full bg-[#16243F] text-white flex items-center justify-center h-9 px-4">
       <p
@@ -8,11 +9,11 @@ export default function AnnouncementBar() {
         style={{ fontFamily: "var(--font-inter)" }}
       >
         <Clock size={12} className="text-[#E8742C] flex-shrink-0" />
-        <span>Open 7 days a week · 7am–10pm</span>
+        <span>{dict.hours}</span>
         <span className="text-white/25 mx-1">|</span>
         <Phone size={11} className="text-[#E8742C] flex-shrink-0" />
         <span>
-          WhatsApp&nbsp;
+          {dict.whatsappLabel}&nbsp;
           <a
             href="https://wa.me/84905955161"
             className="text-[#E8742C] font-semibold hover:text-white transition-colors"
@@ -21,7 +22,7 @@ export default function AnnouncementBar() {
           </a>
         </span>
         <span className="text-white/25 mx-1 hidden sm:inline">|</span>
-        <span className="hidden sm:inline text-white/60">Da Nang, Vietnam</span>
+        <span className="hidden sm:inline text-white/60">{dict.location}</span>
       </p>
     </div>
   );

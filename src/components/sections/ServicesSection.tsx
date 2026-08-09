@@ -2,45 +2,23 @@
 
 import { useState } from "react";
 import { Truck, PlaneTakeoff, Hotel, BatteryCharging, Wifi, Coffee, Printer, ArrowRight } from "lucide-react";
+import type { Dictionary } from "@/content/types";
 
 const NAV_H = 72; // fixed nav height in px
 
-const services = [
-  {
-    Icon: Truck,
-    title: "Pickup & Delivery",
-    subtitle: "We come to you",
-    description: "WhatsApp us your hotel or address — we collect your bags and bring them back when you need them.",
-    image: "/images/service-pickup.jpg",
-    overlay: "rgba(22,36,63,0.62)",
-  },
-  {
-    Icon: PlaneTakeoff,
-    title: "Airport Transfer",
-    subtitle: "Straight to the gate",
-    description: "Flying out? We deliver your bags directly to Da Nang Airport so you can head straight to check-in.",
-    image: "/images/service-airport.jpg",
-    overlay: "rgba(100,40,10,0.58)",
-  },
-  {
-    Icon: Hotel,
-    title: "Hotel Delivery",
-    subtitle: "Door to door",
-    description: "Checked into a new place? We'll deliver your bags to your hotel lobby at a time that works for you.",
-    image: "/images/service-hotel.jpg",
-    overlay: "rgba(20,45,25,0.60)",
-  },
+/* Icon/image/overlay stay local — display text comes from dict.items, same order. */
+const visuals = [
+  { Icon: Truck, image: "/images/service-pickup.jpg", overlay: "rgba(22,36,63,0.62)" },
+  { Icon: PlaneTakeoff, image: "/images/service-airport.jpg", overlay: "rgba(100,40,10,0.58)" },
+  { Icon: Hotel, image: "/images/service-hotel.jpg", overlay: "rgba(20,45,25,0.60)" },
 ];
 
-const addons = [
-  { Icon: BatteryCharging, label: "Phone charging" },
-  { Icon: Wifi, label: "Free Wi-Fi" },
-  { Icon: Coffee, label: "Drinking water" },
-  { Icon: Printer, label: "Boarding pass print" },
-];
+const addonIcons = [BatteryCharging, Wifi, Coffee, Printer];
 
-export default function ServicesSection() {
+export default function ServicesSection({ dict }: { dict: Dictionary["services"] }) {
   const [hovered, setHovered] = useState<number | null>(null);
+  const services = dict.items.map((item, i) => ({ ...item, ...visuals[i] }));
+  const addons = dict.addons.map((label, i) => ({ label, Icon: addonIcons[i] }));
 
   return (
     <section id="services" className="w-full">
@@ -64,7 +42,7 @@ export default function ServicesSection() {
               className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8742C] mb-6"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              More than storage
+              {dict.eyebrow}
             </p>
             <h2
               className="text-white font-bold leading-[1.06] mb-6"
@@ -74,13 +52,15 @@ export default function ServicesSection() {
                 letterSpacing: "-0.03em",
               }}
             >
-              We go where<br />you need us.
+              {dict.headlineLines[0]}
+              <br />
+              {dict.headlineLines[1]}
             </h2>
             <p
               className="text-[14px] text-white/50 leading-relaxed"
               style={{ fontFamily: "var(--font-inter)", maxWidth: "240px" }}
             >
-              Storage is the core. But when your itinerary demands it, we handle pickup, delivery, and the little things that make travel smoother.
+              {dict.intro}
             </p>
           </div>
 
@@ -115,7 +95,7 @@ export default function ServicesSection() {
                 className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#E8742C] mb-3"
                 style={{ fontFamily: "var(--font-poppins)" }}
               >
-                Free while you wait
+                {dict.freeWhileYouWait}
               </p>
               <div className="flex flex-col gap-2">
                 {addons.map(({ Icon, label }) => (
@@ -135,7 +115,7 @@ export default function ServicesSection() {
               className="inline-flex items-center gap-2 border border-white/20 text-white text-[13px] font-semibold px-6 py-3 rounded-lg hover:bg-white/8 transition-colors"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              Book storage now <ArrowRight size={14} />
+              {dict.bookStorageNow} <ArrowRight size={14} />
             </a>
           </div>
         </div>
@@ -169,7 +149,7 @@ export default function ServicesSection() {
                   className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/70 bg-black/25 backdrop-blur-sm px-3 py-1 rounded-full"
                   style={{ fontFamily: "var(--font-poppins)" }}
                 >
-                  On Request
+                  {dict.onRequestBadge}
                 </span>
               </div>
 
@@ -217,7 +197,7 @@ export default function ServicesSection() {
                     className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-white hover:text-white/80 transition-colors"
                     style={{ fontFamily: "var(--font-inter)" }}
                   >
-                    WhatsApp to arrange <ArrowRight size={12} />
+                    {dict.whatsappToArrange} <ArrowRight size={12} />
                   </a>
                 </div>
               </div>
@@ -233,7 +213,7 @@ export default function ServicesSection() {
             className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8742C] mb-3"
             style={{ fontFamily: "var(--font-poppins)" }}
           >
-            More than storage
+            {dict.eyebrow}
           </p>
           <h2
             className="text-white font-bold leading-[1.06] mb-5"
@@ -243,13 +223,13 @@ export default function ServicesSection() {
               letterSpacing: "-0.03em",
             }}
           >
-            We go where you need us.
+            {dict.headlineLines.join(" ")}
           </h2>
           <p
             className="text-[14px] text-white/50 leading-relaxed mb-10"
             style={{ fontFamily: "var(--font-inter)" }}
           >
-            Storage is the core. But when your itinerary demands it, we handle pickup, delivery, and the little things that make travel smoother.
+            {dict.intro}
           </p>
 
           <div className="flex flex-col gap-4 mb-6">
@@ -276,7 +256,7 @@ export default function ServicesSection() {
                       className="text-[10px] font-bold uppercase tracking-[0.12em] text-white/60 bg-black/25 px-2.5 py-1 rounded-full"
                       style={{ fontFamily: "var(--font-poppins)" }}
                     >
-                      On Request
+                      {dict.onRequestBadge}
                     </span>
                   </div>
                   <div className="mt-auto">
@@ -309,7 +289,7 @@ export default function ServicesSection() {
                       className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-white"
                       style={{ fontFamily: "var(--font-inter)" }}
                     >
-                      WhatsApp to arrange <ArrowRight size={12} />
+                      {dict.whatsappToArrange} <ArrowRight size={12} />
                     </a>
                   </div>
                 </div>
@@ -323,7 +303,7 @@ export default function ServicesSection() {
               className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#E8742C] mb-3"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              Free while you wait
+              {dict.freeWhileYouWait}
             </p>
             <div className="flex flex-wrap gap-4">
               {addons.map(({ Icon, label }) => (
@@ -343,7 +323,7 @@ export default function ServicesSection() {
             className="inline-flex items-center gap-2 bg-[#E8742C] text-white text-[14px] font-semibold px-6 py-3.5 rounded-lg hover:bg-[#C85E1E] transition-colors"
             style={{ fontFamily: "var(--font-poppins)" }}
           >
-            Book storage now <ArrowRight size={14} />
+            {dict.bookStorageNow} <ArrowRight size={14} />
           </a>
         </div>
       </div>

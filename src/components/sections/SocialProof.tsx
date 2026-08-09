@@ -2,7 +2,10 @@
 
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
+import type { Dictionary } from "@/content/types";
 
+/* Testimonial quotes/names/origins stay English on every locale as
+   authentic customer attribution — see content/en/social.ts's note. */
 const testimonials = [
   {
     quote:
@@ -24,7 +27,7 @@ const testimonials = [
   },
 ];
 
-export default function SocialProof() {
+export default function SocialProof({ dict }: { dict: Dictionary["social"] }) {
   return (
     <section className="w-full bg-white py-16 lg:py-80 border-t border-[#F0F0EC]">
       <div className="max-w-[1280px] mx-auto px-6">
@@ -51,7 +54,7 @@ export default function SocialProof() {
               className="text-[13px] text-[#9CA3AF] hover:text-[#E8742C] transition-colors underline underline-offset-2 decoration-dotted"
               style={{ fontFamily: "var(--font-inter)" }}
             >
-              5.0 on Google ↗
+              {dict.googleRatingLink}
             </a>
           </div>
 
@@ -65,7 +68,7 @@ export default function SocialProof() {
               200+
             </span>
             <p className="text-[13px] text-[#9CA3AF]" style={{ fontFamily: "var(--font-inter)" }}>
-              Travelers & expats served
+              {dict.stats.served}
             </p>
           </div>
 
@@ -79,7 +82,7 @@ export default function SocialProof() {
               20+
             </span>
             <p className="text-[13px] text-[#9CA3AF]" style={{ fontFamily: "var(--font-inter)" }}>
-              Nationalities welcomed
+              {dict.stats.nationalities}
             </p>
           </div>
 
@@ -93,7 +96,7 @@ export default function SocialProof() {
               &lt;3 min
             </span>
             <p className="text-[13px] text-[#9CA3AF]" style={{ fontFamily: "var(--font-inter)" }}>
-              Check-in time
+              {dict.stats.checkIn}
             </p>
           </div>
 
@@ -107,7 +110,7 @@ export default function SocialProof() {
               &lt;2 min
             </span>
             <p className="text-[13px] text-[#9CA3AF]" style={{ fontFamily: "var(--font-inter)" }}>
-              Pick-up time
+              {dict.stats.pickUp}
             </p>
           </div>
         </motion.div>

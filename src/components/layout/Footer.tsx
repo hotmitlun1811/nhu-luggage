@@ -1,22 +1,22 @@
 import Link from "next/link";
 import Image from "next/image";
 import { MapPin, Clock, Phone, Mail } from "lucide-react";
+import type { Dictionary } from "@/content/types";
+import type { AppLocale } from "@/content/locales";
+import LanguageSwitcher from "./LanguageSwitcher";
 
-const links = {
-  Navigate: [
-    { label: "How It Works", href: "#how-it-works" },
-    { label: "Pricing", href: "#pricing" },
-    { label: "Services", href: "#services" },
-    { label: "Location", href: "#location" },
-    { label: "Book Now", href: "/#booking" },
-  ],
-  Legal: [
-    { label: "Privacy Policy", href: "/privacy-policy" },
-    { label: "Terms of Service", href: "/terms-of-service" },
-  ],
-};
+const navigateHrefs = ["#how-it-works", "#pricing", "#services", "#location", "/#booking"];
+const legalHrefs = ["/privacy-policy", "/terms-of-service"];
 
-export default function Footer() {
+export default function Footer({
+  dict,
+  locale,
+  currentPath,
+}: {
+  dict: Dictionary["footer"];
+  locale: AppLocale;
+  currentPath: string;
+}) {
   return (
     <footer className="w-full bg-[#0D1829] text-white pt-14 pb-10">
       <div className="max-w-[1280px] mx-auto px-6">
@@ -28,7 +28,7 @@ export default function Footer() {
             <Link href="/" className="flex items-center mb-5 w-fit">
               <Image
                 src="/logo-final.png"
-                alt="Stow — Luggage Storage Da Nang"
+                alt={dict.logoAlt}
                 width={80}
                 height={80}
                 className="h-[64px] w-auto object-contain"
@@ -39,7 +39,7 @@ export default function Footer() {
               className="text-[14px] text-white/50 leading-relaxed mb-6 max-w-[200px]"
               style={{ fontFamily: "var(--font-inter)" }}
             >
-              Safe, simple luggage and bag storage in Da Nang. By the hour, day, or month. We&apos;re open 7am–10pm, every day.
+              {dict.brandDescription}
             </p>
 
             {/* Social links */}
@@ -80,36 +80,55 @@ export default function Footer() {
           </div>
 
           {/* Link columns */}
-          {Object.entries(links).map(([section, items]) => (
-            <div key={section}>
-              <h4
-                className="text-[12px] font-semibold uppercase tracking-widest text-white/30 mb-4"
-                style={{ fontFamily: "var(--font-poppins)" }}
-              >
-                {section}
-              </h4>
-              <ul className="flex flex-col gap-3">
-                {items.map((item) => (
-                  <li key={item.href}>
-                    <Link
-                      href={item.href}
-                      className="text-[14px] text-white/60 hover:text-white transition-colors"
-                      style={{ fontFamily: "var(--font-inter)" }}
-                    >
-                      {item.label}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
+          <div>
+            <h4
+              className="text-[12px] font-semibold uppercase tracking-widest text-white/30 mb-4"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            >
+              {dict.navigateHeading}
+            </h4>
+            <ul className="flex flex-col gap-3">
+              {dict.navigateLinks.map((label, i) => (
+                <li key={navigateHrefs[i]}>
+                  <Link
+                    href={navigateHrefs[i]}
+                    className="text-[14px] text-white/60 hover:text-white transition-colors"
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+          <div>
+            <h4
+              className="text-[12px] font-semibold uppercase tracking-widest text-white/30 mb-4"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            >
+              {dict.legalHeading}
+            </h4>
+            <ul className="flex flex-col gap-3">
+              {dict.legalLinks.map((label, i) => (
+                <li key={legalHrefs[i]}>
+                  <Link
+                    href={legalHrefs[i]}
+                    className="text-[14px] text-white/60 hover:text-white transition-colors"
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  >
+                    {label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
         </div>
 
         {/* Contact bar */}
         <div className="border-t border-white/10 py-6 flex flex-wrap gap-5 items-center justify-between">
           <div className="flex flex-wrap gap-5 text-[13px] text-white/40" style={{ fontFamily: "var(--font-inter)" }}>
-            <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#E8742C]" /> Da Nang, Vietnam</span>
-            <span className="flex items-center gap-1.5"><Clock size={12} className="text-[#E8742C]" /> Open 7am–10pm daily</span>
+            <span className="flex items-center gap-1.5"><MapPin size={12} className="text-[#E8742C]" /> {dict.contactBar.location}</span>
+            <span className="flex items-center gap-1.5"><Clock size={12} className="text-[#E8742C]" /> {dict.contactBar.hours}</span>
             <a href="https://wa.me/84905955161" className="flex items-center gap-1.5 hover:text-white transition-colors">
               <Phone size={12} className="text-[#E8742C]" /> +84 905 955 161
             </a>
@@ -117,6 +136,7 @@ export default function Footer() {
               <Mail size={12} className="text-[#E8742C]" /> stowdanang@gmail.com
             </a>
           </div>
+          <LanguageSwitcher currentLocale={locale} currentPath={currentPath} variant="footer" />
         </div>
 
         {/* Bottom bar */}
@@ -125,13 +145,13 @@ export default function Footer() {
             className="text-[13px] text-white/25"
             style={{ fontFamily: "var(--font-inter)" }}
           >
-            © 2026 Stow — Luggage Storage Da Nang. All rights reserved.
+            {dict.copyright}
           </p>
           <p
             className="text-[12px] text-white/20 italic"
             style={{ fontFamily: "var(--font-inter)" }}
           >
-            Drop off. Tag on. Go free.
+            {dict.tagline}
           </p>
         </div>
       </div>

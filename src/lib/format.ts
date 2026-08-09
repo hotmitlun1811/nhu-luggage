@@ -43,3 +43,14 @@ export function formatLongDate(dateStr: string, locale: AppLocale = "en"): strin
     year: "numeric",
   });
 }
+
+/**
+ * Picks the singular or plural form of a dictionary-provided word pair
+ * based on count — English has real singular/plural ("1 hour" / "2
+ * hours"); Korean/Chinese don't pluralize nouns this way, so their
+ * dictionary entries just set `singular === plural` and this becomes a
+ * no-op for them. No i18n library needed for a distinction this small.
+ */
+export function pluralizeWord(count: number, word: { singular: string; plural: string }): string {
+  return count > 1 ? word.plural : word.singular;
+}

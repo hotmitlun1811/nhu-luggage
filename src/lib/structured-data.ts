@@ -25,20 +25,25 @@
  * Facebook URLs here as soon as those exist too; each one strengthens
  * entity resolution for AI answer engines.
  *
- * FAQPage — added 2026-08-09 once real visible Q&A copy shipped
- * (FAQSection.tsx, content approved by the owner). Built from
- * `faqGroups` in faq-data.ts — same array the component renders, so
- * this can never drift from what's actually visible on the page.
- * Google's own rich result for this is dead (killed May 2026) but the
- * kit's MUST checklist condition — schema only paired with a real
- * visible body — is met, and AI answer engines still parse it.
- *
- * Not shipped here (see backlog in the research writeup — needs real
- * data, not code): AggregateRating (needs real review counts from the
- * GBP dashboard).
+ * i18n (Phase 1, 2026-08-09) — split by what each field IS, per the i18n
+ * plan's decision #7:
+ *   - Identity/facts (@id, address, geo, telephone, sameAs, price) stay
+ *     IDENTICAL across every locale. It's one business, not three —
+ *     forking @id per locale would fragment the entity signal this graph
+ *     exists to build.
+ *   - description text and FAQPage content are locale-parameterized,
+ *     read from the resolved Dictionary passed in by the caller (never
+ *     fetched here — this module has no async/locale-loading of its own,
+ *     matching the "pass a resolved dict down" pattern used by every
+ *     component in this build).
+ *   - faqPageJsonLd only emits a mainEntity for locales that actually
+ *     have translated FAQ content — Google's own policy requires
+ *     structured data to be a true representation of page content, and
+ *     an /ko page not yet reviewed by a native speaker (still `noindex`)
+ *     has nothing here to represent yet regardless.
  */
 
-import { faqGroups } from "./faq-data";
+import type { Dictionary } from "@/content/types";
 
 const BASE_URL = "https://www.stowdanang.com";
 const BUSINESS_ID = `${BASE_URL}/#business`;
@@ -55,7 +60,7 @@ type StorageOffer = {
    drifted: this used to say "Standard"/500,000₫/3 months, copied from a stale
    memory note instead of the actual component, which has said "Strand" and
    1,000,000₫/4 months since 2026-08-08, commit 2485a68 — a day before this
-   schema was even written.) */
+   schema was even written.) Locale-invariant — prices don't change by language. */
 const STORAGE_PLANS: StorageOffer[] = [
   { name: "Hourly", price: 15000, unitText: "per hour, 1-hour minimum" },
   { name: "Daily", price: 60000, unitText: "per day, up to 24 hours" },
@@ -64,95 +69,96 @@ const STORAGE_PLANS: StorageOffer[] = [
   { name: "Flat — Long Stay", price: 1000000, unitText: "flat rate, up to 4 months" },
 ];
 
-const localBusiness = {
-  "@type": "LocalBusiness",
-  "@id": BUSINESS_ID,
-  name: "Stow — Luggage Storage Da Nang",
-  alternateName: "Stow Da Nang",
-  description:
-    "Safe, simple luggage storage in Da Nang, Vietnam. Hourly and daily plans for tourists, flat-rate weekly and monthly plans for expats and visa runners. CCTV monitored, open 7am–10pm every day.",
-  url: BASE_URL,
-  logo: `${BASE_URL}/logo-final.png`,
-  /* Was `${BASE_URL}/opengraph-image` — broke during the i18n route-group
-     restructure: Next.js appends a disambiguation hash to the served path
-     for opengraph-image.tsx files nested inside a route group (verified:
-     it now serves at /opengraph-image-<hash>, not the clean path), so the
-     hardcoded URL here started 404ing. Pointing at the stable logo file
-     instead — a real storefront/interior photo would be a better long-term
-     value here once one exists (already on the local-SEO audit's shot list). */
-  image: `${BASE_URL}/logo-final.png`,
-  telephone: "+84905955161",
-  email: "stowdanang@gmail.com",
-  priceRange: "15.000₫–1.000.000₫",
-  address: {
-    "@type": "PostalAddress",
-    streetAddress: "55 Bà Bang Nhãn",
-    addressLocality: "Ngũ Hành Sơn",
-    addressRegion: "Đà Nẵng",
-    postalCode: "550000",
-    addressCountry: "VN",
-  },
-  geo: {
-    "@type": "GeoCoordinates",
-    latitude: 16.009581,
-    longitude: 108.254455,
-  },
-  openingHoursSpecification: {
-    "@type": "OpeningHoursSpecification",
-    dayOfWeek: [
-      "Monday",
-      "Tuesday",
-      "Wednesday",
-      "Thursday",
-      "Friday",
-      "Saturday",
-      "Sunday",
+/** The one entity — identical on every locale page it appears on. */
+export function localBusinessJsonLd(dict: Dictionary) {
+  const localBusiness = {
+    "@type": "LocalBusiness",
+    "@id": BUSINESS_ID,
+    name: "Stow — Luggage Storage Da Nang",
+    alternateName: "Stow Da Nang",
+    description: dict.meta.businessDescription,
+    url: BASE_URL,
+    logo: `${BASE_URL}/logo-final.png`,
+    /* Was `${BASE_URL}/opengraph-image` — broke during the i18n route-group
+       restructure: Next.js appends a disambiguation hash to the served path
+       for opengraph-image.tsx files nested inside a route group (verified:
+       it now serves at /opengraph-image-<hash>, not the clean path), so the
+       hardcoded URL here started 404ing. Pointing at the stable logo file
+       instead — a real storefront/interior photo would be a better long-term
+       value here once one exists (already on the local-SEO audit's shot list). */
+    image: `${BASE_URL}/logo-final.png`,
+    telephone: "+84905955161",
+    email: "stowdanang@gmail.com",
+    priceRange: "15.000₫–1.000.000₫",
+    address: {
+      "@type": "PostalAddress",
+      streetAddress: "55 Bà Bang Nhãn",
+      addressLocality: "Ngũ Hành Sơn",
+      addressRegion: "Đà Nẵng",
+      postalCode: "550000",
+      addressCountry: "VN",
+    },
+    geo: {
+      "@type": "GeoCoordinates",
+      latitude: 16.009581,
+      longitude: 108.254455,
+    },
+    openingHoursSpecification: {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: [
+        "Monday",
+        "Tuesday",
+        "Wednesday",
+        "Thursday",
+        "Friday",
+        "Saturday",
+        "Sunday",
+      ],
+      opens: "07:00",
+      closes: "22:00",
+    },
+    areaServed: {
+      "@type": "City",
+      name: "Da Nang",
+    },
+    sameAs: [
+      "https://www.instagram.com/stowdanang/",
+      "https://share.google/4fTTPlY1pwqbLAvmB",
     ],
-    opens: "07:00",
-    closes: "22:00",
-  },
-  areaServed: {
-    "@type": "City",
-    name: "Da Nang",
-  },
-  sameAs: [
-    "https://www.instagram.com/stowdanang/",
-    "https://share.google/4fTTPlY1pwqbLAvmB",
-  ],
-};
+  };
 
-const luggageStorageService = {
-  "@type": "Service",
-  "@id": SERVICE_ID,
-  name: "Luggage Storage Service",
-  serviceType: "Luggage storage",
-  description:
-    "Two pricing lanes: pay-per-time (hourly/daily) for tourists and day-trippers, flat-rate (weekly/monthly/long-stay) for expats and visa runners. +30,000₫ oversized-item surcharge on hourly/daily plans, +50,000₫ on flat plans.",
-  provider: { "@id": BUSINESS_ID },
-  areaServed: {
-    "@type": "City",
-    name: "Da Nang",
-  },
-  hasOfferCatalog: {
-    "@type": "OfferCatalog",
-    name: "Storage Plans",
-    itemListElement: STORAGE_PLANS.map((plan) => ({
-      "@type": "Offer",
-      name: plan.name,
-      priceSpecification: {
-        "@type": "UnitPriceSpecification",
-        priceCurrency: "VND",
-        price: plan.price,
-        unitText: plan.unitText,
-      },
-    })),
-  },
-};
+  const luggageStorageService = {
+    "@type": "Service",
+    "@id": SERVICE_ID,
+    name: "Luggage Storage Service",
+    serviceType: "Luggage storage",
+    description: dict.meta.serviceDescription,
+    provider: { "@id": BUSINESS_ID },
+    areaServed: {
+      "@type": "City",
+      name: "Da Nang",
+    },
+    hasOfferCatalog: {
+      "@type": "OfferCatalog",
+      name: "Storage Plans",
+      itemListElement: STORAGE_PLANS.map((plan) => ({
+        "@type": "Offer",
+        name: plan.name,
+        priceSpecification: {
+          "@type": "UnitPriceSpecification",
+          priceCurrency: "VND",
+          price: plan.price,
+          unitText: plan.unitText,
+        },
+      })),
+    },
+  };
 
-export const localBusinessJsonLd = {
-  "@context": "https://schema.org",
-  "@graph": [localBusiness, luggageStorageService],
-} as const;
+  return {
+    "@context": "https://schema.org",
+    "@graph": [localBusiness, luggageStorageService],
+  } as const;
+}
 
 /** Per-page BreadcrumbList for the sub-pages — cheap, correct, no content risk. */
 export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
@@ -168,20 +174,22 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
   } as const;
 }
 
-/** Homepage FAQPage — flattens faq-data.ts's grouped Q&A into schema.org's
+/** Homepage FAQPage — flattens the dictionary's grouped Q&A into schema.org's
  *  flat mainEntity list. Grouping is a visual/scannability affordance in
  *  FAQSection.tsx; schema.org's FAQPage has no concept of it. */
-export const faqPageJsonLd = {
-  "@context": "https://schema.org",
-  "@type": "FAQPage",
-  mainEntity: faqGroups.flatMap((group) =>
-    group.items.map((item) => ({
-      "@type": "Question",
-      name: item.q,
-      acceptedAnswer: {
-        "@type": "Answer",
-        text: item.a,
-      },
-    }))
-  ),
-} as const;
+export function faqPageJsonLd(dict: Dictionary) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: dict.faq.groups.flatMap((group) =>
+      group.items.map((item) => ({
+        "@type": "Question",
+        name: item.q,
+        acceptedAnswer: {
+          "@type": "Answer",
+          text: item.a,
+        },
+      }))
+    ),
+  } as const;
+}

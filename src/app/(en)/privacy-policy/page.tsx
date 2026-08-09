@@ -4,6 +4,7 @@ import Footer from "@/components/layout/Footer";
 import PrivacyPolicyContent from "@/components/legal/PrivacyPolicyContent";
 import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
+import { getDictionary } from "@/content/dictionary";
 
 /* Short title — the root layout's title.template ("%s | Stow Da Nang")
    appends the brand suffix automatically; this used to already include
@@ -48,14 +49,16 @@ const toc = [
   { href: "#contact-priv", label: "11. Contact" },
 ];
 
-export default function PrivacyPage() {
+export default async function PrivacyPage() {
+  const dict = await getDictionary("en");
+
   return (
     <main>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
-      <PrimaryNav />
+      <PrimaryNav dict={dict.nav} locale="en" currentPath="/privacy-policy" />
 
       <div className="bg-[#16243F]" style={{ paddingTop: "72px" }}>
         <div className="max-w-[1280px] mx-auto px-6" style={{ paddingTop: "56px", paddingBottom: "56px" }}>
@@ -137,7 +140,7 @@ export default function PrivacyPage() {
         </div>
       </div>
 
-      <Footer />
+      <Footer dict={dict.footer} locale="en" currentPath="/privacy-policy" />
     </main>
   );
 }

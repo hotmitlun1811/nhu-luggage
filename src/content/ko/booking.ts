@@ -1,0 +1,85 @@
+export const booking = {
+  planNames: {
+    hourly: "시간제",
+    daily: "일일 요금제",
+    mini: "미니",
+    strand: "스트랜드",
+    longstay: "장기 보관",
+  },
+  planDurations: {
+    hourly: "최소 1시간",
+    daily: "최대 24시간",
+    mini: "최대 1주일",
+    strand: "최대 1개월",
+    longstay: "최대 4개월",
+  },
+  planTopBadge: "TOP",
+
+  laneLabel: "유형",
+  laneFlexible: "자유 요금제",
+  laneFlatRate: "고정 요금제",
+  laneFlexibleSub: "관광객 및 워크인 고객용",
+  laneFlatRateSub: "주재원 및 디지털 노마드용",
+
+  planLabel: "요금제",
+  laptopNotice: "자유 요금제에서는 노트북 및 전자기기도 보관 가능합니다.",
+
+  dropOffDateLabel: "맡기는 날짜",
+  dropOffLabel: "맡기는 날",
+  timeLabel: "시간",
+  selectPlaceholder: "선택…",
+  pickupTimeLabel: "픽업 시간",
+  pickupDateLabel: "픽업 날짜",
+  bagsLabel: "가방 수",
+  bagsHelp: "가방 수 = 보관 물품 개수 (인원 수 아님)",
+  bringAtLabel: "맡기는 시간",
+  pickupLabel: "픽업",
+
+  /* Korean doesn't pluralize nouns — singular and plural are the same word. */
+  hourUnit: { singular: "시간", plural: "시간" },
+  dayUnit: { singular: "일", plural: "일" },
+  bagUnit: { singular: "개", plural: "개" },
+
+  nameLabel: "이름",
+  namePlaceholder: "성함을 입력하세요",
+  whatsappLabel: "WhatsApp",
+  whatsappPlaceholder: "+84 또는 현지 번호",
+  emailLabel: "이메일",
+  emailPlaceholder: "you@example.com",
+
+  bagsInlineHelp: "보관 물품 수 (인원 아님)",
+  oversizedLabel: "초과 크기?",
+  oversizedHelpPrefix: "28인치 이상, 자전거, 서프보드 · +",
+
+  totalFlatFee: "총액 (고정 요금)",
+  totalPrefix: "총액 (",
+  totalSuffix: ")",
+
+  consentAgreedText: "이용약관 및 개인정보처리방침에 동의함",
+  changeLabel: "변경",
+  consentPromptPre: "스토우의 ",
+  consentPromptTos: "이용약관",
+  consentPromptAnd: " 및 ",
+  consentPromptPrivacy: "개인정보처리방침",
+  consentPromptPost: "을 확인하고 동의해야 계속할 수 있습니다",
+  consentErrorText: "계속하려면 확인 후 동의해 주세요",
+
+  submitLoading: "WhatsApp 여는 중…",
+  submitIdle: "WhatsApp으로 예약 확정",
+
+  successTitle: "요청이 전송되었습니다!",
+  successSubtitle: "예약 정보가 WhatsApp에 전달되었습니다.",
+  successReplyTime: "15분 이내에 답변드립니다.",
+  successRefPrefix: "예약번호: ",
+  policyEmailLabel: "약관 동의 확인 이메일",
+  emailSendingPrefix: "전송 중: ",
+  emailSentPrefix: "전송 완료: ",
+  emailFailedFallback: "전송 실패",
+  emailWillSendPrefix: "전송 예정: ",
+  retryLabel: "다시 시도",
+  backToHome: "홈으로 돌아가기",
+  bookAgain: "다시 예약하기",
+
+  required: "필수 입력",
+  invalidEmail: "올바르지 않은 이메일",
+} as const;

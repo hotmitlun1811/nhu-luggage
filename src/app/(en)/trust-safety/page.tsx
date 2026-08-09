@@ -5,6 +5,7 @@ import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import PrimaryNav from "@/components/layout/PrimaryNav";
 import Footer from "@/components/layout/Footer";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
+import { getDictionary } from "@/content/dictionary";
 
 /* Two titles on purpose: the root layout's title.template ("%s | Stow Da Nang")
    appends the brand suffix to `metadata.title` automatically, so that one
@@ -63,15 +64,17 @@ const security = [
   { Icon: Users,       text: "Authorized staff only — identity verified at pick-up" },
 ];
 
-export default function TrustSafetyPage() {
+export default async function TrustSafetyPage() {
+  const dict = await getDictionary("en");
+
   return (
     <main>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
-      <AnnouncementBar />
-      <PrimaryNav />
+      <AnnouncementBar dict={dict.announcement} />
+      <PrimaryNav dict={dict.nav} locale="en" currentPath="/trust-safety" />
 
       {/* Page header */}
       <div className="bg-[#16243F] py-40 lg:py-64">
@@ -333,7 +336,7 @@ export default function TrustSafetyPage() {
         </div>
       </div>
 
-      <Footer />
+      <Footer dict={dict.footer} locale="en" currentPath="/trust-safety" />
     </main>
   );
 }

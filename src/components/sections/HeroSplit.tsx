@@ -3,9 +3,18 @@
 import { MapPin, Clock, MessageCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import HeroBookingForm from "@/components/booking/HeroBookingForm";
+import type { Dictionary } from "@/content/types";
+import type { AppLocale } from "@/content/locales";
 
-
-export default function HeroSplit() {
+export default function HeroSplit({
+  dict,
+  bookingDict,
+  locale,
+}: {
+  dict: Dictionary["hero"];
+  bookingDict: Dictionary["booking"];
+  locale: AppLocale;
+}) {
   return (
     <section
       id="booking"
@@ -61,7 +70,7 @@ export default function HeroSplit() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5, delay: 0.05, ease: "easeOut" }}
             >
-              Luggage Storage&nbsp;·&nbsp;Da&nbsp;Nang
+              {dict.tagline}
             </motion.p>
 
             {/* Headline */}
@@ -77,9 +86,9 @@ export default function HeroSplit() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6, delay: 0.12, ease: "easeOut" }}
             >
-              Drop your bags.{" "}
-              <span className="text-[#E8742C]">Explore Da&nbsp;Nang</span>{" "}
-              freely.
+              {dict.headlinePre}
+              {dict.headlineHighlight && <span className="text-[#E8742C]">{dict.headlineHighlight}</span>}
+              {dict.headlinePost}
             </motion.h1>
 
             {/* Sub-copy */}
@@ -93,7 +102,7 @@ export default function HeroSplit() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.55, delay: 0.2, ease: "easeOut" }}
             >
-              Fixed flat rates for expats, remote workers, and visa runners storing by the week or month. Hourly and daily plans for tourists and day-trippers. Drop off in under 3 minutes.
+              {dict.subcopy}
             </motion.p>
 
             {/* Contact info */}
@@ -112,15 +121,15 @@ export default function HeroSplit() {
               >
                 <MessageCircle size={13} className="text-[#25D366] flex-shrink-0" />
                 <span>+84 905 955 161</span>
-                <span className="text-white/30 text-[12px]">WhatsApp · Zalo</span>
+                <span className="text-white/30 text-[12px]">{dict.whatsappZalo}</span>
               </a>
               <div className="flex items-center gap-2 text-[13px] text-white/65">
                 <Clock size={13} className="text-[#E8742C] flex-shrink-0" />
-                <span>7am to 10pm, every day</span>
+                <span>{dict.hoursLine}</span>
               </div>
               <div className="flex items-start gap-2 text-[13px] text-white/65">
                 <MapPin size={13} className="text-[#E8742C] flex-shrink-0 mt-0.5" />
-                <span>55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng</span>
+                <span>{dict.address}</span>
               </div>
             </motion.div>
           </div>
@@ -141,19 +150,19 @@ export default function HeroSplit() {
                   className="text-[11px] text-white/50 uppercase tracking-[0.1em] font-semibold"
                   style={{ fontFamily: "var(--font-poppins)" }}
                 >
-                  Open · 7am–10pm daily
+                  {dict.bookingPanel.openStatus}
                 </span>
               </div>
               <span
                 className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#E8742C]"
                 style={{ fontFamily: "var(--font-poppins)" }}
               >
-                Book now
+                {dict.bookingPanel.bookNow}
               </span>
             </div>
 
             {/* Booking form */}
-            <HeroBookingForm />
+            <HeroBookingForm dict={bookingDict} locale={locale} />
           </motion.div>
 
         </div>

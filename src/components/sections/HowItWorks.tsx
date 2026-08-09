@@ -2,35 +2,9 @@
 
 import { motion } from "framer-motion";
 import { UserCheck } from "lucide-react";
+import type { Dictionary } from "@/content/types";
 
-const steps = [
-  {
-    number: "01",
-    title: "Book Online",
-    description:
-      "Pick what fits your trip — a few hours or a few months. Confirm via WhatsApp and we'll be ready when you walk in.",
-  },
-  {
-    number: "02",
-    title: "Drop Off",
-    description:
-      "Walk in, show your confirmation. We photograph your bag, attach a unique ID tag, and you're out in under 3 minutes.",
-  },
-  {
-    number: "03",
-    title: "Go Explore",
-    description:
-      "Your bags are safe with us. Hit My Khe Beach, grab coffee at Han Market, or ride out to the Marble Mountains.",
-  },
-  {
-    number: "04",
-    title: "Pick Up",
-    description:
-      "Come back whenever you're ready. Show your tag and your bag is back in under 2 minutes.",
-  },
-];
-
-export default function HowItWorks() {
+export default function HowItWorks({ dict }: { dict: Dictionary["howItWorks"] }) {
   return (
     <section id="how-it-works" className="w-full bg-[#F4F4F0] py-16 lg:py-80">
       <div className="max-w-[1280px] mx-auto px-6">
@@ -48,7 +22,7 @@ export default function HowItWorks() {
               className="text-[11px] font-bold uppercase tracking-[0.18em] text-[#E8742C] mb-4"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              How It Works
+              {dict.label}
             </p>
             <h2
               className="text-[#0D1829] font-bold leading-[1.06] mb-5"
@@ -58,13 +32,18 @@ export default function HowItWorks() {
                 letterSpacing: "-0.03em",
               }}
             >
-              Drop off.<br />Explore.<br />Come back.
+              {dict.headlineLines.map((line, i) => (
+                <span key={line}>
+                  {line}
+                  {i < dict.headlineLines.length - 1 && <br />}
+                </span>
+              ))}
             </h2>
             <p
               className="text-[14px] text-[#6B7280] leading-relaxed max-w-[240px]"
               style={{ fontFamily: "var(--font-inter)" }}
             >
-              Four steps. Under 3 minutes in, under 2 minutes out.
+              {dict.subhead}
             </p>
           </motion.div>
 
@@ -76,16 +55,16 @@ export default function HowItWorks() {
             transition={{ duration: 0.5, delay: 0.08, ease: "easeOut" }}
           >
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-12">
-              {steps.map((step) => (
+              {dict.steps.map((step, i) => (
                 <div
-                  key={step.number}
+                  key={step.title}
                   className="border-t border-[#E2E2DE] pt-6 pb-7 sm:pb-10"
                 >
                   <p
                     className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#E8742C] mb-3"
                     style={{ fontFamily: "var(--font-poppins)" }}
                   >
-                    {step.number}
+                    {String(i + 1).padStart(2, "0")}
                   </p>
                   <h3
                     className="text-[15px] font-bold text-[#0D1829] mb-2"
@@ -110,8 +89,8 @@ export default function HowItWorks() {
                 className="text-[13.5px] text-[#6B7280] leading-relaxed"
                 style={{ fontFamily: "var(--font-inter)" }}
               >
-                <span className="font-semibold text-[#16243F]">Walk-ins always welcome.</span>{" "}
-                No booking needed — just come in and tell us what you need.
+                <span className="font-semibold text-[#16243F]">{dict.walkInTitle}</span>{" "}
+                {dict.walkInBody}
               </p>
             </div>
           </motion.div>

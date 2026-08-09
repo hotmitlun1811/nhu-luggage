@@ -124,3 +124,36 @@ html {
     color: var(--color-navy);
   }
 }
+
+/* ─── i18n — CJK typography (i18n plan decision #9) ───
+   next/font's Latin subsets (globals used by every layout) don't cover
+   Korean/Chinese glyphs — text under the Poppins/Inter variable names
+   would silently fall back to an unstyled OS default. Redefining the
+   same custom properties per :lang() fixes it with zero extra bytes: a
+   system CJK stack, not a webfont download. (Google's Noto Sans SC ships
+   sliced across ~100 unicode-range files via next/font — too heavy for
+   what this is.) `<html lang="ko">` is set by src/app/(intl)/[lang]/layout.tsx,
+   so this cascades to the whole page automatically. */
+:lang(ko) {
+  --font-poppins: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  --font-inter: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+  word-break: keep-all; /* prevents ugly mid-word line breaks in Korean headlines */
+}
+
+:lang(zh) {
+  --font-poppins: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  --font-inter: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+}
+
+/* uppercase + wide letter-spacing (used throughout as eyebrow/badge
+   labels, e.g. `uppercase tracking-[0.18em]`) are no-ops or visually
+   broken on CJK script — neutralize both utilities site-wide under a
+   CJK locale rather than editing every component that uses them. */
+:lang(ko) .uppercase,
+:lang(zh) .uppercase {
+  text-transform: none;
+}
+:lang(ko) [class*="tracking-"],
+:lang(zh) [class*="tracking-"] {
+  letter-spacing: 0;
+}

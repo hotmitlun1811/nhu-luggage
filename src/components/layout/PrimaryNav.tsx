@@ -4,16 +4,19 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { Menu, X } from "lucide-react";
+import type { Dictionary } from "@/content/types";
+import type { AppLocale } from "@/content/locales";
+import LanguageSwitcher from "./LanguageSwitcher";
 
-const navLinks = [
-  { label: "How It Works", href: "#how-it-works" },
-  { label: "Services",     href: "#services" },
-  { label: "Pricing",      href: "#pricing" },
-  { label: "What We Store", href: "#trust-safety" },
-  { label: "Location",     href: "#location" },
-];
-
-export default function PrimaryNav() {
+export default function PrimaryNav({
+  dict,
+  locale,
+  currentPath,
+}: {
+  dict: Dictionary["nav"];
+  locale: AppLocale;
+  currentPath: string;
+}) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
 
@@ -55,7 +58,7 @@ export default function PrimaryNav() {
         <Link href="/" className="flex-shrink-0 flex items-center">
           <Image
             src="/logo-final.png"
-            alt="Stow — Luggage Storage Da Nang"
+            alt={dict.logoAlt}
             width={180}
             height={68}
             className="h-[64px] w-auto object-contain"
@@ -65,7 +68,7 @@ export default function PrimaryNav() {
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-2 flex-1">
-          {navLinks.map((link) => (
+          {dict.links.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -84,6 +87,10 @@ export default function PrimaryNav() {
 
         {/* Right actions */}
         <div className="ml-auto flex items-center gap-5">
+          <div className="hidden lg:block">
+            <LanguageSwitcher currentLocale={locale} currentPath={currentPath} variant="nav" />
+          </div>
+
           <a
             href="https://wa.me/84905955161"
             target="_blank"
@@ -99,7 +106,7 @@ export default function PrimaryNav() {
               <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
               <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.549 4.107 1.51 5.843L.057 23.547a.75.75 0 00.914.914l5.703-1.453A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.907 0-3.698-.487-5.254-1.341l-.375-.212-3.888.99.99-3.89-.213-.374A9.952 9.952 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
             </svg>
-            Chat with us
+            {dict.chatWithUs}
           </a>
 
           <a
@@ -108,7 +115,7 @@ export default function PrimaryNav() {
             className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[12px] font-bold px-6 py-2.5 rounded-[4px] hover:bg-[#C85E1E] transition-colors whitespace-nowrap tracking-[0.07em] uppercase"
             style={{ fontFamily: "var(--font-poppins)" }}
           >
-            Book Now
+            {dict.bookNow}
           </a>
 
           <button
@@ -118,7 +125,7 @@ export default function PrimaryNav() {
                 : "text-white hover:bg-white/10"
             }`}
             onClick={() => setMenuOpen(!menuOpen)}
-            aria-label={menuOpen ? "Close menu" : "Open menu"}
+            aria-label={menuOpen ? dict.closeMenu : dict.openMenu}
           >
             {menuOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
@@ -128,7 +135,8 @@ export default function PrimaryNav() {
       {/* Mobile drawer */}
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-[#EAEAE6] px-6 py-6 flex flex-col gap-5">
-          {navLinks.map((link) => (
+          <LanguageSwitcher currentLocale={locale} currentPath={currentPath} variant="nav" />
+          {dict.links.map((link) => (
             <a
               key={link.href}
               href={link.href}
@@ -151,7 +159,7 @@ export default function PrimaryNav() {
                 <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z" />
                 <path d="M12 0C5.373 0 0 5.373 0 12c0 2.117.549 4.107 1.51 5.843L.057 23.547a.75.75 0 00.914.914l5.703-1.453A11.94 11.94 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.907 0-3.698-.487-5.254-1.341l-.375-.212-3.888.99.99-3.89-.213-.374A9.952 9.952 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z" />
               </svg>
-              Chat with us
+              {dict.chatWithUs}
             </a>
             <a
               href="#booking"
@@ -159,7 +167,7 @@ export default function PrimaryNav() {
               className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[15px] font-semibold px-5 py-3 rounded-lg hover:bg-[#C85E1E] transition-colors"
               style={{ fontFamily: "var(--font-poppins)" }}
             >
-              Book Now
+              {dict.bookNow}
             </a>
           </div>
         </div>

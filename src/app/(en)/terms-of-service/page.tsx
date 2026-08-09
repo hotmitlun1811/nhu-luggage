@@ -4,6 +4,7 @@ import Footer from "@/components/layout/Footer";
 import TermsOfServiceContent from "@/components/legal/TermsOfServiceContent";
 import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
+import { getDictionary } from "@/content/dictionary";
 
 /* Short title — the root layout's title.template ("%s | Stow Da Nang")
    appends the brand suffix automatically; this used to already include
@@ -50,14 +51,16 @@ const toc = [
   { href: "#contact-terms", label: "13. Contact" },
 ];
 
-export default function TermsPage() {
+export default async function TermsPage() {
+  const dict = await getDictionary("en");
+
   return (
     <main>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
       />
-      <PrimaryNav />
+      <PrimaryNav dict={dict.nav} locale="en" currentPath="/terms-of-service" />
 
       <div className="bg-[#16243F]" style={{ paddingTop: "72px" }}>
         <div className="max-w-[1280px] mx-auto px-6" style={{ paddingTop: "56px", paddingBottom: "56px" }}>
@@ -139,7 +142,7 @@ export default function TermsPage() {
         </div>
       </div>
 
-      <Footer />
+      <Footer dict={dict.footer} locale="en" currentPath="/terms-of-service" />
     </main>
   );
 }

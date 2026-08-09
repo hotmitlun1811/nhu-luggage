@@ -20,8 +20,11 @@ export type Lane = "flexible" | "flatrate";
 export type PlanKey = "hourly" | "daily" | "mini" | "strand" | "longstay";
 
 export type PlanFacts = {
-  /** Stable English name — Lark payloads and WhatsApp messages only. Never shown to customers directly; UI uses the locale dictionary's display name instead. */
+  /** Stable English name/duration — Lark payloads and WhatsApp messages
+   *  only. Never shown to customers directly; UI uses the locale
+   *  dictionary's display name/duration instead. */
   canonicalName: string;
+  canonicalDuration: string;
   price: number;
   unit: "/ hr" | "/ day" | "flat";
   lane: Lane;
@@ -31,11 +34,11 @@ export type PlanFacts = {
 };
 
 export const PLAN_FACTS: Record<PlanKey, PlanFacts> = {
-  hourly:   { canonicalName: "By the Hour", price: 15000,   unit: "/ hr",  lane: "flexible", oversizeSurcharge: 30000 },
-  daily:    { canonicalName: "By the Day",  price: 60000,   unit: "/ day", lane: "flexible", oversizeSurcharge: 30000, popular: true },
-  mini:     { canonicalName: "Mini",        price: 150000,  unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
-  strand:   { canonicalName: "Strand",      price: 300000,  unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
-  longstay: { canonicalName: "Long Stay",   price: 1000000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 120 },
+  hourly:   { canonicalName: "By the Hour", canonicalDuration: "Min 1 hr",       price: 15000,   unit: "/ hr",  lane: "flexible", oversizeSurcharge: 30000 },
+  daily:    { canonicalName: "By the Day",  canonicalDuration: "Up to 24 hrs",   price: 60000,   unit: "/ day", lane: "flexible", oversizeSurcharge: 30000, popular: true },
+  mini:     { canonicalName: "Mini",        canonicalDuration: "Up to 1 week",   price: 150000,  unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
+  strand:   { canonicalName: "Strand",      canonicalDuration: "Up to 1 month",  price: 300000,  unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
+  longstay: { canonicalName: "Long Stay",   canonicalDuration: "Up to 4 months", price: 1000000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 120 },
 };
 
 export const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
