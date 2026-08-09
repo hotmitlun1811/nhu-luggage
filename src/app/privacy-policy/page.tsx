@@ -5,7 +5,13 @@ import PrivacyPolicyContent from "@/components/legal/PrivacyPolicyContent";
 import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 
-const pageTitle = "Privacy Policy — Stow Da Nang";
+/* Short title — the root layout's title.template ("%s | Stow Da Nang")
+   appends the brand suffix automatically; this used to already include
+   "Stow Da Nang" itself, doubling it on the rendered <title> tag. Social
+   titles keep the fuller string since og:title/twitter:title don't go
+   through that template. */
+const pageTitle = "Privacy Policy";
+const socialTitle = "Privacy Policy — Stow Da Nang";
 const pageDescription = "How Stow Da Nang collects, uses, and protects your personal information.";
 
 export const metadata: Metadata = {
@@ -13,12 +19,12 @@ export const metadata: Metadata = {
   description: pageDescription,
   alternates: { canonical: "/privacy-policy" },
   openGraph: {
-    title: pageTitle,
+    title: socialTitle,
     description: pageDescription,
     url: "https://www.stowdanang.com/privacy-policy",
   },
   twitter: {
-    title: pageTitle,
+    title: socialTitle,
     description: pageDescription,
   },
 };

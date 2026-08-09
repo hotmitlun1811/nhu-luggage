@@ -5,7 +5,13 @@ import TermsOfServiceContent from "@/components/legal/TermsOfServiceContent";
 import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 
-const pageTitle = "Terms of Service — Stow Da Nang";
+/* Short title — the root layout's title.template ("%s | Stow Da Nang")
+   appends the brand suffix automatically; this used to already include
+   "Stow Da Nang" itself, doubling it on the rendered <title> tag. Social
+   titles keep the fuller string since og:title/twitter:title don't go
+   through that template. */
+const pageTitle = "Terms of Service";
+const socialTitle = "Terms of Service — Stow Da Nang";
 const pageDescription = "Terms of Service for Stow luggage storage in Da Nang, Vietnam. Read before you book.";
 
 export const metadata: Metadata = {
@@ -13,12 +19,12 @@ export const metadata: Metadata = {
   description: pageDescription,
   alternates: { canonical: "/terms-of-service" },
   openGraph: {
-    title: pageTitle,
+    title: socialTitle,
     description: pageDescription,
     url: "https://www.stowdanang.com/terms-of-service",
   },
   twitter: {
-    title: pageTitle,
+    title: socialTitle,
     description: pageDescription,
   },
 };

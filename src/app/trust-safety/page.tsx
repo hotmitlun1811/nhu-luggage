@@ -6,7 +6,14 @@ import PrimaryNav from "@/components/layout/PrimaryNav";
 import Footer from "@/components/layout/Footer";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 
-const pageTitle = "Safe & Trustworthy Luggage Storage in Da Nang | Stow";
+/* Two titles on purpose: the root layout's title.template ("%s | Stow Da Nang")
+   appends the brand suffix to `metadata.title` automatically, so that one
+   stays short — the layout was doubling it into "...| Stow | Stow Da Nang"
+   on the rendered <title> tag. og:title/twitter:title aren't run through
+   that template (they're separate fields), so they keep the fuller string —
+   a social card has no tab-title context to borrow brand from. */
+const pageTitle = "Safe & Trustworthy Luggage Storage in Da Nang";
+const socialTitle = "Safe & Trustworthy Luggage Storage in Da Nang | Stow";
 const pageDescription =
   "How Stow keeps luggage storage in Da Nang safe and trustworthy: unique ID tags, CCTV, photo receipts at drop-off, and what we can and cannot store.";
 
@@ -15,12 +22,12 @@ export const metadata: Metadata = {
   description: pageDescription,
   alternates: { canonical: "/trust-safety" },
   openGraph: {
-    title: pageTitle,
+    title: socialTitle,
     description: pageDescription,
     url: "https://www.stowdanang.com/trust-safety",
   },
   twitter: {
-    title: pageTitle,
+    title: socialTitle,
     description: pageDescription,
   },
 };
