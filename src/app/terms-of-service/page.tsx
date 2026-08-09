@@ -7,6 +7,7 @@ import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
 export const metadata: Metadata = {
   title: "Terms of Service — Stow Da Nang",
   description: "Terms of Service for Stow luggage storage in Da Nang, Vietnam. Read before you book.",
+  alternates: { canonical: "/terms-of-service" },
 };
 
 const toc = [

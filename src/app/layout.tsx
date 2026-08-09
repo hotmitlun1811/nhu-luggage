@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Poppins, Geist_Mono, Playfair_Display } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { localBusinessJsonLd } from "@/lib/structured-data";
 import "./globals.css";
 
 const inter = Inter({
@@ -67,6 +68,11 @@ export const metadata: Metadata = {
     canonical: "/",
   },
 
+  /* og:image / twitter:image come from app/opengraph-image.tsx (file
+     convention) — Next auto-generates and injects those tags, so no
+     `images` array is declared here. Don't re-add a hardcoded path;
+     the previous /og-image.png reference pointed at a file that never
+     existed in public/. */
   openGraph: {
     type: "website",
     locale: "en_US",
@@ -75,14 +81,6 @@ export const metadata: Metadata = {
     title: "Luggage Storage Da Nang | Stow",
     description:
       "Store your bags in Da Nang from 15,000₫/hr or 60,000₫/day. Flat-rate plans for expats and visa runners from 150,000₫/week. Open 7am–10pm daily.",
-    images: [
-      {
-        url: "/og-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Stow — Luggage Storage Da Nang",
-      },
-    ],
   },
 
   twitter: {
@@ -90,7 +88,6 @@ export const metadata: Metadata = {
     title: "Luggage Storage Da Nang | Stow",
     description:
       "From 15,000₫/hr or flat-rate monthly plans. CCTV monitored, open 7am–10pm daily. 55 Ba Bang Nhan, Ngu Hanh Son, Da Nang.",
-    images: ["/og-image.png"],
   },
 
   robots: {
@@ -116,7 +113,14 @@ export default function RootLayout({
       lang="en"
       className={`${inter.variable} ${poppins.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
     >
-      <body>{children}</body>
+      <body>
+        {children}
+        <script
+          type="application/ld+json"
+          // eslint-disable-next-line react/no-danger
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(localBusinessJsonLd) }}
+        />
+      </body>
       <GoogleAnalytics gaId="G-FCXSCK0ZCH" />
     </html>
   );

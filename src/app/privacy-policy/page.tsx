@@ -7,6 +7,7 @@ import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
 export const metadata: Metadata = {
   title: "Privacy Policy — Stow Da Nang",
   description: "How Stow Da Nang collects, uses, and protects your personal information.",
+  alternates: { canonical: "/privacy-policy" },
 };
 
 const toc = [

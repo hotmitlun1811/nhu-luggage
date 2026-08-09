@@ -9,6 +9,7 @@ export const metadata: Metadata = {
   title: "Trust & Safety — Stow Luggage Storage Da Nang",
   description:
     "How Stow keeps your belongings safe. Our security measures, what we can and cannot store, and what we promise.",
+  alternates: { canonical: "/trust-safety" },
 };
 
 const canStore = [
