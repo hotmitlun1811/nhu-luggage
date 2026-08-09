@@ -5,10 +5,22 @@ import PrivacyPolicyContent from "@/components/legal/PrivacyPolicyContent";
 import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 
+const pageTitle = "Privacy Policy — Stow Da Nang";
+const pageDescription = "How Stow Da Nang collects, uses, and protects your personal information.";
+
 export const metadata: Metadata = {
-  title: "Privacy Policy — Stow Da Nang",
-  description: "How Stow Da Nang collects, uses, and protects your personal information.",
+  title: pageTitle,
+  description: pageDescription,
   alternates: { canonical: "/privacy-policy" },
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    url: "https://www.stowdanang.com/privacy-policy",
+  },
+  twitter: {
+    title: pageTitle,
+    description: pageDescription,
+  },
 };
 
 const breadcrumb = breadcrumbJsonLd([

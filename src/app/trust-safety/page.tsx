@@ -6,11 +6,23 @@ import PrimaryNav from "@/components/layout/PrimaryNav";
 import Footer from "@/components/layout/Footer";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 
+const pageTitle = "Safe & Trustworthy Luggage Storage in Da Nang | Stow";
+const pageDescription =
+  "How Stow keeps luggage storage in Da Nang safe and trustworthy: unique ID tags, CCTV, photo receipts at drop-off, and what we can and cannot store.";
+
 export const metadata: Metadata = {
-  title: "Trust & Safety — Stow Luggage Storage Da Nang",
-  description:
-    "How Stow keeps your belongings safe. Our security measures, what we can and cannot store, and what we promise.",
+  title: pageTitle,
+  description: pageDescription,
   alternates: { canonical: "/trust-safety" },
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    url: "https://www.stowdanang.com/trust-safety",
+  },
+  twitter: {
+    title: pageTitle,
+    description: pageDescription,
+  },
 };
 
 const breadcrumb = breadcrumbJsonLd([
@@ -78,7 +90,8 @@ export default function TrustSafetyPage() {
             style={{ fontFamily: "var(--font-inter)" }}
           >
             Short, honest, and written to protect you as much as us. Here&apos;s
-            exactly how we keep your bags safe and what we can and cannot accept.
+            exactly how Stow keeps luggage storage in Da Nang safe, and what
+            we can and cannot accept.
           </p>
         </div>
       </div>
@@ -199,6 +212,14 @@ export default function TrustSafetyPage() {
               >
                 Every bag gets the same care.
               </h2>
+              <p
+                className="text-[14px] text-[#6B7280] leading-relaxed mt-4"
+                style={{ fontFamily: "var(--font-inter)" }}
+              >
+                Trust here isn&apos;t a slogan. Every bag gets a unique ID
+                tag, a photo receipt at drop-off, and CCTV coverage until
+                you&apos;re back.
+              </p>
             </div>
 
             <div className="flex flex-col">

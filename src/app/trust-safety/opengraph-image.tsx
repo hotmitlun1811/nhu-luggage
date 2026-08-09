@@ -1,11 +1,12 @@
 import { ImageResponse } from "next/og";
 
-/* Fills the og:image / twitter:image slot that layout.tsx's metadata
-   used to point at a /og-image.png that never existed in public/.
-   Next auto-wires the meta tags from this file — no manual `images: []`
-   needed in the metadata object. */
+/* Next's file-convention routing serves this for /trust-safety instead of
+   the root opengraph-image.tsx — no wiring needed in metadata. Same visual
+   system as the root image (same colors, same wordmark block) so the brand
+   stays consistent across shares; only the headline/eyebrow change to match
+   this page's own title (see 2026-08-09-trust-safety-copy-pass.md). */
 
-export const alt = "Stow — Luggage Storage Da Nang";
+export const alt = "Safe & Trustworthy Luggage Storage in Da Nang | Stow";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -67,21 +68,21 @@ export default function Image() {
             marginBottom: 16,
           }}
         >
-          Luggage Storage · Da Nang
+          Trust &amp; Safety · Da Nang
         </div>
 
         <div
           style={{
             display: "flex",
             color: "#FFFFFF",
-            fontSize: 60,
+            fontSize: 56,
             fontWeight: 700,
             lineHeight: 1.12,
-            maxWidth: 920,
+            maxWidth: 940,
             marginBottom: 26,
           }}
         >
-          Drop your bags. Go explore Da Nang.
+          Safe, trustworthy luggage storage. Clear rules, no surprises.
         </div>
 
         <div
@@ -91,7 +92,7 @@ export default function Image() {
             fontSize: 25,
           }}
         >
-          From 15,000 VND/hr · Flat rates for expats · Open 7am–10pm daily
+          Unique ID tag · Photo receipt · CCTV coverage · Open 7am–10pm daily
         </div>
       </div>
     ),

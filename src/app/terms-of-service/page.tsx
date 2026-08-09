@@ -5,10 +5,22 @@ import TermsOfServiceContent from "@/components/legal/TermsOfServiceContent";
 import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
 import { breadcrumbJsonLd } from "@/lib/structured-data";
 
+const pageTitle = "Terms of Service — Stow Da Nang";
+const pageDescription = "Terms of Service for Stow luggage storage in Da Nang, Vietnam. Read before you book.";
+
 export const metadata: Metadata = {
-  title: "Terms of Service — Stow Da Nang",
-  description: "Terms of Service for Stow luggage storage in Da Nang, Vietnam. Read before you book.",
+  title: pageTitle,
+  description: pageDescription,
   alternates: { canonical: "/terms-of-service" },
+  openGraph: {
+    title: pageTitle,
+    description: pageDescription,
+    url: "https://www.stowdanang.com/terms-of-service",
+  },
+  twitter: {
+    title: pageTitle,
+    description: pageDescription,
+  },
 };
 
 const breadcrumb = breadcrumbJsonLd([

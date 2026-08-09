@@ -45,6 +45,12 @@ export const metadata: Metadata = {
   description:
     "Luggage storage in Da Nang from 15,000₫/hr or 60,000₫/day. Flat-rate plans for expats from 150,000₫/week. CCTV monitored. Open 7am–10pm daily at 55 Ba Bang Nhan, Ngu Hanh Son.",
 
+  /* Meta keywords carries ~zero direct Google ranking weight (deprecated
+     since 2009) — kept aligned anyway since it's free and some
+     non-Google crawlers/AI systems still read it. Real ranking weight
+     lives in title/description/body copy, not this array. Expanded
+     2026-08-09 from docs/aeo-seo/2026-08-09-entity-topical-keyword-map.md's
+     trust/landmark/persona clusters. */
   keywords: [
     "luggage storage Da Nang",
     "bag storage Da Nang",
@@ -56,6 +62,12 @@ export const metadata: Metadata = {
     "visa run luggage storage",
     "Da Nang travel tips",
     "Ngu Hanh Son luggage storage",
+    "trustworthy luggage storage Da Nang",
+    "safe luggage storage Da Nang",
+    "luggage storage near Marble Mountains",
+    "luggage storage Da Nang airport",
+    "monthly luggage storage Da Nang",
+    "suitcase storage Da Nang",
   ],
 
   authors: [{ name: "Stow Da Nang" }],

@@ -1,6 +1,6 @@
 # Trust & Safety copy pass — AUTHOR-tier proposal
 
-**Status: PROPOSAL — not shipped.** Per Golden Rule #4 (AUTHOR-tier content needs an editorial brief, never ships unilaterally) — same pattern as `2026-08-09-author-content-brief.md`. Nothing below is live.
+**Status: SHIPPED 2026-08-09.** All 3 diffs approved and live. Extended beyond the original proposal in the same pass — see "Also shipped" below for the additional metadata/OG work done at the owner's request.
 
 **Scope:** `src/app/trust-safety/page.tsx` (the dedicated crawlable page) and `src/components/sections/TrustSafety.tsx` (the homepage card). **Grounded in:** the trust/quality-modifier cluster from `2026-08-09-entity-topical-keyword-map.md` — the owner specifically named "trustworthy luggage storage Da Nang" as a target phrase.
 
@@ -73,7 +73,13 @@ This mirrors the FAQ answer already shipped for "Is it safe to store luggage in 
 
 ---
 
-## What I need from you
+## Also shipped in the same pass (owner asked to extend to all metadata/OG)
 
-1. **Approve/edit/reject** the 3 concrete diffs above (title/meta, subhead, new lead-in line).
-2. Once approved, I'll wire it directly into `trust-safety/page.tsx` (the `TrustSafety.tsx` homepage line is a separate approval, already pending in the earlier brief).
+Site-wide metadata/OG consistency sweep, done alongside the 3 approved diffs:
+
+- **`/trust-safety`, `/terms-of-service`, `/privacy-policy` all inherited the homepage's `openGraph`/`twitter` title and description** — none of the three had their own set, so sharing any of those links on social/messaging showed "Luggage Storage Da Nang | Stow" and the homepage pitch, not the actual page. Added explicit `openGraph`/`twitter` blocks (sourced from each page's own `title`/`description`, one variable each so they can't drift apart) to all three.
+- **New dedicated OG image at `src/app/trust-safety/opengraph-image.tsx`** — same visual system (colors, wordmark) as the root image, headline swapped to match the new page title. File-convention routing means Next serves it automatically for `/trust-safety`, no metadata wiring needed. `/terms-of-service` and `/privacy-policy` deliberately kept the shared root image — low social-share value, not worth a unique visual.
+- **Root `opengraph-image.tsx` headline fix**: *"Explore Da Nang freely"* → *"Go explore Da Nang"* — "freely" is on `STOW_HUMANIZER_RULES.md`'s banned freedom/transformation list (Test 4). Found while in the file for the trust-safety image; fixed since it's a one-line, easily-reverted, already-documented rule violation rather than reopening a full approval round for one word.
+- **Sitewide `keywords` meta array** expanded from 10 to 16 terms — added the trust/landmark/persona clusters this pass and the entity-topical-keyword-map doc surfaced (`trustworthy luggage storage Da Nang`, `safe luggage storage Da Nang`, `luggage storage near Marble Mountains`, `luggage storage Da Nang airport`, `monthly luggage storage Da Nang`, `suitcase storage Da Nang`). Noted honestly in a code comment that this tag carries ~zero direct Google ranking weight (deprecated since 2009) — kept aligned since it's free, not because it moves rank.
+
+Not touched: `/intake` (staff-only, already `noindex`, correctly out of scope).
