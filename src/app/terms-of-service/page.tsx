@@ -3,12 +3,18 @@ import PrimaryNav from "@/components/layout/PrimaryNav";
 import Footer from "@/components/layout/Footer";
 import TermsOfServiceContent from "@/components/legal/TermsOfServiceContent";
 import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "Terms of Service — Stow Da Nang",
   description: "Terms of Service for Stow luggage storage in Da Nang, Vietnam. Read before you book.",
   alternates: { canonical: "/terms-of-service" },
 };
+
+const breadcrumb = breadcrumbJsonLd([
+  { name: "Home", path: "/" },
+  { name: "Terms of Service", path: "/terms-of-service" },
+]);
 
 const toc = [
   { href: "#acceptance",    label: "1. Acceptance" },
@@ -29,6 +35,10 @@ const toc = [
 export default function TermsPage() {
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
       <PrimaryNav />
 
       <div className="bg-[#16243F]" style={{ paddingTop: "72px" }}>

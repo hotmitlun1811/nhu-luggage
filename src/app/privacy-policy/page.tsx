@@ -3,12 +3,18 @@ import PrimaryNav from "@/components/layout/PrimaryNav";
 import Footer from "@/components/layout/Footer";
 import PrivacyPolicyContent from "@/components/legal/PrivacyPolicyContent";
 import { EFFECTIVE, EMAIL } from "@/components/legal/LegalShared";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "Privacy Policy — Stow Da Nang",
   description: "How Stow Da Nang collects, uses, and protects your personal information.",
   alternates: { canonical: "/privacy-policy" },
 };
+
+const breadcrumb = breadcrumbJsonLd([
+  { name: "Home", path: "/" },
+  { name: "Privacy Policy", path: "/privacy-policy" },
+]);
 
 const toc = [
   { href: "#who-we-are",   label: "1. Who we are" },
@@ -27,6 +33,10 @@ const toc = [
 export default function PrivacyPage() {
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
       <PrimaryNav />
 
       <div className="bg-[#16243F]" style={{ paddingTop: "72px" }}>

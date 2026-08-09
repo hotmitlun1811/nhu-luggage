@@ -4,6 +4,7 @@ import { CheckCircle2, XCircle, ShieldCheck, Camera, Tag, Lock, Users, MessageCi
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import PrimaryNav from "@/components/layout/PrimaryNav";
 import Footer from "@/components/layout/Footer";
+import { breadcrumbJsonLd } from "@/lib/structured-data";
 
 export const metadata: Metadata = {
   title: "Trust & Safety — Stow Luggage Storage Da Nang",
@@ -11,6 +12,11 @@ export const metadata: Metadata = {
     "How Stow keeps your belongings safe. Our security measures, what we can and cannot store, and what we promise.",
   alternates: { canonical: "/trust-safety" },
 };
+
+const breadcrumb = breadcrumbJsonLd([
+  { name: "Home", path: "/" },
+  { name: "Trust & Safety", path: "/trust-safety" },
+]);
 
 const canStore = [
   "Suitcases & rolling luggage",
@@ -41,6 +47,10 @@ const security = [
 export default function TrustSafetyPage() {
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }}
+      />
       <AnnouncementBar />
       <PrimaryNav />
 
