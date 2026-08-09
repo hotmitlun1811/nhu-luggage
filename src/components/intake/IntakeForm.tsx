@@ -2,42 +2,28 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { CheckCircle2, Send, RotateCcw, ChevronDown } from "lucide-react";
+import { PLAN_FACTS, FLEX_PLANS, FLAT_PLANS, vnd, generateTimeSlots, type PlanKey, type Lane } from "@/lib/plans";
 
-type Lane = "flexible" | "flatrate";
-type PlanKey = "hourly" | "daily" | "mini" | "strand" | "longstay";
-
-const PLANS: Record<PlanKey, {
-  name: string;
-  price: number;
-  unit: string;
-  duration: string;
-  lane: Lane;
-  oversizeSurcharge: number;
-}> = {
-  hourly:   { name: "By the Hour", price: 15000,  unit: "/ hr",  duration: "Min 1 hr, billed per hr",  lane: "flexible", oversizeSurcharge: 30000 },
-  daily:    { name: "By the Day",  price: 60000,  unit: "/ day", duration: "Up to 24 hrs from drop-off", lane: "flexible", oversizeSurcharge: 30000 },
-  mini:     { name: "Mini",        price: 150000, unit: "flat",  duration: "Up to 1 week",              lane: "flatrate", oversizeSurcharge: 50000 },
-  strand:   { name: "Strand",      price: 300000, unit: "flat",  duration: "Up to 1 month",             lane: "flatrate", oversizeSurcharge: 50000 },
-  longstay: { name: "Long Stay",   price: 1000000, unit: "flat", duration: "Up to 4 months",            lane: "flatrate", oversizeSurcharge: 50000 },
+/* This tool is staff-only (noindex, out of scope for the i18n build —
+   single operating language) so its display text stays a local English
+   const, not a locale dictionary. src/lib/plans.ts holds the numeric
+   facts shared with HeroBookingForm.tsx; the two forms' `duration`
+   wording differs slightly on purpose (this one's more descriptive, for
+   staff at the counter) and stays that way. */
+const PLAN_DISPLAY: Record<PlanKey, { name: string; duration: string }> = {
+  hourly:   { name: "By the Hour", duration: "Min 1 hr, billed per hr" },
+  daily:    { name: "By the Day",  duration: "Up to 24 hrs from drop-off" },
+  mini:     { name: "Mini",        duration: "Up to 1 week" },
+  strand:   { name: "Strand",      duration: "Up to 1 month" },
+  longstay: { name: "Long Stay",   duration: "Up to 4 months" },
 };
 
-const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
-const FLAT_PLANS: PlanKey[] = ["mini", "strand", "longstay"];
+const PLANS: Record<PlanKey, typeof PLAN_FACTS[PlanKey] & { name: string; duration: string }> =
+  Object.fromEntries(
+    (Object.keys(PLAN_FACTS) as PlanKey[]).map((k) => [k, { ...PLAN_FACTS[k], ...PLAN_DISPLAY[k] }])
+  ) as Record<PlanKey, typeof PLAN_FACTS[PlanKey] & { name: string; duration: string }>;
 
-function vnd(n: number) {
-  return n.toLocaleString("vi-VN") + " ₫";
-}
-
-function generateSlots() {
-  const s: string[] = [];
-  for (let h = 7; h <= 21; h++) {
-    s.push(`${String(h).padStart(2, "0")}:00`);
-    s.push(`${String(h).padStart(2, "0")}:30`);
-  }
-  s.push("22:00");
-  return s;
-}
-const TIME_SLOTS = generateSlots();
+const TIME_SLOTS = generateTimeSlots();
 
 type Confirmed = {
   ref: string;

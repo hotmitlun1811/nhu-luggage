@@ -73,7 +73,14 @@ const localBusiness = {
     "Safe, simple luggage storage in Da Nang, Vietnam. Hourly and daily plans for tourists, flat-rate weekly and monthly plans for expats and visa runners. CCTV monitored, open 7am–10pm every day.",
   url: BASE_URL,
   logo: `${BASE_URL}/logo-final.png`,
-  image: `${BASE_URL}/opengraph-image`,
+  /* Was `${BASE_URL}/opengraph-image` — broke during the i18n route-group
+     restructure: Next.js appends a disambiguation hash to the served path
+     for opengraph-image.tsx files nested inside a route group (verified:
+     it now serves at /opengraph-image-<hash>, not the clean path), so the
+     hardcoded URL here started 404ing. Pointing at the stable logo file
+     instead — a real storefront/interior photo would be a better long-term
+     value here once one exists (already on the local-SEO audit's shot list). */
+  image: `${BASE_URL}/logo-final.png`,
   telephone: "+84905955161",
   email: "stowdanang@gmail.com",
   priceRange: "15.000₫–1.000.000₫",

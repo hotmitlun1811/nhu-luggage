@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Inter, Poppins, Geist_Mono, Playfair_Display } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
 import { localBusinessJsonLd } from "@/lib/structured-data";
-import "./globals.css";
+import "../globals.css";
 
 const inter = Inter({
   variable: "--font-inter",

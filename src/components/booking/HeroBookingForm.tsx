@@ -6,38 +6,39 @@ import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { EFFECTIVE as LEGAL_EFFECTIVE } from "@/components/legal/LegalShared";
+import {
+  PLAN_FACTS,
+  FLEX_PLANS,
+  FLAT_PLANS,
+  vnd,
+  generateTimeSlots,
+  type PlanKey,
+  type Lane,
+} from "@/lib/plans";
+import { formatDateTime, formatShortDate, formatLongDate } from "@/lib/format";
 
 // Client-only: renders via a document.body portal, which has no server
 // equivalent — skipping SSR avoids a hydration mismatch entirely instead of
 // papering over it with a mounted-after-effect gate.
 const ConsentModal = dynamic(() => import("./ConsentModal"), { ssr: false });
 
-type Lane = "flexible" | "flatrate";
-type PlanKey = "hourly" | "daily" | "mini" | "strand" | "longstay";
-
-const PLANS: Record<PlanKey, {
-  name: string;
-  price: number;
-  unit: string;
-  duration: string;
-  lane: Lane;
-  oversizeSurcharge: number;
-  maxDays?: number;
-  popular?: boolean;
-}> = {
-  hourly:   { name: "By the Hour", price: 15000,  unit: "/ hr",  duration: "Min 1 hr",     lane: "flexible", oversizeSurcharge: 30000 },
-  daily:    { name: "By the Day",  price: 60000,  unit: "/ day", duration: "Up to 24 hrs", lane: "flexible", oversizeSurcharge: 30000, popular: true },
-  mini:     { name: "Mini",        price: 150000, unit: "flat",  duration: "Up to 1 week",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
-  strand:   { name: "Strand",      price: 300000, unit: "flat",  duration: "Up to 1 month", lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
-  longstay: { name: "Long Stay",   price: 1000000, unit: "flat", duration: "Up to 4 months", lane: "flatrate", oversizeSurcharge: 50000, maxDays: 120 },
+/* English display text (name/duration) — src/lib/plans.ts holds the shared
+   numeric facts (price, surcharge, lane) both forms use; this component's
+   own display copy stays local for now and moves into a locale dictionary
+   in Phase 1 of the i18n build. Merged into PLANS below so every existing
+   `PLANS[plan].name` / `.duration` call site is unchanged. */
+const PLAN_DISPLAY: Record<PlanKey, { name: string; duration: string }> = {
+  hourly:   { name: "By the Hour", duration: "Min 1 hr" },
+  daily:    { name: "By the Day",  duration: "Up to 24 hrs" },
+  mini:     { name: "Mini",        duration: "Up to 1 week" },
+  strand:   { name: "Strand",      duration: "Up to 1 month" },
+  longstay: { name: "Long Stay",   duration: "Up to 4 months" },
 };
 
-const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
-const FLAT_PLANS: PlanKey[] = ["mini", "strand", "longstay"];
-
-function vnd(n: number) {
-  return n.toLocaleString("vi-VN") + " ₫";
-}
+const PLANS: Record<PlanKey, typeof PLAN_FACTS[PlanKey] & { name: string; duration: string }> =
+  Object.fromEntries(
+    (Object.keys(PLAN_FACTS) as PlanKey[]).map((k) => [k, { ...PLAN_FACTS[k], ...PLAN_DISPLAY[k] }])
+  ) as Record<PlanKey, typeof PLAN_FACTS[PlanKey] & { name: string; duration: string }>;
 
 function addDays(dateStr: string, days: number): string {
   const d = new Date(dateStr + "T12:00:00");
@@ -58,29 +59,23 @@ function diffMinutes(fromStr: string, toStr: string): number {
 }
 
 // Evidence trail for the scrollwrap consent: when they actually clicked
-// "I Agree" and which version of the documents that was.
+// "I Agree" and which version of the documents that was. Thin wrappers
+// around src/lib/format.ts's locale-aware formatters — default "en" keeps
+// today's behavior identical; Phase 1 of the i18n build passes the active
+// page locale through instead.
 function fmtDateTime(d: Date): string {
-  return d.toLocaleString("en-GB", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+  return formatDateTime(d);
 }
 
 function fmtShort(dateStr: string): string {
-  return new Date(dateStr + "T12:00:00").toLocaleDateString("en-GB", { day: "numeric", month: "short" });
+  return formatShortDate(dateStr);
 }
 
 function fmtLong(dateStr: string): string {
-  return new Date(dateStr + "T12:00:00").toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "long", year: "numeric" });
+  return formatLongDate(dateStr);
 }
 
-function generateSlots() {
-  const s: string[] = [];
-  for (let h = 7; h <= 21; h++) {
-    s.push(`${String(h).padStart(2, "0")}:00`);
-    s.push(`${String(h).padStart(2, "0")}:30`);
-  }
-  s.push("22:00");
-  return s;
-}
-const TIME_SLOTS = generateSlots();
+const TIME_SLOTS = generateTimeSlots();
 
 const LABEL = "block text-[10px] font-bold uppercase tracking-[0.12em] text-white/30 mb-1.5";
 const INPUT  = "w-full appearance-none bg-white/[0.07] border border-white/[0.12] rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/25 focus:outline-none focus:border-[#E8742C]/70 transition-colors";
