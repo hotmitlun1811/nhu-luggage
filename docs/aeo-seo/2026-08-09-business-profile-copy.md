@@ -1,52 +1,45 @@
 # Ready-to-paste profile copy — Google Business Profile, Facebook, Zalo OA
 
-**Status: PROPOSAL — none of these profiles exist yet** (per [`2026-08-09-local-seo-audit.md`](2026-08-09-local-seo-audit.md), P1 gap #1). This is copy-paste-ready for the moment you (or whoever has owner access) creates each one. I can't create these myself — they need your identity to verify.
-
-**One rule that applies to all three:** keep the *name field* itself short — **"Stow"** — not the keyword-stuffed full name. The audit flagged this: Google's guideline is the real-world name as it appears on signage, and a name like "Stow — Luggage Storage Da Nang" in the name field risks a guideline flag. Let category + description carry the keywords. **Confirm "Stow" matches your actual shopfront signage before submitting anywhere.**
-
-The moment each profile is live, send me the URL — it goes straight into `sameAs` in `src/lib/structured-data.ts`, which is currently Instagram-only.
+**Correction, same day:** the first version of this doc told you to *create* a Google Business Profile. That was wrong — Stow already has one, live: **[Stow - Luggage Storage Da Nang](https://share.google/4fTTPlY1pwqbLAvmB)** (Knowledge Graph entity `kgmid=/g/11z9561m6s`), owner-reported 5.0 rating. The original local-SEO audit missed it because the site's own Maps links pointed at a bare address pin and a dead text search instead of the real listing — both now fixed and wired into `sameAs`. See [[feedback-gbp-exists-verify-before-missing]] in memory for the full lesson. **Facebook Page and Zalo OA are still genuinely missing** — those sections below are unchanged.
 
 ---
 
-## Google Business Profile
+## Google Business Profile — optimize the existing listing, don't create a new one
 
-**Name:** `Stow`
-**Primary category:** `Luggage Storage Facility` — confirm this exact label exists in your category picker when you get there; if it doesn't, the audit's fallback is anything closer to "storage" than "self-storage" (self-storage reads long-term rented units, which caused the schema.org type mismatch fixed in the on-site work).
-**Address:** `55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng 550000, Vietnam`
-**Phone:** `+84 905 955 161`
-**Website:** `https://www.stowdanang.com`
-**Hours:** `7:00 AM – 10:00 PM`, every day, no holiday exceptions
-**Business type:** Storefront (has a physical location customers visit) — not "service area business." Confirm 55 Bà Bang Nhãn is a dedicated, staffed, client-facing space before submitting (the audit's one unresolved open item).
+**Link:** https://share.google/4fTTPlY1pwqbLAvmB — already wired into the site (`sameAs`, "Get directions," "5.0 on Google").
 
-**Description** (750-char limit, plain text, no keyword stuffing):
-> Stow is a luggage storage service in Ngũ Hành Sơn, Da Nang — 10 minutes from Da Nang Airport and steps from the Marble Mountains. Store your bags by the hour (15,000₫) or day (60,000₫) for sightseeing and layovers, or choose a flat-rate plan (from 150,000₫) for a week, a month, or a visa run. Every item gets a photo receipt and a unique ID tag at drop-off, and storage areas run on CCTV all day. Open 7am–10pm, every day including holidays. Message us on WhatsApp or Zalo to book ahead, or just walk in.
+I don't have dashboard access, so I can't see what's already filled in — this is a checklist to run against the real listing, not fresh copy to submit. Everything below is written to match the pricing/hours already live on the site, ready to paste into whichever fields are currently blank:
 
-**Services to add** (GBP's Services feature — add every one individually, not just as one line; this is a real 2026 ranking factor per the audit):
-- Hourly luggage storage — 15,000₫
-- Daily luggage storage — 60,000₫
-- Weekly flat-rate storage — 150,000₫
-- Monthly flat-rate storage — 300,000₫
-- Long-stay storage (up to 3 months) — 500,000₫
-- Oversized item storage (surcharge)
-
-**Photos to shoot before launch** (audit's Phase 6 recommendation): storefront exterior/signage, the storage area itself, staff performing the tag-and-photo check-in process. Real photos, not stock — this is a trust signal Google and customers both weigh.
+- **Category** — confirm it's set to `Luggage Storage Facility` (or the closest real label in the picker). If it's set to something that reads "self-storage," that's the same long-term-vs-hourly mismatch the on-site schema work already fixed once — worth correcting here too.
+- **Description** (750-char limit, if not already set):
+  > Stow is a luggage storage service in Ngũ Hành Sơn, Da Nang — 10 minutes from Da Nang Airport and steps from the Marble Mountains. Store your bags by the hour (15,000₫) or day (60,000₫) for sightseeing and layovers, or choose a flat-rate plan (from 150,000₫) for a week, a month, or a visa run. Every item gets a photo receipt and a unique ID tag at drop-off, and storage areas run on CCTV all day. Open 7am–10pm, every day including holidays. Message us on WhatsApp or Zalo to book ahead, or just walk in.
+- **Services list** — add each individually if not already there (a real 2026 ranking factor, not just a formality):
+  - Hourly luggage storage — 15,000₫
+  - Daily luggage storage — 60,000₫
+  - Weekly flat-rate storage — 150,000₫
+  - Monthly flat-rate storage — 300,000₫
+  - Long-stay storage (up to 3 months) — 500,000₫
+  - Oversized item storage (surcharge)
+- **Hours** — confirm they match the live site exactly: 7:00 AM–10:00 PM, every day, no holiday exceptions.
+- **Photos** — storefront exterior/signage, the storage area itself, staff performing the tag-and-photo check-in process, if not already uploaded.
+- **What I still need from you:** a dashboard screenshot (or just tell me) — exact review count, verified badge status, current category, and whether the fields above are already filled in. Those all feed the `AggregateRating` schema and the local-SEO audit's remaining "VERIFY" items.
 
 ---
 
-## Facebook Page
+## Facebook Page — still doesn't exist
 
 **Page name:** `Stow`
 **Category:** closest match to "Luggage Storage Service" / "Shipping & Package Service" in Facebook's category list — check what's actually offered when you create it.
 **Short description / bio** (255-char limit):
 > Luggage storage in Da Nang — hourly, daily, or flat-rate. 55 Bà Bang Nhãn, Ngũ Hành Sơn. Open 7am–10pm daily.
 
-**Long "About" section** — same copy as the GBP description above, it's already written for this length.
+**Long "About" section** — same copy as the GBP description above, already written for this length.
 
 **Website, phone, hours:** identical to GBP — this consistency is the whole point (NAP matching across every profile is what lets Google merge them into one entity).
 
 ---
 
-## Zalo Official Account
+## Zalo Official Account — still doesn't exist
 
 Zalo is the highest-relevance Tier 1 platform in Vietnam per the audit (the default local-business contact surface, and the phone number is already Zalo-enabled). This one should reach a bilingual audience — English for tourists/expats, Vietnamese for the "gửi hành lý Đà Nẵng" search cluster identified in the keyword map.
 
@@ -62,8 +55,9 @@ Zalo is the highest-relevance Tier 1 platform in Vietnam per the audit (the defa
 
 ---
 
-## After you create these
+## Outstanding
 
-1. Send me each profile URL — I'll add it to `sameAs` in `structured-data.ts` immediately.
-2. Fix the Instagram bio link at the same time if you haven't already (still points to the old `stow-vn.vercel.app` URL, per the local-SEO audit) — that one's on you, needs the Instagram app, not code.
-3. Once GBP has been live a few weeks and picks up real reviews, tell me the count/rating and I'll add real `AggregateRating` schema — not before, per Google's policy on fabricated review markup.
+1. **Facebook + Zalo** — create these, send me the URLs the moment they're live, I'll add both to `sameAs` immediately (GBP's already in there).
+2. **Instagram bio** — still points to the old `stow-vn.vercel.app` URL, not `stowdanang.com`. Needs the Instagram app, not code.
+3. **GBP dashboard facts** — exact review count, category, verified badge (see checklist above) — send a screenshot when you have a minute, unblocks `AggregateRating` schema.
+4. **GSC/Bing Webmaster** — Bing's done (`BingSiteAuth.xml` live). Google Search Console still needs your account.
