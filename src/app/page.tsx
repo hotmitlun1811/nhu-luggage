@@ -4,20 +4,27 @@ import HowItWorks from "@/components/sections/HowItWorks";
 import ServicesSection from "@/components/sections/ServicesSection";
 import PricingSection from "@/components/sections/PricingSection";
 import WhyStow from "@/components/sections/WhyStow";
+import FAQSection from "@/components/sections/FAQSection";
 import TrustSafety from "@/components/sections/TrustSafety";
 import SocialProof from "@/components/sections/SocialProof";
 import LocationSection from "@/components/sections/LocationSection";
 import Footer from "@/components/layout/Footer";
+import { faqPageJsonLd } from "@/lib/structured-data";
 
 export default function Home() {
   return (
     <main>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqPageJsonLd) }}
+      />
       <PrimaryNav />
       <HeroSplit />
       <HowItWorks />
       <ServicesSection />
       <PricingSection />
       <WhyStow />
+      <FAQSection />
       <TrustSafety />
       <SocialProof />
       <LocationSection />

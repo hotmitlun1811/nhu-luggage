@@ -117,6 +117,132 @@ No search-volume tool access yet (Ahrefs/GSC) — treat this as an intent map to
 
 ---
 
+---
+
+## Expanded keyword brainstorm (2026-08-09, follow-up pass)
+
+Requested by the owner: push past the 3 original clusters toward comprehensive coverage — every real way someone searches for "store my stuff in Da Nang," across both classic search and AI answer engines. Same rule as before: this is intent-clustering, not volume data (still no GSC/Ahrefs access — see the follow-up item at the top of this doc). Grouped by what's *actually different* about the searcher's intent, since that's what determines where each phrase should live, not just word-swapping the head term.
+
+### Trust / quality modifiers
+The pattern the owner specifically flagged ("trustworthy luggage storage") is its own cluster — these are bottom-of-funnel, high-intent searches from someone who's already decided *what* they need and is now vetting safety before handing over a bag with their passport in it. This maps directly to the existing `trust-safety` page and `TrustSafety` component — don't invent new content, make sure that page's copy contains these exact phrases in plain sentences (it currently proves trust through specifics — photo receipts, CCTV, unique tags — without ever using the word "trustworthy" itself, which is the actual gap):
+- trustworthy luggage storage Da Nang
+- safe luggage storage Da Nang
+- secure bag storage Da Nang
+- is it safe to store luggage in Da Nang
+- luggage storage with CCTV Da Nang
+- reputable left luggage service Da Nang
+- verified luggage storage Da Nang
+
+### Location / landmark variants
+Beyond the existing Marble Mountains connection — every real point of reference someone near 55 Bà Bang Nhãn would search from:
+- luggage storage near Ngũ Hành Sơn
+- luggage storage near Marble Mountains
+- bag storage near My Khe Beach
+- luggage storage Da Nang airport to Hoi An
+- storage between Da Nang and Hoi An day trip
+- luggage storage near Non Nuoc Beach
+- left luggage Da Nang city center vs Ngu Hanh Son *(comparison-shaped — see below)*
+
+### Item-type variants
+Google and LLMs both match on the *object*, not just the service category — "bag" ≠ "suitcase" ≠ "backpack" in a literal-match sense even though they mean the same thing here:
+- suitcase storage Da Nang
+- backpack storage Da Nang
+- where to store a bike Da Nang *(real — oversized-item surcharge already covers bicycles)*
+- surfboard storage Da Nang
+- stroller storage Da Nang
+- where to leave a laptop bag safely Da Nang
+- oversized luggage storage Da Nang
+
+### Persona / duration-intent variants
+Sharpening the two existing persona clusters into the exact phrase-shapes each group actually types:
+- luggage storage for a few hours Da Nang *(tourist, Lane 1)*
+- day trip bag storage Da Nang
+- luggage storage between flights Da Nang
+- weekly luggage storage Da Nang *(expat, Lane 2 — "Mini")*
+- monthly bag storage Da Nang for expats
+- storage while on a visa run Vietnam
+- long term luggage storage for digital nomads Da Nang
+- where do digital nomads store luggage in Da Nang
+
+### Question-shaped / AEO conversational queries
+This is the cluster that matters most for *AI* answer engines specifically — ChatGPT/Perplexity/AI Overviews resolve a direct question to a direct-answer sentence, not a keyword match. Each of these needs a literal question-as-H2 or FAQ entry with a one-sentence answer immediately after it (ties to the AUTHOR-tier content brief, `2026-08-09-author-content-brief.md` — direct-answer format is the whole point of that doc):
+- Where can I store my luggage in Da Nang?
+- How much does luggage storage cost in Da Nang?
+- Is there luggage storage near the Marble Mountains?
+- Can I store my bag for just a few hours in Da Nang?
+- What's the best luggage storage option for a Da Nang visa run?
+- Do I need to book luggage storage in Da Nang in advance?
+- What happens if I pick up my bag late in Da Nang?
+
+### Comparison / evaluative queries
+Someone choosing between options — this is where Stow's actual differentiators (real address + staffed check-in vs. marketplace host-network model) become the answer, not a weakness to hide:
+- Stow vs Stasher Da Nang
+- best luggage storage Da Nang reviews
+- cheapest luggage storage Da Nang
+- luggage storage Da Nang vs hotel storage
+- luggage storage locker vs staffed storage Da Nang
+
+### Price-intent queries
+Directly answerable with the live `PricingSection` data — verify current numbers there before ever writing a price into new copy (pricing has changed once already this project; Mini/Strand/Long Stay at 150k/300k/1,000,000₫ as of 2026-08-08):
+- luggage storage Da Nang price
+- luggage storage Da Nang cost per day
+- cheap bag storage Da Nang
+- luggage storage Da Nang per hour rate
+
+### Vietnamese-language expansion
+Original doc had 3 — domestic travelers and Zalo/Facebook audiences search in Vietnamese, and this is also the primary language local directories/aggregators index in:
+- gửi hành lý Đà Nẵng *(store luggage Da Nang)*
+- ký gửi hành lý Đà Nẵng
+- giữ hành lý Đà Nẵng
+- gửi đồ Đà Nẵng *(store belongings/stuff — broader than just luggage)*
+- kho gửi hành lý gần Ngũ Hành Sơn *(luggage storage near Ngu Hanh Son)*
+- dịch vụ giữ hành lý uy tín Đà Nẵng *(trustworthy luggage-holding service — the Vietnamese-language version of the trust cluster above)*
+- gửi hành lý theo giờ Đà Nẵng *(hourly luggage storage)*
+- gửi hành lý dài hạn Đà Nẵng *(long-term luggage storage)*
+
+### Synonym / naming variants
+Cheap coverage — same intent, different literal string. Google normalizes most of these automatically now, but AI answer engines historically match more literally, so a few natural mentions across the site (not stuffed) still help:
+- baggage storage Da Nang *(vs. "luggage")*
+- Danang vs Da Nang vs Đà Nẵng *(schema already covers this — `addressRegion: "Đà Nẵng"` plus "Da Nang" throughout copy)*
+- bag drop Da Nang
+- left luggage service Da Nang
+
+---
+
+### The honest strategy note — where these actually belong
+
+Every phrase above needs a home, and **the Instagram bio is the wrong home for almost all of them.** A few reasons, worth being direct about before implementing anything:
+
+1. **Instagram doesn't do keyword-match ranking on bio text the way Google does on a webpage.** A stuffed bio ("Luggage Storage Da Nang | Bag Storage Da Nang | Trustworthy Storage Da Nang...") reads as spam to a human visitor and doesn't move Instagram's own discovery algorithm, which weights hashtags/captions/engagement far more than bio text. It *does* get read by AI answer engines as an entity description — so 1–2 real phrases matter, dozens don't.
+2. **The kit's own Golden Rule 3** (flagged in the local SEO audit) applies to Instagram the same way it applies to GBP: a keyword-stuffed *name* or bio reads as spam and risks worse trust signals, not better ranking. "More keywords crammed in" is not the lever — **genuine entity + citation + content signals are** (the whole body of work already shipped: schema, GBP, the audit).
+3. **Where the real ranking weight actually sits**, per phrase-cluster above:
+
+| Cluster | Real home | Status |
+|---|---|---|
+| Trust/quality modifiers | `trust-safety` page copy | Needs the exact phrases added to existing content — tracked in the AUTHOR-tier content brief |
+| Location/landmark | `LocationSection` + a location FAQ entry | Marble Mountains connection already flagged as underused in this doc |
+| Item-type | `TrustSafety` accept-list copy (already lists most items — needs the search phrases, not new facts) | Minor copy pass |
+| Persona/duration | `PricingSection` intro + `ForExpats` (built, not on page yet per codebase-state memory) | Partially blocked on shipping `ForExpats` |
+| Question-shaped (AEO) | New FAQ entries, direct-answer format | This is the entire point of the AUTHOR-tier content brief — proposal only, needs sign-off |
+| Comparison | Could be a single FAQ entry ("What makes Stow different from app-based storage marketplaces?") — real differentiator, not spin | Not yet drafted |
+| Price-intent | Already answered by `PricingSection` — mostly needs the FAQ phrasing layered on top | Minor |
+| Vietnamese | Zalo OA (once created) + Facebook Page, not the English-first website | Blocked on Zalo/Facebook creation |
+
+**Instagram's actual job here:** bio + 1–2 pinned/recent posts with real keyword-bearing captions (Instagram *does* index caption text for search), not the 150-character bio field.
+
+### Recommended Instagram bio (keeps brand voice, adds the two highest-value real phrases)
+
+```
+STOW | Safe Luggage Storage in Da Nang 🧳
+Near Ngũ Hành Sơn (Marble Mountains) · Store • Explore • Pick Up
+📍 Da Nang, Vietnam · ⏰ 7am–10pm daily
+🔒 Secure Storage ⚡ Friendly Local Support
+```
+
+Two real search phrases woven in as plain sentences ("Safe Luggage Storage in Da Nang", "Near Ngũ Hành Sơn (Marble Mountains)") — matches the humanizer voice rules (short, concrete, no corporate keyword-soup), and picks the two clusters with the best ROI: the core head term, and the underused Marble Mountains entity link this doc already flagged as a gap.
+
+---
+
 ## Sources checked
 
 - [Locafy — Entity SEO for Local Businesses](https://locafy.com/blog/entity-seo-local-businesses) — Knowledge Graph query share, entity-connection mechanics

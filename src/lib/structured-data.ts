@@ -25,11 +25,20 @@
  * Facebook URLs here as soon as those exist too; each one strengthens
  * entity resolution for AI answer engines.
  *
- * Not shipped here (see backlog in the research writeup — needs real data,
- * not code): AggregateRating (needs real review counts), FAQPage (needs
- * visible Q&A body copy — Google also killed the FAQ rich result in
- * May 2026, so this is no longer a quick win either way).
+ * FAQPage — added 2026-08-09 once real visible Q&A copy shipped
+ * (FAQSection.tsx, content approved by the owner). Built from
+ * `faqGroups` in faq-data.ts — same array the component renders, so
+ * this can never drift from what's actually visible on the page.
+ * Google's own rich result for this is dead (killed May 2026) but the
+ * kit's MUST checklist condition — schema only paired with a real
+ * visible body — is met, and AI answer engines still parse it.
+ *
+ * Not shipped here (see backlog in the research writeup — needs real
+ * data, not code): AggregateRating (needs real review counts from the
+ * GBP dashboard).
  */
+
+import { faqGroups } from "./faq-data";
 
 const BASE_URL = "https://www.stowdanang.com";
 const BUSINESS_ID = `${BASE_URL}/#business`;
@@ -151,3 +160,21 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
     })),
   } as const;
 }
+
+/** Homepage FAQPage — flattens faq-data.ts's grouped Q&A into schema.org's
+ *  flat mainEntity list. Grouping is a visual/scannability affordance in
+ *  FAQSection.tsx; schema.org's FAQPage has no concept of it. */
+export const faqPageJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqGroups.flatMap((group) =>
+    group.items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    }))
+  ),
+} as const;
