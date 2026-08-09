@@ -34,10 +34,10 @@ As long as you need. Pay hourly — 15,000₫/hour, 1-hour minimum — for a sho
 ### Visa run / expat / digital nomad intent
 
 **Where can I store luggage during a visa run in Da Nang?**
-Stow's flat-rate plans are built for this. Mini (150,000₫) covers up to 1 week, Standard (300,000₫) up to 1 month, Long Stay (500,000₫) up to 3 months — one flat price no matter when you actually pick up.
+Stow's flat-rate plans are built for this. Mini (150,000₫) covers up to 1 week, Strand (300,000₫) up to 1 month, Long Stay (1,000,000₫) up to 4 months — one flat price no matter when you actually pick up.
 
 **Is there monthly luggage storage in Da Nang for digital nomads?**
-Yes — the Standard plan is 300,000₫ flat for up to 1 month, with no daily charges added on. It's built for remote workers and visa runners who want to travel light for a few weeks without carrying everything.
+Yes — the Strand plan is 300,000₫ flat for up to 1 month, with no daily charges added on. It's built for remote workers and visa runners who want to travel light for a few weeks without carrying everything.
 
 ### Pricing (both intents)
 

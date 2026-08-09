@@ -41,12 +41,18 @@ type StorageOffer = {
   unitText: string;
 };
 
+/* Source of truth for these five is src/components/sections/PricingSection.tsx —
+   read the live component before ever editing this list again. (One already
+   drifted: this used to say "Standard"/500,000₫/3 months, copied from a stale
+   memory note instead of the actual component, which has said "Strand" and
+   1,000,000₫/4 months since 2026-08-08, commit 2485a68 — a day before this
+   schema was even written.) */
 const STORAGE_PLANS: StorageOffer[] = [
   { name: "Hourly", price: 15000, unitText: "per hour, 1-hour minimum" },
   { name: "Daily", price: 60000, unitText: "per day, up to 24 hours" },
   { name: "Flat — Mini", price: 150000, unitText: "flat rate, up to 1 week" },
-  { name: "Flat — Standard", price: 300000, unitText: "flat rate, up to 1 month" },
-  { name: "Flat — Long Stay", price: 500000, unitText: "flat rate, up to 3 months" },
+  { name: "Flat — Strand", price: 300000, unitText: "flat rate, up to 1 month" },
+  { name: "Flat — Long Stay", price: 1000000, unitText: "flat rate, up to 4 months" },
 ];
 
 const localBusiness = {
@@ -61,7 +67,7 @@ const localBusiness = {
   image: `${BASE_URL}/opengraph-image`,
   telephone: "+84905955161",
   email: "stowdanang@gmail.com",
-  priceRange: "15.000₫–500.000₫",
+  priceRange: "15.000₫–1.000.000₫",
   address: {
     "@type": "PostalAddress",
     streetAddress: "55 Bà Bang Nhãn",

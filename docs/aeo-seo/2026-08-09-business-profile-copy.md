@@ -18,7 +18,7 @@ I don't have dashboard access, so I can't see what's already filled in — this 
   - Daily luggage storage — 60,000₫
   - Weekly flat-rate storage — 150,000₫
   - Monthly flat-rate storage — 300,000₫
-  - Long-stay storage (up to 3 months) — 500,000₫
+  - Long-stay storage (up to 4 months) — 1,000,000₫
   - Oversized item storage (surcharge)
 - **Hours** — confirm they match the live site exactly: 7:00 AM–10:00 PM, every day, no holiday exceptions.
 - **Photos** — storefront exterior/signage, the storage area itself, staff performing the tag-and-photo check-in process, if not already uploaded.

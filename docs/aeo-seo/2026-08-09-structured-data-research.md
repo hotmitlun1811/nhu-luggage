@@ -80,9 +80,9 @@ LocalBusiness (#business)              Service (#service)
                                           OfferCatalog "Storage Plans"
                                               │ itemListElement (5)
                     ┌───────────┬────────────┼────────────┬───────────┐
-                Hourly       Daily       Flat—Mini   Flat—Standard  Flat—Long Stay
-               15,000₫     60,000₫       150,000₫      300,000₫       500,000₫
-               /hour        /day       flat/1wk      flat/1mo       flat/3mo
+                Hourly       Daily       Flat—Mini   Flat—Strand    Flat—Long Stay
+               15,000₫     60,000₫       150,000₫      300,000₫     1,000,000₫
+               /hour        /day       flat/1wk      flat/1mo       flat/4mo
 ```
 
 `LocalBusiness` and `Service` are linked by `@id` reference (`provider: { "@id": "https://stowdanang.com/#business" }`) rather than duplicated inline — one source of truth for the NAP data.
