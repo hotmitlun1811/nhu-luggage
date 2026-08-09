@@ -20,9 +20,10 @@
  *   - page-role schema present, `Organization.sameAs` linking every
  *     external entity, validates in Google Rich Results Test.
  *
- * `sameAs` currently only lists Instagram — add the Google Business
- * Profile, TripAdvisor, and Facebook URLs here as soon as those exist;
- * each one strengthens entity resolution for AI answer engines.
+ * `sameAs` — Google Business Profile added 2026-08-09 (local SEO audit,
+ * docs/aeo-seo/2026-08-09-local-seo-audit.md). Add TripAdvisor and
+ * Facebook URLs here as soon as those exist too; each one strengthens
+ * entity resolution for AI answer engines.
  *
  * Not shipped here (see backlog in the research writeup — needs real data,
  * not code): AggregateRating (needs real review counts), FAQPage (needs
@@ -92,7 +93,10 @@ const localBusiness = {
     "@type": "City",
     name: "Da Nang",
   },
-  sameAs: ["https://www.instagram.com/stowdanang/"],
+  sameAs: [
+    "https://www.instagram.com/stowdanang/",
+    "https://share.google/4fTTPlY1pwqbLAvmB",
+  ],
 };
 
 const luggageStorageService = {

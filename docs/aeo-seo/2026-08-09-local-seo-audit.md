@@ -9,7 +9,7 @@
 
 ## The one-line finding
 
-Stow has a technically excellent, schema-rich website — [the JSON-LD is already correct](2026-08-09-structured-data-research.md) — but the business is **completely invisible off-site**: no Google Business Profile, no Facebook Page, no Bing/Apple listing, no directories, and the one social profile that exists (Instagram, 2 followers) links to a dead old URL. Google currently has **zero prominence signal** to rank Stow on for "luggage storage Da Nang" — it isn't ranking low, it *doesn't exist* in the local pack at all. Meanwhile direct local competition (Easy Storage Da Nang, WhaleLO, plus the international host-marketplaces Stasher/Nannybag/Radical Storage) already has a footprint. This is fixable in days — Stow just launched, so there's no history to untangle, only ground to build on.
+**Update, same day:** the first pass of this audit reported no Google Business Profile. That was wrong — GBP exists (owner-confirmed, verified via the real share link, see Phase 2) — but the site itself was never linking to it: both Maps-related CTAs on the live site pointed at a bare address pin and a dead text-search instead of the real listing. That's now fixed. The corrected picture: Stow has a technically excellent, schema-rich website *and* a working Google Business Profile with a reported 5.0 rating — but everything **besides** Google is still unbuilt: no Facebook Page, no Bing/Apple listing, no directories, and the one other social profile that exists (Instagram, 2 followers) links to a dead old URL. The prominence signal isn't zero, but it's resting on a single channel that the site wasn't even pointing at correctly until today. Meanwhile direct local competition (Easy Storage Da Nang, WhaleLO, plus the international host-marketplaces Stasher/Nannybag/Radical Storage) already has a broader footprint. Still fixable fast — Stow just launched, so there's no history to untangle on the *new* channels, only ground to build.
 
 ---
 
@@ -45,23 +45,24 @@ sameAs profiles:
 
 ---
 
-## Phase 2 — Google Business Profile: **MISSING** (the single biggest gap)
+## Phase 2 — Google Business Profile: **EXISTS** (correction — see below)
 
-- **No GBP exists.** Confirmed by tracing the site's own "Get Directions" link: `https://maps.app.goo.gl/wVmkxJ1DgLUJeBAWA` resolves to a Google Maps place titled only *"55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng 550000, Vietnam"* — a raw geocoded address pin, not a named, claimed business listing. If a GBP existed, that place would carry the business name.
-- **A related site bug, caused by the same gap:** the location section's other CTA links to `https://www.google.com/maps/search/Stow+Da+Nang+luggage+storage` — a text search. Since no business named "Stow" is indexed on Maps, any visitor who clicks it currently gets **no result / an unrelated result**, not the store. This is a broken user-facing link, not just a missing citation — fix it (point to the real GBP share link) the moment the profile is verified.
+**Correction, 2026-08-09 (same day):** the first pass of this audit reported GBP as missing. That was wrong in the way it mattered — it existed, but the *site* wasn't linking to it. Tracing the site's own CTAs found two different, both-wrong links: the "Get Directions" link resolved to a bare geocoded address pin (`maps.app.goo.gl/wVmkxJ1DgLUJeBAWA`, titled only by the street address), and the "5.0 on Google" badge pointed at a Maps text-search that returns no result. Neither is the real listing. The owner supplied the actual profile link (`https://share.google/4fTTPlY1pwqbLAvmB`), which resolves through Google's redirector to a real Knowledge Graph entity — `kgmid=/g/11z9561m6s`, bound to the query **"Stow - Luggage Storage Da Nang"** — confirming a genuine indexed Business Profile. Both site links have been repointed to it, and it's now in schema `sameAs`.
+
+- **OBSERVED (via the redirect trace):** a real Google entity exists for "Stow - Luggage Storage Da Nang" (`/g/11z9561m6s`).
+- **VERIFY (dashboard-only — Google's business panel is JS-rendered and didn't come through on a plain fetch):** exact registered category, verified/claimed badge status, live review count and rating, hours as shown on the profile vs. the site's 7am–10pm, and photo count. The owner reports the rating shown is genuine — worth a screenshot for the record next time the dashboard's open, since the previous pass had no way to confirm it independently.
 
 ```
-GBP SCORE — Stow — 2026-08-09 (public-data pass, from-scratch build, not an edit)
-MUST:    0/8 — nothing exists yet to score against
-SHOULD:  0/9 — n/a until created
-ONGOING: not running
+GBP SCORE — Stow — 2026-08-09 (corrected)
+MUST:    claimed/verified=VERIFY · primary category=VERIFY · name="Stow - Luggage Storage Da Nang" (per kgmid query, OK) ·
+         NAP=VERIFY against canonical · address-model=storefront (assumed correct) · phone=VERIFY · website=VERIFY link target · hours=VERIFY
+SHOULD:  description / services / photos / attributes / Q&A — VERIFY (all dashboard-only)
+ONGOING: Posts=VERIFY · Reviews=reported 5.0 (genuine per owner) · responses=VERIFY
 Headline fixes (top 3 by impact):
-  1) Create + verify the Business Profile — storefront model, real address, primary category "Luggage Storage Facility" (or closest predefined match).
-  2) Once created, swap the site's broken "search" CTA for the real GBP share link, and add the GBP URL to schema `sameAs`.
-  3) Populate fully on creation — services (add every relevant predefined service, not custom-only — this is a real 2026 ranking lever), photos (storefront exterior/interior, staff, tagging process), and description built from the existing brand copy in project memory.
+  1) Screenshot the dashboard once (category, hours, review count, verified badge) to convert the VERIFY rows above into confirmed facts — the previous "doesn't exist" miss happened precisely because this audit had no dashboard access.
+  2) Confirm the site's `website` field in GBP points at https://www.stowdanang.com (matches the canonical-host fix from Phase 1), not the old Vercel URL.
+  3) Now that the real link is wired into the site, keep completing the profile — services (every relevant predefined service, not custom-only), fresh photos, weekly Posts — per the SHOULD/ONGOING checklist in file `03-gbp-optimization-checklist.md`.
 ```
-
-Per the kit's 2026 ranking-factor research, **GBP signals are ~32% of local-pack ranking weight** — the largest single lever available, and currently at zero.
 
 ---
 
@@ -77,7 +78,7 @@ The kit's US-centric tier list (BBB, YellowPages, Chamber of Commerce…) doesn'
 
 | Tier | Platform | Found? | Status | Notes |
 |---|---|---|---|---|
-| 1 | **Google Business Profile** | N | **Missing** | See Phase 2 — the whole game. |
+| 1 | **Google Business Profile** | Y | **Match (owner-confirmed) — site links fixed** | `https://share.google/4fTTPlY1pwqbLAvmB` → kgmid `/g/11z9561m6s`, "Stow - Luggage Storage Da Nang". Site's two Maps CTAs were pointing elsewhere; both repointed here and added to schema `sameAs`. Category/hours/photo VERIFY still open — see Phase 2. |
 | 1 | **Facebook Page** | N | **Missing** | No page found under "Stow Da Nang" / "stowdanang" in public search. Create with matching NAP. |
 | 1 | **Instagram** | Y | **Mismatch** | `@stowdanang`, 2 followers. Bio website link is the **old Vercel URL `stow-vn.vercel.app`**, not `stowdanang.com` — a live NAP mismatch on the one profile that exists. No phone/address in bio either. |
 | 1 | **Zalo Official Account** | N | **Missing** | Not found. Zalo is the default local-business/contact surface in Vietnam and the number is already Zalo-enabled per project notes — low-effort, high-relevance create. |
@@ -89,7 +90,7 @@ The kit's US-centric tier list (BBB, YellowPages, Chamber of Commerce…) doesn'
 | 3 | **"Expats in Da Nang City" (Facebook group) presence** | N | **Missing** | Not a formal citation but a high-intent community for the expat/visa-run segment — the project's stated primary revenue driver. |
 | 3 | **TikTok** | N | **Missing** | Optional, matches younger-tourist reach; not NAP-critical. |
 
-**Baseline counts:** Match 0 / Mismatch 1 (Instagram) / Missing 8+. The footprint isn't "messy," it's **empty** — one profile exists and it has a broken link. That's a faster fix than untangling years of inconsistent listings, but every Tier 1/2 platform above is a from-scratch build.
+**Baseline counts:** Match 1 (GBP, corrected) / Mismatch 1 (Instagram) / Missing 7+. Better than the first pass suggested — GBP is real and reportedly performing (5.0 rating) — but it was carrying the whole footprint alone, and even it wasn't correctly linked from the site. Every other Tier 1/2 platform above is still a from-scratch build.
 
 *(Full row-by-row tracker: [`citation-tracker.csv`](citation-tracker.csv) alongside this file.)*
 
@@ -97,49 +98,49 @@ The kit's US-centric tier list (BBB, YellowPages, Chamber of Commerce…) doesn'
 
 ## Phase 5 — Reviews & competitive position
 
-- **Reviews: 0 everywhere.** Expected — Stow launched June 2026 and has no GBP yet to collect them on. Not a defect, a build-from-zero.
+- **Reviews: GBP reportedly at 5.0 (owner-confirmed); 0 everywhere else.** Worth exporting the actual count/rating from the dashboard for the record — this pass couldn't render it independently (Phase 2 VERIFY). Review-recency/velocity is now the single biggest 2025-26 ranking shift per the kit's research (file `06-advanced-ai-era-tactics.md`) — a rating is only as strong as the flow of fresh reviews behind it, so a request-workflow is still worth standing up even with GBP already live.
 - **Direct local competitor confirmed:** *Easy Storage Da Nang*, operating out of Hana's Coworking, 69 Bùi Tá Hán, Khuê Mỹ Ward — the **same Ngũ Hành Sơn district**. Worth a follow-up spot-check on their GBP category/review count as the local benchmark to beat.
 - **International marketplace competitors already active in Da Nang:** Stasher, Nannybag, Radical Storage, and WhaleLO (the last is Klook-listed) all show multiple Da Nang "host" spots. None currently include Stow.
-- **Local-pack reality check:** meaningless to run yet — with no GBP, Stow structurally *cannot* appear in the Maps 3-pack for any "luggage storage near me"-type search right now, regardless of how well the site itself is optimized. This is whitespace, not a low ranking.
+- **Local-pack reality check:** worth re-running now that the real GBP link is confirmed — search "luggage storage near me" / "luggage storage Da Nang" in an incognito window and note where Stow lands in the 3-pack vs. the competitors above. Not done in this pass (needs a live, geo-located search session, not a scripted one) — flagged as the next concrete step rather than assumed.
 
 ---
 
 ## Phase 6 — Synthesis & the plan (impact × effort)
 
-**Narrative:** the site is doing its job (schema, copy, pricing — all solid per the companion AEO doc); the local-pack layer simply hasn't been switched on yet. Every fix below is a *creation*, not an *untangling* — the fastest kind of local SEO work there is.
+**Narrative:** the site is doing its job (schema, copy, pricing — all solid per the companion AEO doc); GBP already exists and is reportedly performing well — the gap was that the site wasn't linking to it, and everything besides Google is still unbuilt. Most of what's left below is *creation*, not *untangling* — the fastest kind of local SEO work there is.
 
 ```
         HIGH IMPACT
             │  [P1 — this week]                [P2 — weeks 2–4]
-            │  • Lock display name w/ owner     • Bing Places + Apple Business
-            │    (confirm signage → "Stow")       Connect (import from GBP)
-            │  • Create + verify GBP            • List on Stasher / Nannybag /
-            │    (storefront, category, hours)    Radical Storage — citation +
-            │  • Create Facebook Page             booking channel in one
-            │  • Create Zalo OA                 • TripAdvisor listing
-            │  • Fix Instagram bio link          • Resolve apex-vs-www canonical
-            │    (stow-vn.vercel.app → real       mismatch site-side
-            │    domain) + add phone            • Add GBP/Facebook/Zalo URLs to
-            │  • Fix dead "search" Maps CTA        schema `sameAs` as each is
-            │    once GBP share link exists        created
-            │  • Design review-request flow
-            │    (ready day 1 of verification,
-            │    not after)
+            │  • Screenshot GBP dashboard        • Bing Places + Apple Business
+            │    (category/hours/reviews/          Connect (import from GBP)
+            │    photos) — close the VERIFY      • List on Stasher / Nannybag /
+            │    rows from Phase 2                 Radical Storage — citation +
+            │  • Create Facebook Page              booking channel in one
+            │  • Create Zalo OA                  • TripAdvisor listing
+            │  • Fix Instagram bio link           • Resolve apex-vs-www canonical
+            │    (stow-vn.vercel.app → real         mismatch site-side (done —
+            │    domain) + add phone                see Phase 1, Open Item 3)
+            │  • [done] Repoint site's Maps      • Add Facebook/Zalo URLs to
+            │    CTAs + schema sameAs at the        schema sameAs as each is
+            │    real GBP listing                   created
+            │  • Design/confirm review-request
+            │    workflow now GBP is live
  ───────────┼──────────────────────────────────────────────────────
-            │  [quick wins, lower impact]       [P3 — ongoing / volume]
-            │  • Standardize "Stow" vs "Stow —   • Da Nang tourism directories
-            │    Luggage Storage Da Nang"          + "Expats in Da Nang City"
-            │    across whichever profiles         FB group presence
-            │    keep the long form              • TikTok
-            │                                    • Weekly GBP Posts once live
-            │                                    • Review velocity: target
-            │                                      5–15/mo, respond ≤48h
+            │  [quick wins, lower impact]        [P3 — ongoing / volume]
+            │  • Standardize "Stow" vs "Stow —    • Da Nang tourism directories
+            │    Luggage Storage Da Nang"           + "Expats in Da Nang City"
+            │    across whichever profiles          FB group presence
+            │    keep the long form               • TikTok
+            │                                     • Weekly GBP Posts
+            │                                     • Review velocity: target
+            │                                       5–15/mo, respond ≤48h
         LOW IMPACT          LOW EFFORT ──────────────────────► HIGH EFFORT
 ```
 
 **Sequenced:**
-- **P1 (this week):** confirm the GBP display name and address model with the owner, create + verify GBP, stand up Facebook + Zalo, fix the two live NAP/link bugs (Instagram bio URL, dead Maps CTA), design the review-ask flow now so it fires the moment GBP is verified.
-- **P2 (weeks 2–4):** Bing, Apple, the three luggage-storage marketplaces (real revenue + citation), TripAdvisor, the apex/www canonical fix, `sameAs` + `aggregateRating` schema updates as profiles/reviews land.
+- **P1 (this week):** pull the GBP dashboard screenshot to close out the VERIFY rows, stand up Facebook + Zalo, fix the Instagram bio link — the Maps CTA/schema fixes are already shipped this session.
+- **P2 (weeks 2–4):** Bing, Apple, the three luggage-storage marketplaces (real revenue + citation), TripAdvisor, `sameAs` + `aggregateRating` schema updates as Facebook/Zalo/reviews land.
 - **P3 (ongoing):** community + volume — expat Facebook group, Da Nang tourism sites, TikTok, weekly Posts, permanent review-velocity cadence.
 
 ---
@@ -148,10 +149,10 @@ The kit's US-centric tier list (BBB, YellowPages, Chamber of Commerce…) doesn'
 
 | Metric | Baseline 2026-08-09 | +30 | +60 | +90 | Target |
 |---|---|---|---|---|---|
-| GBP status | Does not exist | | | | Verified, fully complete |
-| "luggage storage Da Nang" local-pack presence | Not applicable — no listing to rank | | | | Appears in 3-pack |
-| GBP reviews (count / avg) | 0 / — | | | | 10+ / 4.5+ |
-| Citations Match / Mismatch / Missing | 0 / 1 / 8+ | | | | 8+ / 0 / 0 |
+| GBP status | Exists, owner-confirmed; category/verified-badge/photos VERIFY | | | | Fully complete + confirmed |
+| "luggage storage Da Nang" local-pack presence | VERIFY — not run this pass, needs a live incognito search | | | | Appears in 3-pack |
+| GBP reviews (count / avg) | Reported 5.0 avg (owner-confirmed); exact count VERIFY | | | | Rising count, 4.5+ maintained |
+| Citations Match / Mismatch / Missing | 1 / 1 / 7+ | | | | 8+ / 0 / 0 |
 | Instagram followers / bio link correct | 2 / **incorrect** (old Vercel URL) | | | | growing / fixed |
 | GSC clicks on local terms | VERIFY (no GSC access in this pass) | | | | rising |
 
@@ -161,7 +162,7 @@ The kit's US-centric tier list (BBB, YellowPages, Chamber of Commerce…) doesn'
 
 - [x] Canonical NAP extracted from live schema, cross-checked against footer + Instagram — locked above, flagged 4 open items for owner confirmation.
 - [x] Every "missing/broken" claim traced on the live public site or via direct search (the Maps redirect trace, the Instagram bio fetch) — not assumed from an aggregator.
-- [x] Public-data vs dashboard-required items labeled (VERIFY where dashboard access would be needed — none were, since nothing exists yet to check).
+- [x] Public-data vs dashboard-required items labeled VERIFY where dashboard access would be needed. **Correction applied same-day:** the first pass mislabeled GBP itself as missing rather than VERIFY, because the site's own links didn't point at it and public search didn't surface it either — owner correction + the redirect trace on the real link fixed this. Recorded here rather than silently edited, per the kit's own Golden Rule 6 (verify, don't assume — and when you get it wrong, say so).
 - [x] Address model — storefront, matches the staffed check-in/tagging ops process from project brand spec; recommend confirming with owner it's not a shared/unstaffed space (Open Item 4).
 - [x] No invented address, suite, or virtual office — the real address already on the live site was used throughout.
 - [x] Fixes tiered P1/P2/P3 by impact × effort.
@@ -171,7 +172,7 @@ The kit's US-centric tier list (BBB, YellowPages, Chamber of Commerce…) doesn'
 
 ## What this hands back to the owner (the ask)
 
-1. **Confirm the GBP display name** — recommend "Stow" alone (see Open Item 1); confirm against actual shop signage.
-2. **Owner/manager access** to create Google Business Profile, Facebook Page, and Zalo OA (or delegate creation with a shared login) — these require the business owner's identity for verification, not something that can be scaffolded from code.
+1. **A GBP dashboard screenshot** (category, hours, verified badge, exact review count, photo count) — the one thing that can't be confirmed from outside the dashboard; closes the remaining VERIFY rows in Phase 2.
+2. **Owner/manager access** to create Facebook Page and Zalo OA (or delegate creation with a shared login) — these require the business owner's identity for verification, not something that can be scaffolded from code.
 3. **Confirm the address model** — dedicated staffed space at 55 Bà Bang Nhãn vs. shared/unstaffed (Open Item 4).
-4. **Sign-off on the two live bug fixes** (Instagram bio link, dead Maps CTA) and the canonical-host decision (Open Item 3) — code-side, can ship immediately once decided.
+4. **Confirm the GBP display name matches signage** — the entity resolves under "Stow - Luggage Storage Da Nang" (Open Item 1); worth checking that's what's on the shop sign, not a keyword-stuffed name Google could flag later.

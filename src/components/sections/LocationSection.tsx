@@ -87,7 +87,7 @@ export default function LocationSection() {
                     Near Marble Mountains · 10 min from Da Nang Airport
                   </p>
                   <a
-                    href="https://maps.app.goo.gl/wVmkxJ1DgLUJeBAWA"
+                    href="https://share.google/4fTTPlY1pwqbLAvmB"
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-[12px] text-[#E8742C] hover:text-white transition-colors"
