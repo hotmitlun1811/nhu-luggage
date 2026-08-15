@@ -3,6 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { CheckCircle2, Send, RotateCcw, ChevronDown } from "lucide-react";
 import { PLAN_FACTS, FLEX_PLANS, FLAT_PLANS, vnd, generateTimeSlots, type PlanKey, type Lane } from "@/lib/plans";
+import { POST_BOOKING_EMAIL_ENABLED } from "@/lib/features";
 
 /* This tool is staff-only (noindex, out of scope for the i18n build —
    single operating language) so its display text stays a local English
@@ -102,7 +103,11 @@ export default function IntakeForm() {
     return `STW-${d}-${n}`;
   }
 
+  // Same switch as the public booking form — see src/lib/features.ts.
+  // The counter tool must not send either, or a walk-in customer gets an
+  // email the online customer no longer does.
   async function sendAgreementEmail(booking: Confirmed) {
+    if (!POST_BOOKING_EMAIL_ENABLED) return;
     setEmailStatus("sending");
     setEmailError("");
     try {
@@ -271,36 +276,40 @@ export default function IntakeForm() {
           </div>
         </div>
 
-        {/* Policy & agreement email status */}
-        <div className="flex items-center justify-between bg-[#1E3356] rounded-xl px-5 py-3.5 border border-white/10 mb-4">
-          <div className="min-w-0 mr-3">
-            <p className="text-[13px] font-semibold text-white" style={{ fontFamily: "var(--font-poppins)" }}>
-              Policy &amp; agreement email
-            </p>
-            <p className="text-[12px] text-white/40 mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
-              {emailStatus === "sending" && `Sending to ${confirmed.email}…`}
-              {emailStatus === "sent" && `Sent to ${confirmed.email}`}
-              {emailStatus === "error" && (emailError || "Failed to send")}
-              {emailStatus === "idle" && `Will send to ${confirmed.email}`}
-            </p>
+        {/* Policy & agreement email status — hidden while the post-booking
+            email is switched off, so staff aren't told an email is going
+            out that isn't. */}
+        {POST_BOOKING_EMAIL_ENABLED && (
+          <div className="flex items-center justify-between bg-[#1E3356] rounded-xl px-5 py-3.5 border border-white/10 mb-4">
+            <div className="min-w-0 mr-3">
+              <p className="text-[13px] font-semibold text-white" style={{ fontFamily: "var(--font-poppins)" }}>
+                Policy &amp; agreement email
+              </p>
+              <p className="text-[12px] text-white/40 mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
+                {emailStatus === "sending" && `Sending to ${confirmed.email}…`}
+                {emailStatus === "sent" && `Sent to ${confirmed.email}`}
+                {emailStatus === "error" && (emailError || "Failed to send")}
+                {emailStatus === "idle" && `Will send to ${confirmed.email}`}
+              </p>
+            </div>
+            {emailStatus === "error" ? (
+              <button
+                type="button"
+                onClick={() => sendAgreementEmail(confirmed)}
+                className="flex-shrink-0 text-[12px] font-semibold text-[#E8742C] px-3 py-2 rounded-lg border border-[#E8742C]/40"
+                style={{ fontFamily: "var(--font-poppins)" }}
+              >
+                Retry
+              </button>
+            ) : (
+              <CheckCircle2
+                size={18}
+                strokeWidth={2}
+                className={`flex-shrink-0 ${emailStatus === "sent" ? "text-emerald-400" : "text-white/20"}`}
+              />
+            )}
           </div>
-          {emailStatus === "error" ? (
-            <button
-              type="button"
-              onClick={() => sendAgreementEmail(confirmed)}
-              className="flex-shrink-0 text-[12px] font-semibold text-[#E8742C] px-3 py-2 rounded-lg border border-[#E8742C]/40"
-              style={{ fontFamily: "var(--font-poppins)" }}
-            >
-              Retry
-            </button>
-          ) : (
-            <CheckCircle2
-              size={18}
-              strokeWidth={2}
-              className={`flex-shrink-0 ${emailStatus === "sent" ? "text-emerald-400" : "text-white/20"}`}
-            />
-          )}
-        </div>
+        )}
 
         {/* Actions */}
         <div className="flex flex-col gap-3">

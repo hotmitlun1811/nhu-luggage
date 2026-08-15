@@ -16,6 +16,7 @@ import {
   type Lane,
 } from "@/lib/plans";
 import { formatDateTime, formatShortDate, formatLongDate, pluralizeWord } from "@/lib/format";
+import { POST_BOOKING_EMAIL_ENABLED } from "@/lib/features";
 import type { Dictionary } from "@/content/types";
 import type { AppLocale } from "@/content/locales";
 
@@ -64,8 +65,10 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   const fmtShort = (dateStr: string) => formatShortDate(dateStr, locale);
   const fmtLong = (dateStr: string) => formatLongDate(dateStr, locale);
 
-  const [lane, setLane]             = useState<Lane>("flatrate");
-  const [plan, setPlan]             = useState<PlanKey>("strand");
+  // Flexible is both the first tab and the pre-selected one (client
+  // request, 2026-08-15 — it used to open on flatrate/strand).
+  const [lane, setLane]             = useState<Lane>("flexible");
+  const [plan, setPlan]             = useState<PlanKey>("daily");
   const [oversized, setOversized]   = useState(false);
   const [date, setDate]             = useState("");
   const [time, setTime]             = useState("");
@@ -215,7 +218,11 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     }).catch(() => {});
   }
 
+  // Gated by POST_BOOKING_EMAIL_ENABLED — currently off, pending the
+  // review-request email that replaces this one. Left fully wired so
+  // turning it back on is a one-line flag flip, not a rebuild.
   async function sendAgreementEmail(ref: string) {
+    if (!POST_BOOKING_EMAIL_ENABLED) return;
     setEmailStatus("sending");
     setEmailError("");
     try {
@@ -280,35 +287,39 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
           {dict.successRefPrefix}{bookingRef}
         </p>
 
-        <div className="flex items-center justify-between w-full max-w-xs px-3 py-2.5 mb-6 bg-white/[0.05] rounded-lg border border-white/[0.09]">
-          <div className="text-left min-w-0 mr-3">
-            <p className="text-[11.5px] font-semibold text-white/70" style={{ fontFamily: "var(--font-poppins)" }}>
-              {dict.policyEmailLabel}
-            </p>
-            <p className="text-[11px] text-white/35 mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
-              {emailStatus === "sending" && `${dict.emailSendingPrefix}${email}…`}
-              {emailStatus === "sent" && `${dict.emailSentPrefix}${email}`}
-              {emailStatus === "error" && (emailError || dict.emailFailedFallback)}
-              {emailStatus === "idle" && `${dict.emailWillSendPrefix}${email}`}
-            </p>
+        {/* Hidden while POST_BOOKING_EMAIL_ENABLED is off — promising an
+            email we no longer send is worse than saying nothing. */}
+        {POST_BOOKING_EMAIL_ENABLED && (
+          <div className="flex items-center justify-between w-full max-w-xs px-3 py-2.5 mb-6 bg-white/[0.05] rounded-lg border border-white/[0.09]">
+            <div className="text-left min-w-0 mr-3">
+              <p className="text-[11.5px] font-semibold text-white/70" style={{ fontFamily: "var(--font-poppins)" }}>
+                {dict.policyEmailLabel}
+              </p>
+              <p className="text-[11px] text-white/35 mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
+                {emailStatus === "sending" && `${dict.emailSendingPrefix}${email}…`}
+                {emailStatus === "sent" && `${dict.emailSentPrefix}${email}`}
+                {emailStatus === "error" && (emailError || dict.emailFailedFallback)}
+                {emailStatus === "idle" && `${dict.emailWillSendPrefix}${email}`}
+              </p>
+            </div>
+            {emailStatus === "error" ? (
+              <button
+                type="button"
+                onClick={() => sendAgreementEmail(bookingRef)}
+                className="flex-shrink-0 text-[11px] font-semibold text-[#E8742C] px-2.5 py-1.5 rounded-md border border-[#E8742C]/40"
+                style={{ fontFamily: "var(--font-poppins)" }}
+              >
+                {dict.retryLabel}
+              </button>
+            ) : (
+              <CheckCircle2
+                size={16}
+                strokeWidth={2}
+                className={`flex-shrink-0 ${emailStatus === "sent" ? "text-emerald-400" : "text-white/20"}`}
+              />
+            )}
           </div>
-          {emailStatus === "error" ? (
-            <button
-              type="button"
-              onClick={() => sendAgreementEmail(bookingRef)}
-              className="flex-shrink-0 text-[11px] font-semibold text-[#E8742C] px-2.5 py-1.5 rounded-md border border-[#E8742C]/40"
-              style={{ fontFamily: "var(--font-poppins)" }}
-            >
-              {dict.retryLabel}
-            </button>
-          ) : (
-            <CheckCircle2
-              size={16}
-              strokeWidth={2}
-              className={`flex-shrink-0 ${emailStatus === "sent" ? "text-emerald-400" : "text-white/20"}`}
-            />
-          )}
-        </div>
+        )}
 
         <div className="flex gap-2 flex-wrap justify-center">
           <Link
@@ -338,7 +349,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
       <div>
         <p className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>{dict.laneLabel}</p>
         <div className="flex p-[3px] bg-white/[0.06] rounded-lg border border-white/[0.08] gap-[3px]">
-          {(["flatrate", "flexible"] as Lane[]).map((l) => (
+          {(["flexible", "flatrate"] as Lane[]).map((l) => (
             <button
               key={l}
               type="button"

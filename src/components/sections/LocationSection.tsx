@@ -2,6 +2,7 @@
 
 import { MapPin, Clock, Mail, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
+import { GOOGLE_MAPS_EMBED_URL, GOOGLE_MAPS_SHARE_URL } from "@/lib/maps";
 import type { Dictionary } from "@/content/types";
 
 const WA_ICON = (
@@ -31,8 +32,11 @@ export default function LocationSection({ dict }: { dict: Dictionary["location"]
             transition={{ duration: 0.55, ease: "easeOut" }}
             className="rounded-2xl overflow-hidden h-[340px] lg:h-[520px] w-full"
           >
+            {/* Stow's own Google listing, not a search for the street
+                address — the address query rendered an unnamed pin with no
+                business card or rating on it. See src/lib/maps.ts. */}
             <iframe
-              src="https://maps.google.com/maps?q=55+Ba+Bang+Nhan,+Ngu+Hanh+Son,+Da+Nang,+Vietnam&output=embed&z=17"
+              src={GOOGLE_MAPS_EMBED_URL}
               width="100%"
               height="100%"
               style={{ border: 0 }}
@@ -93,7 +97,7 @@ export default function LocationSection({ dict }: { dict: Dictionary["location"]
                     {dict.addressSub}
                   </p>
                   <a
-                    href="https://share.google/4fTTPlY1pwqbLAvmB"
+                    href={GOOGLE_MAPS_SHARE_URL}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1.5 text-[12px] text-[#E8742C] hover:text-white transition-colors"

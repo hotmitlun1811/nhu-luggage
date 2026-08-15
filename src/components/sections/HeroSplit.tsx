@@ -1,8 +1,9 @@
 "use client";
 
-import { MapPin, Clock, MessageCircle } from "lucide-react";
+import { MapPin, Clock, MessageCircle, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import HeroBookingForm from "@/components/booking/HeroBookingForm";
+import { GOOGLE_MAPS_SHARE_URL } from "@/lib/maps";
 import type { Dictionary } from "@/content/types";
 import type { AppLocale } from "@/content/locales";
 
@@ -127,10 +128,33 @@ export default function HeroSplit({
                 <Clock size={13} className="text-[#E8742C] flex-shrink-0" />
                 <span>{dict.hoursLine}</span>
               </div>
-              <div className="flex items-start gap-2 text-[13px] text-white/65">
+              {/* Address links straight into Stow's Google Maps listing —
+                  it used to be inert text, so a visitor at the top of the
+                  page had no way to reach the map without scrolling to the
+                  Location section. */}
+              <a
+                href={GOOGLE_MAPS_SHARE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-start gap-2 text-[13px] text-white/65 hover:text-white transition-colors"
+              >
                 <MapPin size={13} className="text-[#E8742C] flex-shrink-0 mt-0.5" />
                 <span>{dict.address}</span>
-              </div>
+              </a>
+
+              {/* Directions CTA — secondary to "Book Now", so it's an
+                  outlined button, not another orange one. */}
+              <a
+                href={GOOGLE_MAPS_SHARE_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="mt-3 inline-flex w-fit items-center gap-2 rounded-[4px] border border-white/25 bg-white/[0.08] px-5 py-2.5 text-[12px] font-bold uppercase tracking-[0.07em] text-white backdrop-blur-sm transition-colors hover:border-white/45 hover:bg-white/[0.16]"
+                style={{ fontFamily: "var(--font-poppins)" }}
+              >
+                <MapPin size={13} className="flex-shrink-0 text-[#E8742C]" />
+                {dict.getDirections}
+                <ExternalLink size={11} className="flex-shrink-0 opacity-60" />
+              </a>
             </motion.div>
           </div>
 

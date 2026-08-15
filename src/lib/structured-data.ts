@@ -44,6 +44,7 @@
  */
 
 import type { Dictionary } from "@/content/types";
+import { GOOGLE_MAPS_PLACE_URL } from "@/lib/maps";
 
 const BASE_URL = "https://www.stowdanang.com";
 const BUSINESS_ID = `${BASE_URL}/#business`;
@@ -121,9 +122,13 @@ export function localBusinessJsonLd(dict: Dictionary) {
       "@type": "City",
       name: "Da Nang",
     },
+    /* The Maps URL is the canonical ?cid= form, not the share shortener —
+       `sameAs` is an entity-resolution signal, and a redirector is a
+       weaker one. (The previous https://share.google/… link was worse
+       than weak: it 302s to a non-existent Maps path.) */
     sameAs: [
       "https://www.instagram.com/stowdanang/",
-      "https://share.google/4fTTPlY1pwqbLAvmB",
+      GOOGLE_MAPS_PLACE_URL,
     ],
   };
 

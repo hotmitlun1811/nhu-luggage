@@ -13,7 +13,11 @@ export const hero = {
     "Fixed flat rates for expats, remote workers, and visa runners storing by the week or month. Hourly and daily plans for tourists and day-trippers. Drop off in under 3 minutes.",
   whatsappZalo: "WhatsApp · Zalo",
   hoursLine: "7am to 10pm, every day",
+  /* Street address — DO NOT translate in ko/zh, same reason as
+     location.ts: a transliterated Vietnamese address is useless to a
+     Grab driver. Rendered as a link to Stow's Google Maps listing. */
   address: "55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng",
+  getDirections: "Get directions",
   bookingPanel: {
     openStatus: "Open · 7am–10pm daily",
     bookNow: "Book now",

@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import nodemailer from "nodemailer";
+import { POST_BOOKING_EMAIL_ENABLED } from "@/lib/features";
 
 // Absolute URL is required because these links go out in an email, not a page.
 const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || "https://stow-vn.vercel.app").replace(/\/$/, "");
@@ -27,6 +28,17 @@ function escapeHtml(s: string) {
 }
 
 export async function POST(request: Request) {
+  /* Kill switch, checked before anything else — both forms already skip
+     this call, but a browser holding a cached bundle from before the
+     switch would still POST here. Refusing server-side is what actually
+     guarantees no customer receives this email. */
+  if (!POST_BOOKING_EMAIL_ENABLED) {
+    return NextResponse.json(
+      { error: "Post-booking email is disabled." },
+      { status: 503 }
+    );
+  }
+
   const body = (await request.json().catch(() => ({}))) as Body;
   const { to, name, ref, planName, planDuration, lane, consentAt, legalVersion } = body;
 

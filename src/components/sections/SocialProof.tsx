@@ -2,6 +2,7 @@
 
 import { Star } from "lucide-react";
 import { motion } from "framer-motion";
+import { GOOGLE_MAPS_SHARE_URL } from "@/lib/maps";
 import type { Dictionary } from "@/content/types";
 
 /* Testimonial quotes/names/origins stay English on every locale as
@@ -48,7 +49,7 @@ export default function SocialProof({ dict }: { dict: Dictionary["social"] }) {
               ))}
             </div>
             <a
-              href="https://share.google/4fTTPlY1pwqbLAvmB"
+              href={GOOGLE_MAPS_SHARE_URL}
               target="_blank"
               rel="noopener noreferrer"
               className="text-[13px] text-[#9CA3AF] hover:text-[#E8742C] transition-colors underline underline-offset-2 decoration-dotted"
