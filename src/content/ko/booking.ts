@@ -23,6 +23,7 @@ export const booking = {
 
   planLabel: "요금제",
   laptopNotice: "자유 요금제에서는 노트북 및 전자기기도 보관 가능합니다.",
+  hourlyCapNotice: "4시간을 초과하면 1일 요금으로 계산됩니다.",
 
   dropOffDateLabel: "맡기는 날짜",
   dropOffLabel: "맡기는 날",

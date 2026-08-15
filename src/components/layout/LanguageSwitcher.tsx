@@ -2,8 +2,8 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { Check, ChevronDown, Globe } from "lucide-react";
-import { INTL_LOCALES, LOCALE_LABEL, LOCALE_ROUTES, type AppLocale } from "@/content/locales";
+import { Check, ChevronDown } from "lucide-react";
+import { INTL_LOCALES, LOCALE_FLAG, LOCALE_LABEL, LOCALE_ROUTES, type AppLocale } from "@/content/locales";
 
 /**
  * Shared between PrimaryNav and Footer (decision #8 of the i18n plan) —
@@ -119,7 +119,9 @@ export default function LanguageSwitcher({
         className={triggerClass}
         style={{ fontFamily: "var(--font-poppins)" }}
       >
-        <Globe size={14} className={onDark ? "text-[#E8742C]" : "text-[#E8742C]"} aria-hidden="true" />
+        {/* Flag is decorative — the endonym beside it is the real label,
+            and it is already in the button's aria-label. */}
+        <span aria-hidden="true" className="text-[13px] leading-none">{LOCALE_FLAG[currentLocale]}</span>
         <span>{LOCALE_LABEL[currentLocale]}</span>
         <ChevronDown
           size={13}
@@ -155,7 +157,10 @@ export default function LanguageSwitcher({
                 }`}
                 style={{ fontFamily: "var(--font-inter)" }}
               >
-                <span>{LOCALE_LABEL[loc]}</span>
+                <span className="flex items-center gap-2">
+                  <span aria-hidden="true" className="text-[13px] leading-none">{LOCALE_FLAG[loc]}</span>
+                  <span>{LOCALE_LABEL[loc]}</span>
+                </span>
                 {isActive && <Check size={14} aria-hidden="true" className="flex-shrink-0" />}
               </Link>
             );

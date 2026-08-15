@@ -1,0 +1,86 @@
+export const booking = {
+  planNames: {
+    hourly: "時間単位",
+    daily: "1日単位",
+    mini: "ミニ",
+    strand: "ストランド",
+    longstay: "長期",
+  },
+  planDurations: {
+    hourly: "最低1時間",
+    daily: "最大24時間",
+    mini: "最大1週間",
+    strand: "最大1か月",
+    longstay: "最大4か月",
+  },
+  planTopBadge: "TOP",
+
+  laneLabel: "タイプ",
+  laneFlexible: "フレキシブル",
+  laneFlatRate: "定額",
+  laneFlexibleSub: "観光・当日ご来店の方に",
+  laneFlatRateSub: "駐在員・デジタルノマドの方に",
+
+  planLabel: "料金プラン",
+  laptopNotice: "フレキシブルプランではノートパソコンや電子機器もお預かりできます。",
+  hourlyCapNotice: "4時間を超える場合は1日料金として計算されます。",
+
+  dropOffDateLabel: "預ける日",
+  dropOffLabel: "お預かり",
+  timeLabel: "時間",
+  selectPlaceholder: "選択…",
+  pickupTimeLabel: "受け取り時間",
+  pickupDateLabel: "受け取り日",
+  bagsLabel: "個数",
+  bagsHelp: "個数 = お預かりする荷物の数（人数ではありません）",
+  bringAtLabel: "持ち込み時間",
+  pickupLabel: "受け取り",
+
+  /* Japanese doesn't pluralize nouns — singular and plural are identical. */
+  hourUnit: { singular: "時間", plural: "時間" },
+  dayUnit: { singular: "日", plural: "日" },
+  bagUnit: { singular: "個", plural: "個" },
+
+  nameLabel: "お名前",
+  namePlaceholder: "お名前をご入力ください",
+  whatsappLabel: "WhatsApp",
+  whatsappPlaceholder: "+84 または現地の番号",
+  emailLabel: "メールアドレス",
+  emailPlaceholder: "you@example.com",
+
+  bagsInlineHelp: "荷物の数（人数ではありません）",
+  oversizedLabel: "サイズ超過ですか？",
+  oversizedHelpPrefix: "28インチ以上、自転車、サーフボード · +",
+
+  totalFlatFee: "合計（定額）",
+  totalPrefix: "合計（",
+  totalSuffix: "）",
+
+  consentAgreedText: "利用規約およびプライバシーポリシーに同意済み",
+  changeLabel: "変更",
+  consentPromptPre: "Stowの",
+  consentPromptTos: "利用規約",
+  consentPromptAnd: "および",
+  consentPromptPrivacy: "プライバシーポリシー",
+  consentPromptPost: "をご確認・ご同意のうえお進みください",
+  consentErrorText: "続行するにはご確認とご同意をお願いします",
+
+  submitLoading: "WhatsAppを開いています…",
+  submitIdle: "WhatsAppで予約を確定",
+
+  successTitle: "送信しました！",
+  successSubtitle: "ご予約内容がWhatsAppに送信されました。",
+  successReplyTime: "15分以内にお返事します。",
+  successRefPrefix: "予約番号: ",
+  policyEmailLabel: "規約同意の確認メール",
+  emailSendingPrefix: "送信中: ",
+  emailSentPrefix: "送信済み: ",
+  emailFailedFallback: "送信に失敗しました",
+  emailWillSendPrefix: "送信予定: ",
+  retryLabel: "再試行",
+  backToHome: "ホームに戻る",
+  bookAgain: "もう一度予約する",
+
+  required: "必須",
+  invalidEmail: "メールアドレスが正しくありません",
+} as const;

@@ -9,7 +9,9 @@
  * were all built there before this migration and must not move (decision #1).
  */
 
-export const INTL_LOCALES = ["ko", "zh"] as const;
+/* Order here is the order the language menu lists them in. ja added
+   2026-08-15 — the owner reports significant Japanese traffic. */
+export const INTL_LOCALES = ["ko", "ja", "zh"] as const;
 export type IntlLocale = (typeof INTL_LOCALES)[number];
 export type AppLocale = "en" | IntlLocale;
 
@@ -28,19 +30,45 @@ export function isIntlLocale(value: string): value is IntlLocale {
 export const LOCALE_ROUTES: Record<AppLocale, readonly string[]> = {
   en: ["/", "/trust-safety", "/privacy-policy", "/terms-of-service"],
   ko: ["/"], // Phase 1 — homepage only. /ko/trust-safety lands in Phase 2.
+  ja: ["/"], // Homepage only, same scope as ko.
   zh: [], // Not built yet — Phase 3.
 };
 
-/** Endonyms for the switcher — never flags (a flag maps a language to one country; Da Nang draws Korean/Chinese speakers from many). */
+/** Endonyms for the switcher — the language's own name, never a translation of it. */
 export const LOCALE_LABEL: Record<AppLocale, string> = {
   en: "EN",
   ko: "한국어",
+  ja: "日本語",
   zh: "中文",
+};
+
+/**
+ * Flag shown beside each endonym in the switcher (client request,
+ * 2026-08-15). This reverses an earlier decision recorded here against
+ * flags — the objection was that a flag names a country, not a language,
+ * and Da Nang draws Korean/Japanese/Chinese speakers from more than one
+ * of them. The endonym still carries the actual meaning; the flag is a
+ * recognition aid on top of it, which is what the client asked for.
+ *
+ * English gets 🇬🇧 as the conventional stand-in — English has no single
+ * country, and 🇬🇧 is the usual pick on Asian travel sites.
+ *
+ * Caveat: Windows ships no flag glyphs in Segoe UI Emoji, so Windows
+ * browsers render these as two-letter codes ("GB", "KR"). That degrades
+ * readably next to the endonym rather than breaking; swapping to inline
+ * SVG flags is the fix if it ever matters enough.
+ */
+export const LOCALE_FLAG: Record<AppLocale, string> = {
+  en: "🇬🇧",
+  ko: "🇰🇷",
+  ja: "🇯🇵",
+  zh: "🇨🇳",
 };
 
 /** BCP-47 tags for hreflang and Intl.* date/number formatting. */
 export const BCP47: Record<AppLocale, string> = {
   en: "en",
   ko: "ko-KR",
+  ja: "ja",
   zh: "zh-Hans",
 };

@@ -140,6 +140,20 @@ html {
   word-break: keep-all; /* prevents ugly mid-word line breaks in Korean headlines */
 }
 
+/* Japanese needs its own stack, not the Korean one: Korean-first fonts
+   render kanji with Korean glyph shapes where the two scripts share code
+   points (Han unification). No `keep-all` here either — that's a Korean
+   fix; Japanese wraps mid-phrase by design and the browser's kinsoku
+   rules already prevent bad breaks. */
+:lang(ja) {
+  --font-poppins: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+  --font-inter: "Hiragino Sans", "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", sans-serif;
+  /* Breaks lines at phrase boundaries instead of anywhere, which stops
+     the hero headline splitting ダナン across two lines. Progressive
+     enhancement — browsers without it fall back to the default. */
+  word-break: auto-phrase;
+}
+
 :lang(zh) {
   --font-poppins: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
   --font-inter: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
@@ -150,10 +164,12 @@ html {
    broken on CJK script — neutralize both utilities site-wide under a
    CJK locale rather than editing every component that uses them. */
 :lang(ko) .uppercase,
+:lang(ja) .uppercase,
 :lang(zh) .uppercase {
   text-transform: none;
 }
 :lang(ko) [class*="tracking-"],
+:lang(ja) [class*="tracking-"],
 :lang(zh) [class*="tracking-"] {
   letter-spacing: 0;
 }

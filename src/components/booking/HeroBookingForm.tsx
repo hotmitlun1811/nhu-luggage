@@ -10,6 +10,7 @@ import {
   PLAN_FACTS,
   FLEX_PLANS,
   FLAT_PLANS,
+  HOURLY_BILLS_AS_DAY_AFTER_HOURS,
   vnd,
   generateTimeSlots,
   type PlanKey,
@@ -121,10 +122,18 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   const hourlyQuantity = plan === "hourly" && time && pickupTime ? Math.max(1, Math.ceil(diffMinutes(time, pickupTime) / 60)) : 1;
   const effectiveQuantity = plan === "daily" ? dailyQuantity : plan === "hourly" ? hourlyQuantity : 1;
 
+  /* Over the threshold, an hourly booking is charged the daily rate — the
+     rule the form now states in `dict.hourlyCapNotice`. Without this the
+     printed total would contradict that sentence: 5 hours would ring up
+     75,000₫ when the note promises 60,000₫. */
+  const hourlyBillsAsDay = plan === "hourly" && hourlyQuantity > HOURLY_BILLS_AS_DAY_AFTER_HOURS;
+
   const total = useMemo(() => {
-    const base = (plan === "hourly" || plan === "daily") ? curFacts.price * effectiveQuantity : curFacts.price;
+    const base = hourlyBillsAsDay
+      ? PLAN_FACTS.daily.price
+      : (plan === "hourly" || plan === "daily") ? curFacts.price * effectiveQuantity : curFacts.price;
     return base * pax + (oversized ? curFacts.oversizeSurcharge : 0);
-  }, [curFacts, oversized, plan, effectiveQuantity, pax]);
+  }, [curFacts, oversized, plan, effectiveQuantity, pax, hourlyBillsAsDay]);
 
   function validate() {
     const e: Record<string, string> = {};
@@ -159,7 +168,9 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   function buildMessage(ref: string) {
     let periodLine = "";
     if (plan === "hourly" && date && time && pickupTime) {
-      periodLine = `⏱ Duration: ${effectiveQuantity} hour${effectiveQuantity > 1 ? "s" : ""} (${time} → ${pickupTime})`;
+      // The "billed as 1 day" suffix matters to staff: it explains why the
+      // total below is the daily rate and not hours × the hourly rate.
+      periodLine = `⏱ Duration: ${effectiveQuantity} hour${effectiveQuantity > 1 ? "s" : ""} (${time} → ${pickupTime})${hourlyBillsAsDay ? " — billed as 1 day" : ""}`;
     } else if (plan === "daily" && date && pickupDate) {
       // Times included since By the Day started collecting a pick-up time —
       // without them staff can't tell when the customer is coming back.
@@ -193,7 +204,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     // English regardless of locale — same reasoning as buildMessage() above,
     // this crosses into the ops team's Lark Base table.
     const duration = isHourly
-      ? `${hourlyQuantity} hour${hourlyQuantity > 1 ? "s" : ""}`
+      ? `${hourlyQuantity} hour${hourlyQuantity > 1 ? "s" : ""}${hourlyBillsAsDay ? " (billed as 1 day)" : ""}`
       : plan === "daily"
       ? `${dailyQuantity} day${dailyQuantity > 1 ? "s" : ""}`
       : curFacts.canonicalDuration;
@@ -470,11 +481,22 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         </AnimatePresence>
       </div>
 
-      {/* Laptop notice for flexible plans */}
+      {/* Notices for flexible plans */}
       {lane === "flexible" && (
-        <p className="text-[11px] text-white/35 -mt-1" style={{ fontFamily: "var(--font-inter)" }}>
-          {dict.laptopNotice}
-        </p>
+        <div className="-mt-1 flex flex-col gap-1">
+          <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
+            {dict.laptopNotice}
+          </p>
+          {/* Shown on both flexible plans, not just hourly — it's the fact
+              that decides which of the two to pick, so hiding it until
+              hourly is selected would be too late to be useful. */}
+          <p
+            className={`text-[11px] ${hourlyBillsAsDay ? "text-[#E8742C]" : "text-white/35"}`}
+            style={{ fontFamily: "var(--font-inter)" }}
+          >
+            {dict.hourlyCapNotice}
+          </p>
+        </div>
       )}
 
       {/* Date / period fields — adapt per plan */}
@@ -784,7 +806,11 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         <span className="text-[11.5px] text-white/30" style={{ fontFamily: "var(--font-inter)" }}>
           {curFacts.unit === "flat"
             ? dict.totalFlatFee
-            : `${dict.totalPrefix}${effectiveQuantity} ${plan === "hourly" ? pluralizeWord(effectiveQuantity, dict.hourUnit) : pluralizeWord(effectiveQuantity, dict.dayUnit)}${dict.totalSuffix}`}
+            : hourlyBillsAsDay
+              /* Says "1 day", not "5 hours" — the label has to match the
+                 number beside it, which is now the daily rate. */
+              ? `${dict.totalPrefix}1 ${dict.dayUnit.singular}${dict.totalSuffix}`
+              : `${dict.totalPrefix}${effectiveQuantity} ${plan === "hourly" ? pluralizeWord(effectiveQuantity, dict.hourUnit) : pluralizeWord(effectiveQuantity, dict.dayUnit)}${dict.totalSuffix}`}
           {pax > 1 ? ` · ${pax} ${dict.bagUnit.plural}` : ""}
         </span>
         <span className="text-[21px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>

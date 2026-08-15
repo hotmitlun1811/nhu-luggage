@@ -13,6 +13,7 @@ import type { Dictionary } from "./types";
 const loaders: Record<AppLocale, () => Promise<Dictionary>> = {
   en: async () => (await import("./en")).en,
   ko: async () => (await import("./ko")).ko,
+  ja: async () => (await import("./ja")).ja,
   // zh: Phase 3 of the i18n plan — not built yet.
   zh: async () => (await import("./en")).en,
 };

@@ -50,8 +50,10 @@ export async function generateMetadata({
 }
 
 export async function generateStaticParams() {
-  // Only ko exists so far — zh is Phase 3 of the i18n plan, not built yet.
-  return [{ lang: "ko" }];
+  // ko and ja are built; zh is Phase 3 of the i18n plan, not built yet.
+  // Must stay in sync with LOCALE_ROUTES in src/content/locales.ts — a
+  // locale with routes there but no entry here won't prerender.
+  return [{ lang: "ko" }, { lang: "ja" }];
 }
 
 // Restricts this segment to exactly the locales above — without this, an

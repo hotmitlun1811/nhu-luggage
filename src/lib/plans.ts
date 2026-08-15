@@ -44,6 +44,17 @@ export const PLAN_FACTS: Record<PlanKey, PlanFacts> = {
 export const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
 export const FLAT_PLANS: PlanKey[] = ["mini", "strand", "longstay"];
 
+/**
+ * Past this many hours, an hourly booking is billed at the daily rate
+ * instead of hours × the hourly rate (owner's rule, 2026-08-15).
+ *
+ * The number isn't arbitrary: 4 × 15,000₫ is exactly the 60,000₫ daily
+ * price, so this is the break-even point rather than a discount — beyond
+ * it, charging per hour would cost the customer more than the cheaper
+ * plan sitting right next to it in the form.
+ */
+export const HOURLY_BILLS_AS_DAY_AFTER_HOURS = 4;
+
 /** Vietnamese-dong formatting — locale-invariant regardless of page language, since the currency itself doesn't change. */
 export function vnd(n: number): string {
   return n.toLocaleString("vi-VN") + " ₫";

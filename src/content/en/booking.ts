@@ -36,6 +36,10 @@ export const booking = {
 
   planLabel: "Plan",
   laptopNotice: "Laptops and electronics accepted on flexible plans.",
+  /* The 4 in this sentence is HOURLY_BILLS_AS_DAY_AFTER_HOURS in
+     src/lib/plans.ts, which is what the total actually bills on — change
+     both together or the copy and the price stop agreeing. */
+  hourlyCapNotice: "Over 4 hours is charged as 1 day.",
 
   dropOffDateLabel: "Drop-off date",
   dropOffLabel: "Drop-off",
