@@ -10,8 +10,4 @@ export const hero = {
   /* Street address — untranslated on purpose, see en/location.ts's note. */
   address: "55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng",
   getDirections: "길찾기",
-  bookingPanel: {
-    openStatus: "영업 중 · 매일 오전 7시–오후 10시",
-    bookNow: "지금 예약",
-  },
 } as const;

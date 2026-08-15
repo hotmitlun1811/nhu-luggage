@@ -1,6 +1,7 @@
 export const footer = {
   brandDescription: "다낭에서 안전하고 간편한 짐 보관 서비스. 시간제, 일일, 월 단위로 이용 가능합니다. 매일 오전 7시부터 오후 10시까지 영업합니다.",
   logoAlt: "스토우 — 다낭 짐 보관",
+  language: "언어",
   navigateHeading: "바로가기",
   legalHeading: "약관",
   navigateLinks: ["이용 방법", "요금", "서비스", "위치", "예약하기"],

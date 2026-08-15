@@ -87,8 +87,15 @@ export default function PrimaryNav({
 
         {/* Right actions */}
         <div className="ml-auto flex items-center gap-5">
+          {/* tone follows `scrolled` like every other nav item — as a
+              static light-grey it was unreadable against the hero photo. */}
           <div className="hidden lg:block">
-            <LanguageSwitcher currentLocale={locale} currentPath={currentPath} variant="nav" />
+            <LanguageSwitcher
+              currentLocale={locale}
+              currentPath={currentPath}
+              label={dict.language}
+              tone={scrolled ? "onLight" : "onDark"}
+            />
           </div>
 
           <a
@@ -135,7 +142,16 @@ export default function PrimaryNav({
       {/* Mobile drawer */}
       {menuOpen && (
         <div className="md:hidden bg-white border-t border-[#EAEAE6] px-6 py-6 flex flex-col gap-5">
-          <LanguageSwitcher currentLocale={locale} currentPath={currentPath} variant="nav" />
+          {/* Drawer is always white, so the tone is fixed regardless of scroll. */}
+          <div className="self-start">
+            <LanguageSwitcher
+              currentLocale={locale}
+              currentPath={currentPath}
+              label={dict.language}
+              tone="onLight"
+              anchor="left"
+            />
+          </div>
           {dict.links.map((link) => (
             <a
               key={link.href}

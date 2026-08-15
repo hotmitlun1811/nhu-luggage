@@ -129,9 +129,13 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   function validate() {
     const e: Record<string, string> = {};
     if (!date)          e.date    = dict.required;
-    if ((plan === "hourly" || lane === "flatrate") && !time) e.time = dict.required;
+    // Drop-off time is now required on every plan. It was optional for
+    // "By the Day" alone, which stopped making sense once that plan
+    // started asking for a pick-up time too — a booking can't have an end
+    // time and no start time.
+    if (!time)          e.time    = dict.required;
     if (plan === "daily" && !pickupDate) e.pickupDate = dict.required;
-    if (plan === "hourly" && !pickupTime) e.pickupTime = dict.required;
+    if ((plan === "hourly" || plan === "daily") && !pickupTime) e.pickupTime = dict.required;
     if (!name.trim())   e.name    = dict.required;
     if (!phone.trim())  e.phone   = dict.required;
     if (!email.trim())  e.email   = dict.required;
@@ -157,7 +161,9 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     if (plan === "hourly" && date && time && pickupTime) {
       periodLine = `⏱ Duration: ${effectiveQuantity} hour${effectiveQuantity > 1 ? "s" : ""} (${time} → ${pickupTime})`;
     } else if (plan === "daily" && date && pickupDate) {
-      periodLine = `📅 Period: ${formatShortDate(date, "en")} → ${formatShortDate(pickupDate, "en")} (${effectiveQuantity} day${effectiveQuantity > 1 ? "s" : ""})`;
+      // Times included since By the Day started collecting a pick-up time —
+      // without them staff can't tell when the customer is coming back.
+      periodLine = `📅 Period: ${formatShortDate(date, "en")}${time ? ` ${time}` : ""} → ${formatShortDate(pickupDate, "en")}${pickupTime ? ` ${pickupTime}` : ""} (${effectiveQuantity} day${effectiveQuantity > 1 ? "s" : ""})`;
     } else if (lane === "flatrate" && date && pickupDate) {
       periodLine = `📅 Period: ${formatShortDate(date, "en")} → ${formatShortDate(pickupDate, "en")}`;
     }
@@ -169,7 +175,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
       `📦 Plan: ${curFacts.canonicalName} — ${vnd(curFacts.price)}${curFacts.unit === "flat" ? " flat fee" : curFacts.unit} / bag`,
       `🧳 Bags: ${pax}`,
       oversized ? `📏 Item: Oversized (+${vnd(curFacts.oversizeSurcharge)})` : `📏 Item: Standard size`,
-      `📅 Drop-off: ${date ? formatLongDate(date, "en") : "TBD"}${(plan === "hourly" || lane === "flatrate") && time ? ` at ${time}` : ""}`,
+      `📅 Drop-off: ${date ? formatLongDate(date, "en") : "TBD"}${time ? ` at ${time}` : ""}`,
       periodLine,
       `💰 Total: ${vnd(total)}`,
       ``,
@@ -208,7 +214,8 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         // Hourly has no separate pickup-date input (same-day, per the app's
         // own quantity math) — daily/flatrate use their explicit date field.
         pickupDate: isHourly ? date : pickupDate,
-        pickupTime: isHourly ? pickupTime : undefined,
+        // Hourly and daily both collect one; flatrate doesn't, so it stays undefined.
+        pickupTime: pickupTime || undefined,
         name: name.trim(),
         phone: phone.trim(),
         email: email.trim(),
@@ -266,6 +273,45 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   }
 
   const plans = lane === "flexible" ? FLEX_PLANS : FLAT_PLANS;
+
+  /* Pick-up slots. Hourly is always same-day, so only later slots are
+     valid. Daily normally spans days — but the date input permits
+     same-day pick-up, and on that one day the same "must be later than
+     drop-off" rule applies. */
+  const pickupSameDay = plan === "hourly" || (!!date && pickupDate === date);
+  const pickupSlots = pickupSameDay && time
+    ? TIME_SLOTS.filter((t) => t > time)
+    : TIME_SLOTS;
+
+  /* Rendered in two different places depending on plan (see Row 2 below),
+     so it's defined once here rather than duplicated. */
+  const bagsField = (
+    <div className="min-w-0">
+      <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+        {dict.bagsLabel}{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
+      </label>
+      <input
+        type="text"
+        inputMode="numeric"
+        pattern="[0-9]*"
+        value={paxInput}
+        onChange={(e) => {
+          const digits = e.target.value.replace(/\D/g, "");
+          setPaxInput(digits);
+          if (digits) setPax(Math.max(1, parseInt(digits, 10)));
+          clearErr("pax");
+        }}
+        onBlur={() => {
+          const n = paxInput ? Math.max(1, parseInt(paxInput, 10)) : 1;
+          setPaxInput(String(n));
+          setPax(n);
+        }}
+        onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
+        className={`${INPUT} ${errors.pax ? ERR : ""}`}
+        style={{ fontFamily: "var(--font-inter)" }}
+      />
+    </div>
+  );
 
   /* ── Success ── */
   if (submitted) {
@@ -343,7 +389,9 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
 
   /* ── Form ── */
   return (
-    <form onSubmit={handleSubmit} noValidate className="px-5 pb-5 pt-3 flex flex-col gap-3.5">
+    /* pt-5, not pt-3: the panel's header strip above this was removed, so
+       the first field would otherwise crowd the rounded top edge. */
+    <form onSubmit={handleSubmit} noValidate className="px-5 pb-5 pt-5 flex flex-col gap-3.5">
 
       {/* Lane */}
       <div>
@@ -457,7 +505,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
               </div>
               <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  {dict.timeLabel}{plan === "hourly" && errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
+                  {dict.timeLabel}{errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
                 </label>
                 <div className="relative">
                   <select
@@ -465,10 +513,13 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
                     onChange={(e) => {
                       const v = e.target.value;
                       setTime(v);
-                      if (pickupTime && pickupTime <= v) setPickupTime("");
+                      // Only invalidates the pick-up time when both fall on
+                      // the same day; a later-date pick-up is unaffected.
+                      const sameDay = plan === "hourly" || (!!date && pickupDate === date);
+                      if (sameDay && pickupTime && pickupTime <= v) setPickupTime("");
                       clearErr("time");
                     }}
-                    className={`${SELECT} ${plan === "hourly" && errors.time ? ERR : ""}`}
+                    className={`${SELECT} ${errors.time ? ERR : ""}`}
                     style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                   >
                     <option value="">{dict.selectPlaceholder}</option>
@@ -479,7 +530,12 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
               </div>
             </div>
 
-            {/* Row 2: Pick-up time (hourly) / Pick-up date (daily) + Pax */}
+            {/* Row 2 — the pick-up pair.
+                Hourly is same-day, so it needs only a time and Bags fits
+                alongside. Daily needs both a pick-up date and a pick-up
+                time (client request 2026-08-15: staff had no idea what
+                time a By-the-Day customer was coming back), so those take
+                the row and Bags drops to its own row below. */}
             <div className="grid grid-cols-2 gap-2">
               <div className="min-w-0">
                 <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
@@ -496,7 +552,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
                       style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                     >
                       <option value="">{dict.selectPlaceholder}</option>
-                      {TIME_SLOTS.filter((t) => !time || t > time).map((t) => <option key={t} value={t}>{t}</option>)}
+                      {pickupSlots.map((t) => <option key={t} value={t}>{t}</option>)}
                     </select>
                     <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
                   </div>
@@ -506,45 +562,53 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
                     value={pickupDate}
                     min={date || today}
                     max={date ? addDays(date, 30) : undefined}
-                    onChange={(e) => { setPickupDate(e.target.value); clearErr("pickupDate"); }}
+                    onChange={(e) => {
+                      const v = e.target.value;
+                      setPickupDate(v);
+                      // Same-day pick-up must still be after drop-off.
+                      if (v === date && time && pickupTime && pickupTime <= time) setPickupTime("");
+                      clearErr("pickupDate");
+                    }}
                     className={`${INPUT} ${errors.pickupDate ? ERR : ""}`}
                     style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                   />
                 )}
               </div>
-              <div className="min-w-0">
-                <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  {dict.bagsLabel}{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
-                </label>
-                <input
-                  type="text"
-                  inputMode="numeric"
-                  pattern="[0-9]*"
-                  value={paxInput}
-                  onChange={(e) => {
-                    const digits = e.target.value.replace(/\D/g, "");
-                    setPaxInput(digits);
-                    if (digits) setPax(Math.max(1, parseInt(digits, 10)));
-                    clearErr("pax");
-                  }}
-                  onBlur={() => {
-                    const n = paxInput ? Math.max(1, parseInt(paxInput, 10)) : 1;
-                    setPaxInput(String(n));
-                    setPax(n);
-                  }}
-                  onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
-                  className={`${INPUT} ${errors.pax ? ERR : ""}`}
-                  style={{ fontFamily: "var(--font-inter)" }}
-                />
-              </div>
+
+              {plan === "daily" ? (
+                <div className="min-w-0">
+                  <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+                    {dict.pickupTimeLabel}{errors.pickupTime && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupTime})</span>}
+                  </label>
+                  <div className="relative">
+                    <select
+                      value={pickupTime}
+                      onChange={(e) => { setPickupTime(e.target.value); clearErr("pickupTime"); }}
+                      className={`${SELECT} ${errors.pickupTime ? ERR : ""}`}
+                      style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
+                    >
+                      <option value="">{dict.selectPlaceholder}</option>
+                      {pickupSlots.map((t) => <option key={t} value={t}>{t}</option>)}
+                    </select>
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
+                  </div>
+                </div>
+              ) : (
+                bagsField
+              )}
             </div>
+
+            {/* Bags, when the pick-up pair above took the whole row. */}
+            {plan === "daily" && (
+              <div className="grid grid-cols-2 gap-2">{bagsField}</div>
+            )}
             <p className="text-[10.5px] text-white/25 -mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
               {dict.bagsHelp}
             </p>
 
             {plan === "daily" && date && pickupDate && (
               <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
-                <span className="text-white font-semibold">{dailyQuantity} {pluralizeWord(dailyQuantity, dict.dayUnit)}</span> · {fmtShort(date)} → {fmtShort(pickupDate)}
+                <span className="text-white font-semibold">{dailyQuantity} {pluralizeWord(dailyQuantity, dict.dayUnit)}</span> · {fmtShort(date)}{time && ` ${time}`} → {fmtShort(pickupDate)}{pickupTime && ` ${pickupTime}`}
               </p>
             )}
             {plan === "hourly" && time && pickupTime && (

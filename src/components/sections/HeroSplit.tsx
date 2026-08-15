@@ -17,9 +17,14 @@ export default function HeroSplit({
   locale: AppLocale;
 }) {
   return (
+    /* `lg:min-h-screen`, never `lg:h-screen`. With a fixed height the
+       booking panel (~750px) couldn't fit a short laptop viewport, and
+       `items-center` split the overflow evenly — pushing the panel's
+       header up underneath the 72px fixed nav. min-h lets the section
+       grow instead of overlapping. */
     <section
       id="booking"
-      className="relative w-full overflow-hidden bg-[#0D1829] lg:h-screen"
+      className="relative w-full overflow-hidden bg-[#0D1829]"
       style={{ minHeight: "600px" }}
     >
       {/* ── Video background ── */}
@@ -58,8 +63,13 @@ export default function HeroSplit({
       />
 
       {/* ── Content layer ── */}
-      <div className="relative z-10 max-w-[1280px] mx-auto px-6 lg:h-full lg:flex lg:items-center">
-        <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_500px] gap-8 items-start pt-28 pb-14 lg:items-center lg:py-32">
+      <div className="relative z-10 max-w-[1280px] mx-auto px-6 lg:flex lg:min-h-screen lg:items-center">
+        {/* Vertical padding in explicit px, not `lg:py-32`: globals.css
+            redefines --spacing-32 to 32px, so that class was rendering a
+            quarter of the intended 128px and left no room under the nav.
+            pt must always exceed the 72px nav height. See
+            feedback-tailwind-v4-spacing. */}
+        <div className="w-full grid grid-cols-1 lg:grid-cols-[1fr_460px] xl:grid-cols-[1fr_500px] gap-8 items-start pt-28 pb-14 lg:items-center lg:pt-[112px] lg:pb-[80px]">
 
           {/* ── Left — editorial text ── */}
           <div>
@@ -166,25 +176,11 @@ export default function HeroSplit({
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.6, delay: 0.4, ease: [0.22, 1, 0.36, 1] }}
           >
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 py-3.5 border-b border-white/8">
-              <div className="flex items-center gap-2">
-                <span className="w-2 h-2 rounded-full bg-emerald-400 flex-shrink-0 shadow-[0_0_8px_2px_rgba(52,211,153,0.6)]" />
-                <span
-                  className="text-[11px] text-white/50 uppercase tracking-[0.1em] font-semibold"
-                  style={{ fontFamily: "var(--font-poppins)" }}
-                >
-                  {dict.bookingPanel.openStatus}
-                </span>
-              </div>
-              <span
-                className="text-[10px] font-bold uppercase tracking-[0.1em] text-[#E8742C]"
-                style={{ fontFamily: "var(--font-poppins)" }}
-              >
-                {dict.bookingPanel.bookNow}
-              </span>
-            </div>
-
+            {/* The "OPEN · 7AM–10PM DAILY / BOOK NOW" strip that used to sit
+                here was removed at the client's request (2026-08-15). Both
+                facts are already on the page: opening hours in the contact
+                block to the left, "Book Now" in the nav and as the form's
+                own submit button. */}
             {/* Booking form */}
             <HeroBookingForm dict={bookingDict} locale={locale} />
           </motion.div>

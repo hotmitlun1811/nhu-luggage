@@ -136,7 +136,14 @@ export default function Footer({
               <Mail size={12} className="text-[#E8742C]" /> stowdanang@gmail.com
             </a>
           </div>
-          <LanguageSwitcher currentLocale={locale} currentPath={currentPath} variant="footer" />
+          {/* Navy footer, and low on the page — dark tone, menu opens upward. */}
+          <LanguageSwitcher
+            currentLocale={locale}
+            currentPath={currentPath}
+            label={dict.language}
+            tone="onDark"
+            align="up"
+          />
         </div>
 
         {/* Bottom bar */}

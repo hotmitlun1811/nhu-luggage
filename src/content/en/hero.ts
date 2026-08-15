@@ -18,8 +18,4 @@ export const hero = {
      Grab driver. Rendered as a link to Stow's Google Maps listing. */
   address: "55 Bà Bang Nhãn, Ngũ Hành Sơn, Đà Nẵng",
   getDirections: "Get directions",
-  bookingPanel: {
-    openStatus: "Open · 7am–10pm daily",
-    bookNow: "Book now",
-  },
 } as const;

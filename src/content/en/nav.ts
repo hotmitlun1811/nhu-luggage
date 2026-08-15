@@ -7,6 +7,7 @@ export const nav = {
     { label: "Location", href: "#location" },
   ],
   chatWithUs: "Chat with us",
+  language: "Language",
   bookNow: "Book Now",
   logoAlt: "Stow — Luggage Storage Da Nang",
   openMenu: "Open menu",

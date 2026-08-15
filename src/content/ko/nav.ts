@@ -7,6 +7,7 @@ export const nav = {
     { label: "위치", href: "#location" },
   ],
   chatWithUs: "채팅하기",
+  language: "언어",
   bookNow: "예약하기",
   logoAlt: "스토우 — 다낭 짐 보관",
   openMenu: "메뉴 열기",
