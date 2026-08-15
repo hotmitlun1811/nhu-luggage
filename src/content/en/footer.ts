@@ -4,7 +4,7 @@ export const footer = {
   language: "Language",
   navigateHeading: "Navigate",
   legalHeading: "Legal",
-  navigateLinks: ["How It Works", "Pricing", "Services", "Location", "Book Now"],
+  navigateLinks: ["How It Works", "Pricing", "Services", "Location", "Guides", "Book Now"],
   legalLinks: ["Privacy Policy", "Terms of Service"],
   contactBar: {
     location: "Da Nang, Vietnam",

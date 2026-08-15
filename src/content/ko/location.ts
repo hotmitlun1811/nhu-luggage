@@ -9,4 +9,5 @@ export const location = {
   hoursSub: "연중무휴 · 공휴일 포함",
   whatsappZaloSuffix: "(WhatsApp / Zalo)",
   chatToBook: "채팅으로 예약",
+  faqLink: "오행산(마블 마운틴) 근처가 궁금하신가요? FAQ에서 확인하세요",
 } as const;

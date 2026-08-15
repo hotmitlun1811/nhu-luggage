@@ -18,4 +18,5 @@ export const expats = {
   pricingCalloutPre: "定額プランは ",
   pricingCalloutHighlight: "1週間 150,000 ₫ から",
   pricingCalloutPost: " — 定額ひとつで、日割り料金も早期受け取りの追加料金もありません。",
+  guideLink: "ダナン ビザラン ガイドを見る",
 } as const;

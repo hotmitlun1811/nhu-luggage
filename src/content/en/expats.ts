@@ -24,4 +24,5 @@ export const expats = {
   pricingCalloutPre: "Flat Rate plans start at ",
   pricingCalloutHighlight: "150,000 ₫ for 1 week",
   pricingCalloutPost: " — one fixed fee, no daily rate, no early-pickup penalty.",
+  guideLink: "Read the full Da Nang Visa Run Guide",
 } as const;

@@ -284,10 +284,10 @@ Every cluster so far assumed English or Vietnamese searchers. That's wrong for D
 
 ### A few more English-language gaps worth closing
 
-- **Landmark pairings not yet covered:** luggage storage near Dragon Bridge, luggage storage near Han Market — both already used as attraction names in `HowItWorks.tsx` copy ("Hit My Khe Beach, grab coffee at Han Market... Marble Mountains") but never paired with a storage keyword in the same sentence, the same gap the Marble Mountains connection had before the FAQ entry fixed it.
-- **Group/multi-item intent:** store multiple bags Da Nang, family luggage storage Da Nang — real (pricing is already per-bag, not per-person, and the site says so) but not yet phrased as a searchable question.
-- **Seasonal:** Tet holiday luggage storage Da Nang — Tet is Vietnam's biggest domestic travel spike; worth one FAQ entry or a seasonal GBP Post when the date approaches, not evergreen copy.
-- **Direct booking-intent:** book luggage storage Da Nang online, reserve luggage storage Da Nang — already true (the homepage booking form does exactly this) but never stated as a direct-answer sentence anywhere.
+- **Landmark pairings — SHIPPED 2026-08-15:** Dragon Bridge added alongside the existing My Khe Beach / Han Market / Marble Mountains mentions in `how-it-works.ts` (en + ko).
+- **Group/multi-item intent — SHIPPED 2026-08-15:** new FAQ entry ("Can I store multiple bags or luggage for my whole family at Stow?") in `faq.ts` (en + ko), answered with the real per-bag pricing fact.
+- **Seasonal:** Tet holiday luggage storage Da Nang — still open, deliberately deferred until closer to the date (not evergreen copy).
+- **Direct booking-intent:** already covered — the "Book Online" step title in `HowItWorks` states this directly; no further action needed.
 
 ---
 

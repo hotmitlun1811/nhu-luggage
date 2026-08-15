@@ -25,4 +25,5 @@ export const pricing = {
     button: "지금 예약하기",
     note: "회원가입 불필요 · 워크인 문의는 WhatsApp 0905 955 161",
   },
+  faqLink: "요금이 궁금하신가요? FAQ에서 확인하세요",
 } as const;

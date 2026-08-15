@@ -27,4 +27,5 @@ export const pricing = {
     button: "荷物を預ける",
     note: "会員登録は不要 · 当日のご相談は WhatsApp 0905 955 161 へ",
   },
+  faqLink: "料金について気になる点は？よくあるご質問へ",
 } as const;

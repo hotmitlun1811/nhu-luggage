@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { MapPin, Clock, Mail, ExternalLink } from "lucide-react";
 import { motion } from "framer-motion";
 import { GOOGLE_MAPS_EMBED_URL, GOOGLE_MAPS_SHARE_URL } from "@/lib/maps";
@@ -105,6 +106,13 @@ export default function LocationSection({ dict }: { dict: Dictionary["location"]
                   >
                     {dict.getDirections} <ExternalLink size={11} />
                   </a>
+                  <Link
+                    href="/#faq-location"
+                    className="block mt-1.5 text-[12px] text-white/45 hover:text-[#E8742C] transition-colors"
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  >
+                    {dict.faqLink} →
+                  </Link>
                 </div>
               </div>
 

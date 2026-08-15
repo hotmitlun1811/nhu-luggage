@@ -13,6 +13,16 @@ export const faq = {
   eyebrow: "Common Questions",
   headlineLines: ["Airports, visa runs,", "and everything else."],
   subhead: "The questions tourists and expats actually ask, answered straight.",
+  /* Reciprocal links, rendered by FAQSection.tsx after specific groups
+     (matched by array index via GROUP_GUIDE_LINKS in the component, not
+     these labels). trustSafetyLink pairs with trust-safety/page.tsx's own
+     link back to /#faq-trust-safety. The guide links point at the English-
+     only /guides/* pages — same pattern as legalLinks in footer.ts linking
+     ko/ja readers to English legal pages, not a new gap. */
+  trustSafetyLink: "Full storage rules on the Trust & Safety page",
+  layoverGuideLink: "Full Da Nang layover guide",
+  visaRunGuideLink: "Full Da Nang visa run guide",
+  marbleMountainsGuideLink: "Full Marble Mountains guide",
   groups: [
     {
       cluster: "Airport & short stays",
@@ -50,6 +60,10 @@ export const faq = {
         {
           q: 'Is there a size limit on luggage storage in Da Nang?',
           a: 'No hard limit — an oversized surcharge applies instead. Add 30,000₫ on hourly/daily plans, or 50,000₫ on flat-rate plans, for anything 28"+: a large suitcase, a bicycle, a surfboard, a big box.',
+        },
+        {
+          q: "Can I store multiple bags or luggage for my whole family at Stow?",
+          a: "Yes — pricing is per bag, not per person, so each item just adds to the total at the same rate. Message us on WhatsApp if you're bringing several bags and we'll help you sort the drop-off.",
         },
       ],
     },

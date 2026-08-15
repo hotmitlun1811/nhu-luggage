@@ -19,7 +19,7 @@ export const howItWorks = {
     {
       title: "Go Explore",
       description:
-        "Your bags are safe with us. Hit My Khe Beach, grab coffee at Han Market, or ride out to the Marble Mountains.",
+        "Your bags are safe with us. Hit My Khe Beach, grab coffee at Han Market, cross the Dragon Bridge, or ride out to the Marble Mountains.",
     },
     {
       title: "Pick Up",

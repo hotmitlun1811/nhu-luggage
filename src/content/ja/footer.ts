@@ -5,7 +5,7 @@ export const footer = {
   language: "言語",
   navigateHeading: "メニュー",
   legalHeading: "規約",
-  navigateLinks: ["ご利用の流れ", "料金", "サービス", "アクセス", "予約する"],
+  navigateLinks: ["ご利用の流れ", "料金", "サービス", "アクセス", "ガイド", "予約する"],
   /* Labels translate; both still link to the English legal pages —
      translated Terms/Privacy is Phase 4 of the i18n plan. */
   legalLinks: ["プライバシーポリシー", "利用規約"],

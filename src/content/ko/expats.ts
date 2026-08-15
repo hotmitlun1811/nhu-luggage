@@ -18,4 +18,5 @@ export const expats = {
   pricingCalloutPre: "고정 요금제는 ",
   pricingCalloutHighlight: "1주일에 150,000₫부터",
   pricingCalloutPost: " 시작 — 고정 요금 하나로, 일일 요금도 조기 픽업 페널티도 없습니다.",
+  guideLink: "다낭 비자런 가이드 전체 보기",
 } as const;

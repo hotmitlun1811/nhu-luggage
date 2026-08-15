@@ -28,4 +28,5 @@ export const pricing = {
     button: "Book Your Storage",
     note: "No account needed · WhatsApp 0905 955 161 for walk-in questions",
   },
+  faqLink: "Questions about pricing? See the FAQ",
 } as const;

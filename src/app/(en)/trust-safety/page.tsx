@@ -309,7 +309,11 @@ export default async function TrustSafetyPage() {
                 className="text-[14px] text-[#6B7280]"
                 style={{ fontFamily: "var(--font-inter)" }}
               >
-                We&apos;re here in English and Vietnamese. Just WhatsApp us.
+                We&apos;re here in English and Vietnamese. Just WhatsApp us, or{" "}
+                <Link href="/#faq-trust-safety" className="text-[#E8742C] font-semibold hover:text-[#16243F] transition-colors">
+                  see the full FAQ
+                </Link>
+                .
               </p>
             </div>
             <div className="flex gap-3 sm:justify-end flex-wrap">

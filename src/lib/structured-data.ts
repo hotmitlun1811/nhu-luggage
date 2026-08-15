@@ -198,3 +198,22 @@ export function faqPageJsonLd(dict: Dictionary) {
     ),
   } as const;
 }
+
+/** Generic FAQPage builder for /guides/* pages — pass the exact same
+ *  `items` array a page renders via <GuideFAQ items={...} /> so the schema
+ *  can never drift from what's visibly on the page (the same discipline
+ *  faqPageJsonLd above follows for the homepage). */
+export function guideFaqJsonLd(items: { q: string; a: string }[]) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    mainEntity: items.map((item) => ({
+      "@type": "Question",
+      name: item.q,
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: item.a,
+      },
+    })),
+  } as const;
+}

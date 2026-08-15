@@ -11,4 +11,5 @@ export const location = {
   hoursSub: "Every day · Public holidays included",
   whatsappZaloSuffix: "(WhatsApp / Zalo)",
   chatToBook: "Chat to book",
+  faqLink: "Near the Marble Mountains? See the FAQ",
 } as const;

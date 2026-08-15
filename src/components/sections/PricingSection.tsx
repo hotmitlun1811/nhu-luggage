@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import { PLAN_FACTS, FLEX_PLANS, FLAT_PLANS, vnd } from "@/lib/plans";
 import type { Dictionary } from "@/content/types";
@@ -274,6 +275,16 @@ export default function PricingSection({ dict }: { dict: Dictionary["pricing"] }
           >
             {dict.cta.note}
           </p>
+        </div>
+
+        <div className="flex justify-center pt-5">
+          <Link
+            href="/#faq-pricing"
+            className="text-[12.5px] font-semibold text-[#9CA3AF] hover:text-[#E8742C] transition-colors"
+            style={{ fontFamily: "var(--font-inter)" }}
+          >
+            {dict.faqLink} →
+          </Link>
         </div>
 
       </div>

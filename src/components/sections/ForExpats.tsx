@@ -130,6 +130,13 @@ export default function ForExpats({ dict }: { dict: Dictionary["expats"] }) {
                 <span className="font-semibold text-[#16243F]">{dict.pricingCalloutHighlight}</span>
                 {dict.pricingCalloutPost}
               </p>
+              <Link
+                href="/guides/da-nang-visa-run-guide"
+                className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#E8742C] hover:text-[#16243F] transition-colors mt-4"
+                style={{ fontFamily: "var(--font-inter)" }}
+              >
+                {dict.guideLink} →
+              </Link>
             </div>
           </motion.div>
 

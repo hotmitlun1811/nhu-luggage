@@ -2,6 +2,10 @@ export const faq = {
   eyebrow: "よくあるご質問",
   headlineLines: ["空港、ビザラン、", "そのほかすべて。"],
   subhead: "観光の方や駐在員の方が実際に気にされる点に、はっきりお答えします。",
+  trustSafetyLink: "信頼と安全ページで保管ルールの詳細を見る",
+  layoverGuideLink: "ダナン レイオーバーガイドを見る",
+  visaRunGuideLink: "ダナン ビザラン ガイドを見る",
+  marbleMountainsGuideLink: "マーブルマウンテン ガイドを見る",
   groups: [
     {
       cluster: "空港・短時間のご利用",

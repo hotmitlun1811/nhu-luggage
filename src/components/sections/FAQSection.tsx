@@ -1,7 +1,27 @@
 "use client";
 
+import Link from "next/link";
 import { motion } from "framer-motion";
 import type { Dictionary } from "@/content/types";
+
+/* Anchor ids for cross-page/cross-section deep links (PricingSection,
+   LocationSection, trust-safety/page.tsx). Matched by group index, not
+   the localized `cluster` label — the group order (airport, expat,
+   pricing, trust & safety, location) is the same across every locale's
+   faq.ts, so index is the stable key. Keep this array's order in sync
+   with faq.ts's `groups` if that ever changes. */
+const GROUP_IDS = ["faq-airport", "faq-expat", "faq-pricing", "faq-trust-safety", "faq-location"];
+
+/* Reciprocal links from a FAQ cluster to the matching /guides/* page
+   (content-engine playbook, docs/aeo-seo/2026-08-15-content-engine-playbook.md
+   step 3 — every new guide gets linked from an existing high-traffic
+   surface). Keyed by group id, dict field read per-group below. */
+const GROUP_GUIDE_LINKS: Record<string, { href: string; dictKey: "layoverGuideLink" | "visaRunGuideLink" | "trustSafetyLink" | "marbleMountainsGuideLink" }> = {
+  "faq-airport": { href: "/guides/da-nang-layover-guide", dictKey: "layoverGuideLink" },
+  "faq-expat": { href: "/guides/da-nang-visa-run-guide", dictKey: "visaRunGuideLink" },
+  "faq-trust-safety": { href: "/trust-safety", dictKey: "trustSafetyLink" },
+  "faq-location": { href: "/guides/marble-mountains-guide", dictKey: "marbleMountainsGuideLink" },
+};
 
 export default function FAQSection({ dict }: { dict: Dictionary["faq"] }) {
   return (
@@ -51,10 +71,12 @@ export default function FAQSection({ dict }: { dict: Dictionary["faq"] }) {
             {dict.groups.map((group, gi) => (
               <motion.div
                 key={group.cluster}
+                id={GROUP_IDS[gi]}
                 initial={{ opacity: 0, y: 16 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true, margin: "-40px" }}
                 transition={{ duration: 0.5, delay: gi * 0.05, ease: "easeOut" }}
+                className="scroll-mt-24"
               >
                 <p
                   className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#9CA3AF] mb-4"
@@ -83,6 +105,15 @@ export default function FAQSection({ dict }: { dict: Dictionary["faq"] }) {
                     </div>
                   ))}
                 </div>
+                {GROUP_GUIDE_LINKS[GROUP_IDS[gi]] && (
+                  <Link
+                    href={GROUP_GUIDE_LINKS[GROUP_IDS[gi]].href}
+                    className="inline-flex items-center gap-1.5 text-[13px] font-semibold text-[#E8742C] hover:text-[#0D1829] transition-colors mt-4"
+                    style={{ fontFamily: "var(--font-inter)" }}
+                  >
+                    {dict[GROUP_GUIDE_LINKS[GROUP_IDS[gi]].dictKey]} →
+                  </Link>
+                )}
               </motion.div>
             ))}
           </div>

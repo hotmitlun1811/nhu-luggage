@@ -5,7 +5,7 @@ import type { Dictionary } from "@/content/types";
 import type { AppLocale } from "@/content/locales";
 import LanguageSwitcher from "./LanguageSwitcher";
 
-const navigateHrefs = ["#how-it-works", "#pricing", "#services", "#location", "/#booking"];
+const navigateHrefs = ["#how-it-works", "#pricing", "#services", "#location", "/guides", "/#booking"];
 const legalHrefs = ["/privacy-policy", "/terms-of-service"];
 
 export default function Footer({

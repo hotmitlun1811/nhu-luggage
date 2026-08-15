@@ -9,4 +9,5 @@ export const location = {
   hoursSub: "年中無休 · 祝日も営業",
   whatsappZaloSuffix: "（WhatsApp / Zalo）",
   chatToBook: "チャットで予約",
+  faqLink: "五行山（マーブルマウンテン）の近くか気になる方は、よくあるご質問へ",
 } as const;

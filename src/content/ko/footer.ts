@@ -4,7 +4,7 @@ export const footer = {
   language: "언어",
   navigateHeading: "바로가기",
   legalHeading: "약관",
-  navigateLinks: ["이용 방법", "요금", "서비스", "위치", "예약하기"],
+  navigateLinks: ["이용 방법", "요금", "서비스", "위치", "가이드", "예약하기"],
   /* Labels translate; both still link to the English legal pages —
      translated Terms/Privacy is Phase 4 of the i18n plan. */
   legalLinks: ["개인정보처리방침", "이용약관"],
