@@ -17,6 +17,7 @@ type Body = {
   lane?: "flexible" | "flatrate";
   planName?: string;
   oversized?: boolean;
+  oversizedCount?: number; // how many bags are oversized (0 when not oversized)
   dropOffDate?: string; // "YYYY-MM-DD"
   dropOffTime?: string; // "HH:mm"
   duration?: string; // pure duration label, e.g. "3 days" or "Up to 1 month" — no date/time embedded
@@ -68,7 +69,7 @@ async function getTenantAccessToken(): Promise<string> {
 
 export async function POST(request: Request) {
   const body = (await request.json().catch(() => ({}))) as Body;
-  const { source, lane, planName, oversized, dropOffDate, dropOffTime, duration, pickupDate, pickupTime, name, phone, email, pax, total } = body;
+  const { source, lane, planName, oversized, oversizedCount, dropOffDate, dropOffTime, duration, pickupDate, pickupTime, name, phone, email, pax, total } = body;
 
   if (!LARK_APP_ID || !LARK_APP_SECRET || !LARK_BASE_APP_TOKEN || !LARK_BASE_TABLE_ID) {
     return NextResponse.json(
@@ -141,7 +142,7 @@ export async function POST(request: Request) {
       `Customer: ${name} (${phone})`,
       email?.trim() ? `Email: ${email.trim()}` : "",
       pax != null ? `Pax: ${pax}` : "",
-      `Plan: ${planName} (${laneLabel})${oversized ? ", Oversized" : ""}`,
+      `Plan: ${planName} (${laneLabel})${oversized ? `, Oversized ×${oversizedCount ?? 1}` : ""}`,
       `Drop-off: ${dropOffDate}${dropOffTime ? ` at ${dropOffTime}` : ""}`,
       `Duration: ${duration || "N/A"}`,
       pickupDate ? `Pickup (est.): ${pickupDate}${pickupTime ? ` at ${pickupTime}` : ""}` : "",

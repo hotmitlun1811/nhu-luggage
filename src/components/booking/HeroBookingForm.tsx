@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useMemo } from "react";
-import { Send, CheckCircle2, ChevronDown, ChevronRight } from "lucide-react";
+import { useState, useMemo, useEffect, useRef, useSyncExternalStore } from "react";
+import { Send, CheckCircle2, ChevronDown, ChevronRight, MessageCircle } from "lucide-react";
 import { AnimatePresence, motion } from "framer-motion";
 import Link from "next/link";
 import dynamic from "next/dynamic";
@@ -46,6 +46,35 @@ function diffMinutes(fromStr: string, toStr: string): number {
 
 const TIME_SLOTS = generateTimeSlots();
 
+// A sane upper bound on bag count — enough for a tour group, low enough that a
+// fat-finger "22" for "2" can't ring up a runaway total or a 100-option
+// oversized selector. Over this, customers are told to message us.
+const MAX_BAGS = 20;
+
+// localStorage key for the auto-saved draft (see the restore/save effects).
+const DRAFT_KEY = "stow-booking-draft-v1";
+
+// The visitor's LOCAL calendar date, "YYYY-MM-DD". Deliberately not
+// toISOString() (that's UTC and lands a day early for UTC+7 between midnight
+// and 07:00). Used for the earliest bookable day and the same-day slot filter.
+function localDateStr(d: Date): string {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+}
+
+// "HH:MM" → minutes since midnight, for comparing a slot against "now".
+function slotToMinutes(s: string): number {
+  const [h, m] = s.split(":").map(Number);
+  return h * 60 + m;
+}
+
+// True only in the browser, and only after hydration — no setState, no
+// hydration mismatch (React uses the server snapshot while hydrating, then
+// swaps to the client one). Gates all "now"-dependent rendering so the
+// server HTML and first client render stay identical.
+function useIsClient(): boolean {
+  return useSyncExternalStore(() => () => {}, () => true, () => false);
+}
+
 const LABEL = "block text-[10px] font-bold uppercase tracking-[0.12em] text-white/30 mb-1.5";
 const INPUT  = "w-full appearance-none bg-white/[0.07] border border-white/[0.12] rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/25 focus:outline-none focus:border-[#E8742C]/70 transition-colors";
 // iOS Safari draws its own light native chrome over <select> unless appearance is
@@ -57,7 +86,13 @@ const EMAIL_RE = /^\S+@\S+\.\S+$/;
 type EmailStatus = "idle" | "sending" | "sent" | "error";
 
 export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["booking"]; locale: AppLocale }) {
-  const today = new Date().toISOString().split("T")[0];
+  const isClient = useIsClient();
+  const nowClock = new Date();
+  // SSR + the first client render use the UTC date (deterministic → hydration
+  // matches); after mount we switch to the visitor's LOCAL date so "earliest
+  // bookable day" and the past-slot filter are correct in their timezone.
+  const today = isClient ? localDateStr(nowClock) : nowClock.toISOString().split("T")[0];
+  const nowMinutes = nowClock.getHours() * 60 + nowClock.getMinutes();
 
   // Evidence trail for the scrollwrap consent + the daily/hourly period
   // summaries — locale-aware via src/lib/format.ts, defaulting to English
@@ -71,6 +106,10 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   const [lane, setLane]             = useState<Lane>("flexible");
   const [plan, setPlan]             = useState<PlanKey>("daily");
   const [oversized, setOversized]   = useState(false);
+  // How many of the bags are oversized. Only relevant (and only shown) when
+  // `oversized` is on and there's more than one bag — the surcharge is now
+  // per oversized bag, not a single flat add-on (client fix, 2026-09-15).
+  const [oversizedBags, setOversizedBags] = useState(1);
   const [date, setDate]             = useState("");
   const [time, setTime]             = useState("");
   const [pax, setPax]               = useState(1);
@@ -89,6 +128,13 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   const [emailStatus, setEmailStatus] = useState<EmailStatus>("idle");
   const [emailError, setEmailError]   = useState("");
   const [bookingRef, setBookingRef]   = useState("");
+  // Kept so the success screen can offer a manual "Open WhatsApp" link when
+  // window.open was blocked or the device has no WhatsApp session.
+  const [waUrl, setWaUrl]             = useState("");
+  // Synchronous double-submit guard — a ref, not `loading`, because two taps
+  // in the same tick both read the pre-update `loading` and would each fire
+  // a WhatsApp open. A ref flips immediately.
+  const submittingRef = useRef(false);
 
   function switchLane(l: Lane) {
     setLane(l);
@@ -107,13 +153,76 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     setErrors(p => { const n = { ...p }; delete n[k]; return n; });
   }
 
+  // Restore a saved draft on mount so a reload / accidental navigation
+  // doesn't wipe a long, half-filled form. Consent is deliberately NOT
+  // restored — it must be re-given each session for a fresh timestamp.
+  // `raw` is read synchronously (so the save effect below can't overwrite it
+  // first); the state is applied in a microtask so these setState calls run
+  // outside React's synchronous commit — no cascading-render lint, and no
+  // hydration mismatch (this runs after hydration regardless).
+  useEffect(() => {
+    let raw: string | null = null;
+    try { raw = localStorage.getItem(DRAFT_KEY); } catch { return; }
+    if (!raw) return;
+    Promise.resolve().then(() => {
+      let d: Record<string, unknown>;
+      try { d = JSON.parse(raw as string); } catch { return; }
+      if (!d || typeof d !== "object") return;
+      // Ignore stale drafts (>12h) so we never restore a now-past date.
+      if (typeof d.savedAt === "number" && Date.now() - d.savedAt > 12 * 3600 * 1000) return;
+      const t = localDateStr(new Date());
+      if (d.lane === "flexible" || d.lane === "flatrate") setLane(d.lane);
+      const pool = d.lane === "flatrate" ? FLAT_PLANS : FLEX_PLANS;
+      if (typeof d.plan === "string" && pool.includes(d.plan as PlanKey)) setPlan(d.plan as PlanKey);
+      if (typeof d.oversized === "boolean") setOversized(d.oversized);
+      if (typeof d.oversizedBags === "number" && d.oversizedBags >= 1) setOversizedBags(d.oversizedBags);
+      // Only restore a still-future drop-off; carry its times only with it.
+      if (typeof d.date === "string" && d.date >= t) {
+        setDate(d.date);
+        if (typeof d.time === "string") setTime(d.time);
+        if (typeof d.pickupDate === "string" && d.pickupDate >= d.date) setPickupDate(d.pickupDate);
+        if (typeof d.pickupTime === "string") setPickupTime(d.pickupTime);
+      }
+      if (typeof d.pax === "number" && d.pax >= 1) {
+        const p = Math.min(MAX_BAGS, d.pax);
+        setPax(p); setPaxInput(String(p));
+      }
+      if (typeof d.name === "string") setName(d.name);
+      if (typeof d.phone === "string") setPhone(d.phone);
+      if (typeof d.email === "string") setEmail(d.email);
+    });
+  }, []);
+
+  // Persist the draft on every change. Writes only (no setState), so this is
+  // a plain external-system sync; best-effort (private mode / quota throws).
+  useEffect(() => {
+    try {
+      localStorage.setItem(DRAFT_KEY, JSON.stringify({
+        savedAt: Date.now(), lane, plan, oversized, oversizedBags,
+        date, time, pax, pickupDate, pickupTime, name, phone, email,
+      }));
+    } catch { /* best-effort */ }
+  }, [lane, plan, oversized, oversizedBags, date, time, pax, pickupDate, pickupTime, name, phone, email]);
+
   // Facts (price/lane/surcharge — locale-invariant) vs. display text
   // (translated, from the dictionary). buildMessage()/sendLarkBooking()
   // below deliberately use `curFacts.canonicalName`/`canonicalDuration`,
   // never `curText` — see plans.ts's note on why those two network
   // boundaries must always stay English regardless of site locale.
   const curFacts = PLAN_FACTS[plan];
-  const maxPickup = date && curFacts.maxDays ? addDays(date, curFacts.maxDays) : "";
+  // Long Stay is intentionally uncapped: the customer picks any future
+  // pick-up date and staff confirm the price for 4+ month stays on WhatsApp
+  // (client decision, 2026-09-15 — a customer wanting 8 months literally
+  // couldn't select the date before). Mini/Strand keep their tier caps.
+  const maxPickup = date && curFacts.maxDays && plan !== "longstay" ? addDays(date, curFacts.maxDays) : "";
+
+  // The number of oversized bags actually billed: 0 when the toggle is off,
+  // otherwise clamped to the total bag count (you can't have more oversized
+  // bags than bags). Because the count selector binds its value to this
+  // derived number, a shrinking bag count clamps the display for free — no
+  // effect syncing raw `oversizedBags` back down. Drives the surcharge, the
+  // help-line math, and the WhatsApp/Lark payloads.
+  const oversizedCount = oversized ? Math.min(Math.max(1, oversizedBags), pax) : 0;
 
   // "By the Day" bills per calendar day between drop-off and pick-up, and
   // "By the Hour" bills per hour between drop-off and pick-up time — the
@@ -132,8 +241,10 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     const base = hourlyBillsAsDay
       ? PLAN_FACTS.daily.price
       : (plan === "hourly" || plan === "daily") ? curFacts.price * effectiveQuantity : curFacts.price;
-    return base * pax + (oversized ? curFacts.oversizeSurcharge : 0);
-  }, [curFacts, oversized, plan, effectiveQuantity, pax, hourlyBillsAsDay]);
+    // Surcharge is per oversized bag now, not a single flat add-on — 2
+    // oversized bags cost 2× the surcharge (client fix, 2026-09-15).
+    return base * pax + oversizedCount * curFacts.oversizeSurcharge;
+  }, [curFacts, oversizedCount, plan, effectiveQuantity, pax, hourlyBillsAsDay]);
 
   function validate() {
     const e: Record<string, string> = {};
@@ -144,11 +255,21 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     // time and no start time.
     if (!time)          e.time    = dict.required;
     if (plan === "daily" && !pickupDate) e.pickupDate = dict.required;
+    // Flat-rate pick-up date was previously optional, so the form let you
+    // submit with an empty Pickup (client bug report, 2026-09-15). It's now
+    // required on every flat-rate plan.
+    if (lane === "flatrate" && !pickupDate) e.pickupDate = dict.required;
     if ((plan === "hourly" || plan === "daily") && !pickupTime) e.pickupTime = dict.required;
     if (!name.trim())   e.name    = dict.required;
+    // Phone is the only callback path (WhatsApp handoff uses the business's
+    // own number, not this one), so reject obvious junk — need ≥8 digits.
     if (!phone.trim())  e.phone   = dict.required;
-    if (!email.trim())  e.email   = dict.required;
-    else if (!EMAIL_RE.test(email.trim())) e.email = dict.invalidEmail;
+    else if (phone.replace(/\D/g, "").length < 8) e.phone = dict.invalidPhone;
+    // Email required on Flat Rate (expats/nomads — higher-value leads worth
+    // reaching), optional on Flexible (a tourist's quick drop shouldn't be
+    // blocked on it). When given, it must still be a valid address.
+    if (lane === "flatrate" && !email.trim()) e.email = dict.required;
+    else if (email.trim() && !EMAIL_RE.test(email.trim())) e.email = dict.invalidEmail;
     if (!pax || pax < 1) e.pax    = dict.required;
     if (!consent)       e.consent = dict.required;
     return e;
@@ -185,7 +306,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
       `📋 Ref: ${ref}`,
       `📦 Plan: ${curFacts.canonicalName} — ${vnd(curFacts.price)}${curFacts.unit === "flat" ? " flat fee" : curFacts.unit} / bag`,
       `🧳 Bags: ${pax}`,
-      oversized ? `📏 Item: Oversized (+${vnd(curFacts.oversizeSurcharge)})` : `📏 Item: Standard size`,
+      oversized ? `📏 Item: Oversized ×${oversizedCount} (+${vnd(oversizedCount * curFacts.oversizeSurcharge)})` : `📏 Item: Standard size`,
       `📅 Drop-off: ${date ? formatLongDate(date, "en") : "TBD"}${time ? ` at ${time}` : ""}`,
       periodLine,
       `💰 Total: ${vnd(total)}`,
@@ -219,6 +340,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         lane,
         planName: curFacts.canonicalName,
         oversized,
+        oversizedCount,
         dropOffDate: date,
         dropOffTime: time,
         duration,
@@ -271,16 +393,26 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
+    // Guard a double-tap in the 600ms before the button disables + the
+    // success screen mounts — otherwise it fires two WhatsApp opens.
+    if (submittingRef.current) return;
     const errs = validate();
     if (Object.keys(errs).length) { setErrors(errs); return; }
     setErrors({});
+    submittingRef.current = true;
     setLoading(true);
     const ref = generateRef();
     setBookingRef(ref);
     sendLarkBooking(ref);
-    window.open(`https://wa.me/84905955161?text=${encodeURIComponent(buildMessage(ref))}`, "_blank", "noopener,noreferrer");
+    // Kept in state so the success screen can offer a manual re-open — the
+    // success screen shows regardless of whether this window.open succeeded.
+    const url = `https://wa.me/84905955161?text=${encodeURIComponent(buildMessage(ref))}`;
+    setWaUrl(url);
+    window.open(url, "_blank", "noopener,noreferrer");
     sendAgreementEmail(ref);
-    setTimeout(() => { setLoading(false); setSubmitted(true); }, 600);
+    // Booking captured — drop the saved draft so a later reload starts clean.
+    try { localStorage.removeItem(DRAFT_KEY); } catch { /* best-effort */ }
+    setTimeout(() => { submittingRef.current = false; setLoading(false); setSubmitted(true); }, 600);
   }
 
   const plans = lane === "flexible" ? FLEX_PLANS : FLAT_PLANS;
@@ -293,6 +425,16 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   const pickupSlots = pickupSameDay && time
     ? TIME_SLOTS.filter((t) => t > time)
     : TIME_SLOTS;
+
+  /* Same-day drop-off must not offer times that have already passed today
+     (no more booking "today at 09:00" at 3pm). Gated on isClient so SSR and
+     the first client render still emit the full list and hydration matches. */
+  const dropoffIsToday = isClient && !!date && date === today;
+  const dropoffSlots = dropoffIsToday ? TIME_SLOTS.filter((t) => slotToMinutes(t) >= nowMinutes) : TIME_SLOTS;
+  const noSlotsToday = dropoffIsToday && dropoffSlots.length === 0;
+  // A late drop-off can leave no valid same-day pick-up slot — surface it
+  // instead of showing an empty dropdown the customer can't get past.
+  const noLaterPickupSlots = pickupSameDay && !!time && pickupSlots.length === 0;
 
   /* Rendered in two different places depending on plan (see Row 2 below),
      so it's defined once here rather than duplicated. */
@@ -308,12 +450,16 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         value={paxInput}
         onChange={(e) => {
           const digits = e.target.value.replace(/\D/g, "");
-          setPaxInput(digits);
-          if (digits) setPax(Math.max(1, parseInt(digits, 10)));
+          // Clamp the visible value too, not just `pax`, so the box never
+          // shows a number different from what's being charged (and "0"
+          // snaps to "1" immediately instead of on blur).
+          const n = digits ? Math.min(MAX_BAGS, Math.max(1, parseInt(digits, 10))) : 0;
+          setPaxInput(digits ? String(n) : "");
+          if (digits) setPax(n);
           clearErr("pax");
         }}
         onBlur={() => {
-          const n = paxInput ? Math.max(1, parseInt(paxInput, 10)) : 1;
+          const n = paxInput ? Math.min(MAX_BAGS, Math.max(1, parseInt(paxInput, 10))) : 1;
           setPaxInput(String(n));
           setPax(n);
         }}
@@ -340,9 +486,31 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         <p className="text-white/30 text-[12px] mb-1" style={{ fontFamily: "var(--font-inter)" }}>
           {dict.successReplyTime}
         </p>
-        <p className="text-white/25 text-[11px] mb-5 tracking-wide" style={{ fontFamily: "var(--font-poppins)" }}>
+        <p className="text-white/25 text-[11px] mb-4 tracking-wide" style={{ fontFamily: "var(--font-poppins)" }}>
           {dict.successRefPrefix}{bookingRef}
         </p>
+
+        {/* WhatsApp may not have auto-opened (popup blocked, desktop with no
+            WhatsApp session, app not installed) — the success screen shows
+            regardless, so always give a manual path rather than leaving the
+            customer believing they're done when nothing was sent. */}
+        {waUrl && (
+          <>
+            <p className="text-white/30 text-[11px] mb-2 max-w-xs" style={{ fontFamily: "var(--font-inter)" }}>
+              {dict.successWhatsAppHint}
+            </p>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full max-w-xs mb-5 bg-[#25D366] hover:bg-[#1EA955] text-white font-bold text-[13px] py-2.5 rounded-lg transition-colors"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            >
+              <MessageCircle size={15} />
+              {dict.successOpenWhatsApp}
+            </a>
+          </>
+        )}
 
         {/* Hidden while POST_BOOKING_EMAIL_ENABLED is off — promising an
             email we no longer send is worse than saying nothing. */}
@@ -545,12 +713,18 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
                     style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                   >
                     <option value="">{dict.selectPlaceholder}</option>
-                    {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                    {dropoffSlots.map((t) => <option key={t} value={t}>{t}</option>)}
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
                 </div>
               </div>
             </div>
+
+            {noSlotsToday && (
+              <p className="text-[11px] text-[#E8742C]" style={{ fontFamily: "var(--font-inter)" }}>
+                {dict.noSlotsTodayNotice}
+              </p>
+            )}
 
             {/* Row 2 — the pick-up pair.
                 Hourly is same-day, so it needs only a time and Bags fits
@@ -620,6 +794,12 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
               )}
             </div>
 
+            {noLaterPickupSlots && (
+              <p className="text-[11px] text-[#E8742C]" style={{ fontFamily: "var(--font-inter)" }}>
+                {dict.noLaterSlotsNotice}
+              </p>
+            )}
+
             {/* Bags, when the pick-up pair above took the whole row. */}
             {plan === "daily" && (
               <div className="grid grid-cols-2 gap-2">{bagsField}</div>
@@ -680,18 +860,38 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
             </div>
             <div className="col-span-2 lg:col-span-1 min-w-0">
               <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                {dict.pickupLabel}
+                {dict.pickupLabel}{errors.pickupDate && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupDate})</span>}
               </label>
               <input
                 type="date"
                 value={pickupDate}
                 min={date || today}
                 max={maxPickup || undefined}
-                onChange={(e) => setPickupDate(e.target.value)}
-                className={INPUT}
+                onChange={(e) => { setPickupDate(e.target.value); clearErr("pickupDate"); }}
+                className={`${INPUT} ${errors.pickupDate ? ERR : ""}`}
                 style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
               />
             </div>
+            {/* Long Stay is uncapped (see maxPickup) — this tells the
+                customer why they can pick a far-out date and that the price
+                for 4+ months is confirmed by staff on WhatsApp. */}
+            {plan === "longstay" && (
+              <p className="col-span-2 lg:col-span-3 text-[11px] text-[#E8742C]" style={{ fontFamily: "var(--font-inter)" }}>
+                {dict.longStayNotice}
+              </p>
+            )}
+            {/* Mini/Strand cap the pick-up date at the tier length — explain
+                the otherwise-silent limit instead of a dead-end date picker. */}
+            {(plan === "mini" || plan === "strand") && (
+              <p className="col-span-2 lg:col-span-3 text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
+                {dict.flatCapNotice}
+              </p>
+            )}
+            {noSlotsToday && (
+              <p className="col-span-2 lg:col-span-3 text-[11px] text-[#E8742C]" style={{ fontFamily: "var(--font-inter)" }}>
+                {dict.noSlotsTodayNotice}
+              </p>
+            )}
           </motion.div>
         )}
       </AnimatePresence>
@@ -728,7 +928,9 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         </div>
         <div className="col-span-2 lg:col-span-1">
           <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            {dict.emailLabel}{errors.email && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.email})</span>}
+            {dict.emailLabel}
+            {lane === "flexible" && !errors.email && <span className="text-white/25 normal-case tracking-normal ml-1 font-medium">· {dict.optionalTag}</span>}
+            {errors.email && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.email})</span>}
           </label>
           <input
             type="email"
@@ -762,11 +964,11 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
               onChange={(e) => {
                 const digits = e.target.value.replace(/\D/g, "");
                 setPaxInput(digits);
-                if (digits) setPax(Math.max(1, parseInt(digits, 10)));
+                if (digits) setPax(Math.min(MAX_BAGS, Math.max(1, parseInt(digits, 10))));
                 clearErr("pax");
               }}
               onBlur={() => {
-                const n = paxInput ? Math.max(1, parseInt(paxInput, 10)) : 1;
+                const n = paxInput ? Math.min(MAX_BAGS, Math.max(1, parseInt(paxInput, 10))) : 1;
                 setPaxInput(String(n));
                 setPax(n);
               }}
@@ -782,22 +984,47 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
             <p className="text-[12.5px] font-semibold text-white/80 leading-none" style={{ fontFamily: "var(--font-poppins)" }}>
               {dict.oversizedLabel}
             </p>
+            {/* Off: the descriptor + per-bag rate. On: the actual line-item
+                math (N bags × rate), so the surcharge is visibly counted —
+                the client's report was that it "wasn't calculating". */}
             <p className="text-[11px] text-white/28 mt-1 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
-              {dict.oversizedHelpPrefix}{vnd(curFacts.oversizeSurcharge)}
+              {oversized
+                ? `${oversizedCount} ${pluralizeWord(oversizedCount, dict.bagUnit)} × ${vnd(curFacts.oversizeSurcharge)}`
+                : `${dict.oversizedHelpPrefix}${vnd(curFacts.oversizeSurcharge)}`}
             </p>
           </div>
-          <button
-            type="button"
-            onClick={() => setOversized(!oversized)}
-            aria-pressed={oversized}
-            className={`relative w-9 h-[19px] rounded-full transition-colors flex-shrink-0 ${oversized ? "bg-[#E8742C]" : "bg-white/15"}`}
-          >
-            <span
-              className={`absolute top-[2px] w-[15px] h-[15px] rounded-full bg-white shadow-sm transition-all ${
-                oversized ? "left-[calc(100%_-_17px)]" : "left-[2px]"
-              }`}
-            />
-          </button>
+          <div className="flex items-center gap-2.5 flex-shrink-0">
+            {/* How many bags are oversized — only meaningful with more than
+                one bag; with a single bag the count can only be 1. */}
+            {oversized && pax > 1 && (
+              <div className="relative">
+                <select
+                  aria-label={dict.oversizedCountLabel}
+                  value={oversizedCount}
+                  onChange={(e) => setOversizedBags(parseInt(e.target.value, 10))}
+                  className="appearance-none bg-white/[0.07] border border-white/[0.14] rounded-md pl-2.5 pr-6 py-1 text-[14px] font-bold text-white focus:outline-none focus:border-[#E8742C]/70"
+                  style={{ fontFamily: "var(--font-poppins)", colorScheme: "dark" }}
+                >
+                  {Array.from({ length: pax }, (_, i) => i + 1).map((n) => (
+                    <option key={n} value={n}>{n}</option>
+                  ))}
+                </select>
+                <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40" />
+              </div>
+            )}
+            <button
+              type="button"
+              onClick={() => setOversized(!oversized)}
+              aria-pressed={oversized}
+              className={`relative w-9 h-[19px] rounded-full transition-colors flex-shrink-0 ${oversized ? "bg-[#E8742C]" : "bg-white/15"}`}
+            >
+              <span
+                className={`absolute top-[2px] w-[15px] h-[15px] rounded-full bg-white shadow-sm transition-all ${
+                  oversized ? "left-[calc(100%_-_17px)]" : "left-[2px]"
+                }`}
+              />
+            </button>
+          </div>
         </div>
       </div>
 

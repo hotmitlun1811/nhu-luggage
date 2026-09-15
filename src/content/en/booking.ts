@@ -69,6 +69,28 @@ export const booking = {
   bagsInlineHelp: "Items stored, not people",
   oversizedLabel: "Oversized?",
   oversizedHelpPrefix: '28″+, bike, surfboard · +',
+  /* aria-label for the "how many oversized bags" counter revealed when the
+     Oversized toggle is on and there's more than one bag. */
+  oversizedCountLabel: "Oversized bags",
+  /* Shown when Long Stay is selected — that plan's pick-up date cap is
+     removed (client decision, 2026-09-15) so any future date is
+     selectable; staff confirm the exact price for 4+ month stays. */
+  longStayNotice: "Stays over 4 months — we'll confirm the final price on WhatsApp.",
+  /* Mini/Strand keep a pick-up date cap at their tier length; this explains
+     the otherwise-silent limit and points to a longer plan. */
+  flatCapNotice: "Pick-up is limited to this plan's length. Choose a longer plan above for more time.",
+  /* Same-day drop-off hints when the fixed 07:00–22:00 slot list has run out
+     of valid options for the chosen day. */
+  noSlotsTodayNotice: "No more time slots today — pick a later drop-off date.",
+  noLaterSlotsNotice: "No later slots — choose an earlier drop-off time.",
+  /* Email is optional on the Flexible lane; this tags the field so tourists
+     doing a quick drop know they can skip it. */
+  optionalTag: "optional",
+  invalidPhone: "Enter a valid phone number",
+  /* Success-screen fallback: WhatsApp may not auto-open (popup blocked,
+     desktop with no session, app not installed). */
+  successOpenWhatsApp: "Open WhatsApp",
+  successWhatsAppHint: "Didn't WhatsApp open? Tap to send your booking.",
 
   totalFlatFee: "Total (flat fee)",
   totalPrefix: "Total (",
