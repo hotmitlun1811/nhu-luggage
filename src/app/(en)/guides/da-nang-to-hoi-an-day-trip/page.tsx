@@ -12,7 +12,6 @@ import {
   GuideCallout,
   GuideStowCallout,
   GuideFAQ,
-  GuideTOC,
   GuideImage,
   GuideSources,
 } from "@/components/guides/GuideElements";
@@ -103,6 +102,18 @@ export default async function HoiAnGuide() {
         eyebrow="Day Trips"
         title="Da Nang to Hoi An Day Trip"
         subhead="How to get there without overpaying, how the Old Town ticket really works, when to go for the lanterns, and what to do with your bags if your flight is the same night."
+        readingTime="11 min read"
+        toc={[
+          { id: "distance", label: "How far, and how long" },
+          { id: "transport", label: "Every way to get there, compared" },
+          { id: "bus", label: "The bus (it changed in 2024)" },
+          { id: "when", label: "When to go: day, evening, lanterns" },
+          { id: "ticket", label: "The Old Town ticket, explained" },
+          { id: "do", label: "What to see in a day" },
+          { id: "marble", label: "Combine the Marble Mountains" },
+          { id: "your-stuff", label: "What to do with your bags" },
+          { id: "faq", label: "Questions people ask" },
+        ]}
         related={[
           { title: "Marble Mountains Guide", href: "/guides/marble-mountains-guide", blurb: "It sits right on the road to Hoi An, the easiest stop to combine." },
           { title: "Ba Na Hills Day Trip", href: "/guides/ba-na-hills-day-trip", blurb: "The other big day trip from Da Nang, in the opposite direction." },
@@ -124,21 +135,6 @@ export default async function HoiAnGuide() {
           is only checked at the doors of the heritage sites, so you can walk, eat, and shop for free. If you have
           checked out or fly out that night, leave your bags in Da Nang and go bag-free.
         </GuideTLDR>
-
-        <GuideTOC
-          sections={[
-            { id: "distance", label: "How far, and how long" },
-            { id: "transport", label: "Every way to get there, compared" },
-            { id: "bus", label: "The bus (it changed in 2024)" },
-            { id: "when", label: "When to go: day, evening, lanterns" },
-            { id: "ticket", label: "The Old Town ticket, explained" },
-            { id: "do", label: "What to see in a day" },
-            { id: "marble", label: "Combine the Marble Mountains" },
-            { id: "your-stuff", label: "What to do with your bags" },
-            { id: "faq", label: "Questions people ask" },
-          ]}
-        />
-
         <GuideImage
           src="https://upload.wikimedia.org/wikipedia/commons/b/b8/2024_H%E1%BB%99i_An_-_Japanese_Covered_Bridge_%28Ch%C3%B9a_C%E1%BA%A7u%29_after_renovation_-_img_11.jpg"
           alt="The Japanese Covered Bridge (Chua Cau) in Hoi An Old Town, after its 2024 renovation"
@@ -160,7 +156,7 @@ export default async function HoiAnGuide() {
           ]}
         />
 
-        <div id="distance" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="distance" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="distance">How far is Hoi An from Da Nang?</GuideH2>
           <p>
             About 30 km by road from central Da Nang, a 30 to 60 minute drive depending on traffic. From the airport
@@ -170,7 +166,7 @@ export default async function HoiAnGuide() {
           </p>
         </div>
 
-        <div id="transport" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="transport" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="transport">Every way to get from Da Nang to Hoi An, compared</GuideH2>
           <p>
             There is no single right way. It is a trade between price, ease, and whether you want to stop on the way.
@@ -193,7 +189,7 @@ export default async function HoiAnGuide() {
           </p>
         </div>
 
-        <div id="bus" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="bus" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="bus">The public bus (it changed in 2024)</GuideH2>
           <p>
             The bus is by far the cheapest way to Hoi An, but it comes with a catch a lot of older guides get wrong.
@@ -212,7 +208,7 @@ export default async function HoiAnGuide() {
           </GuideCallout>
         </div>
 
-        <div id="when" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="when" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="when">When to go: day, evening, and the lanterns</GuideH2>
           <p>
             If you only see Hoi An in the midday heat with the tour crowds, you will wonder what the fuss is about.
@@ -249,7 +245,7 @@ export default async function HoiAnGuide() {
           </GuideCallout>
         </div>
 
-        <div id="ticket" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="ticket" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="ticket">The Ancient Town ticket, explained</GuideH2>
           <p>
             The foreign-visitor ticket is 120,000 VND (about US$5) and buys a booklet of five tear-off coupons. Each
@@ -272,7 +268,7 @@ export default async function HoiAnGuide() {
           </GuideCallout>
         </div>
 
-        <div id="do" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="do" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="do">What to see and do in a day</GuideH2>
           <p>
             The core of a first visit is small and walkable: the <strong>Japanese Covered Bridge</strong> (reopened
@@ -289,7 +285,7 @@ export default async function HoiAnGuide() {
           </p>
         </div>
 
-        <div id="marble" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="marble" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="marble">Combine the Marble Mountains on the way</GuideH2>
           <p>
             The{" "}
@@ -303,7 +299,7 @@ export default async function HoiAnGuide() {
           </p>
         </div>
 
-        <div id="your-stuff" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="your-stuff" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="your-stuff">What to do with your bags</GuideH2>
           <p>
             This quietly decides a lot of Hoi An days. If you have checked out of a Da Nang hotel with an evening
@@ -349,7 +345,7 @@ export default async function HoiAnGuide() {
           </p>
         </div>
 
-        <div id="faq" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="faq" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="faq">Questions people ask</GuideH2>
           <GuideFAQ items={FAQ_ITEMS} />
         </div>

@@ -12,7 +12,6 @@ import {
   GuideCallout,
   GuideStowCallout,
   GuideFAQ,
-  GuideTOC,
   GuideImage,
   GuideSources,
 } from "@/components/guides/GuideElements";
@@ -103,6 +102,18 @@ export default async function LayoverGuide() {
         eyebrow="Layovers"
         title="Da Nang Layover Guide"
         subhead="Your flight lands at 7am and the next one leaves at 6pm. Whether it is worth leaving the airport depends on your passport and the clock. Here is the bag-first version most guides skip."
+        readingTime="11 min read"
+        toc={[
+          { id: "can-you-leave", label: "Can you even leave the airport?" },
+          { id: "long-enough", label: "Is your layover long enough?" },
+          { id: "into-town", label: "Getting into the city" },
+          { id: "the-bag", label: "Step one: where the bag goes" },
+          { id: "itineraries", label: "What fits in your window" },
+          { id: "stops", label: "What is reachable fast" },
+          { id: "eat", label: "What to eat" },
+          { id: "airside", label: "Cannot leave? Airside plan B" },
+          { id: "faq", label: "Questions people ask" },
+        ]}
         related={[
           { title: "Marble Mountains Guide", href: "/guides/marble-mountains-guide", blurb: "The best short-layover sight, about 20 minutes from the airport." },
           { title: "Da Nang to Hoi An Day Trip", href: "/guides/da-nang-to-hoi-an-day-trip", blurb: "Only worth it on a layover of 8 hours or more, if you start early." },
@@ -122,21 +133,6 @@ export default async function LayoverGuide() {
           town around <strong>US$2 to US$4</strong>. Budget 60 to 90 minutes of airport time each way, so only leave
           with <strong>4 or more hours on the ground</strong>. Store your bag first, before you go anywhere.
         </GuideTLDR>
-
-        <GuideTOC
-          sections={[
-            { id: "can-you-leave", label: "Can you even leave the airport?" },
-            { id: "long-enough", label: "Is your layover long enough?" },
-            { id: "into-town", label: "Getting into the city" },
-            { id: "the-bag", label: "Step one: where the bag goes" },
-            { id: "itineraries", label: "What fits in your window" },
-            { id: "stops", label: "What is reachable fast" },
-            { id: "eat", label: "What to eat" },
-            { id: "airside", label: "Cannot leave? Airside plan B" },
-            { id: "faq", label: "Questions people ask" },
-          ]}
-        />
-
         <GuideFacts
           items={[
             { label: "Airport to city", value: "2-3 km, ~10-20 min" },
@@ -148,7 +144,7 @@ export default async function LayoverGuide() {
           ]}
         />
 
-        <div id="can-you-leave" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="can-you-leave" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="can-you-leave">First, can you even leave the airport?</GuideH2>
           <p>
             Most layover guides skip this, and it matters more than the itinerary. Vietnam&apos;s rule turns on
@@ -180,7 +176,7 @@ export default async function LayoverGuide() {
           </GuideCallout>
         </div>
 
-        <div id="long-enough" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="long-enough" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="long-enough">Is your layover long enough? The 4-hour rule</GuideH2>
           <p>
             Plan around the overhead. Getting off the plane takes 15 minutes or more. Immigration runs 10 to 30
@@ -195,7 +191,7 @@ export default async function LayoverGuide() {
           </p>
         </div>
 
-        <div id="into-town" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="into-town" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="into-town">Getting from the airport into the city</GuideH2>
           <p>
             Da Nang&apos;s airport is one of the closest-to-town airports in Vietnam, 2 to 3 km from the centre.
@@ -214,7 +210,7 @@ export default async function LayoverGuide() {
           />
         </div>
 
-        <div id="the-bag" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="the-bag" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="the-bag">Step one: where the bag goes</GuideH2>
           <p>
             This is the first decision, not an afterthought. Anything you might do on a layover is miserable with a
@@ -253,7 +249,7 @@ export default async function LayoverGuide() {
           </GuideStowCallout>
         </div>
 
-        <div id="itineraries" className="flex flex-col gap-5 scroll-mt-24">
+        <div id="itineraries" className="flex flex-col gap-5 scroll-mt-[88px]">
           <GuideH2 id="itineraries">What fits in your window</GuideH2>
           <p>
             Each plan below assumes your bag is stored and you can enter Vietnam. Times are usable hours{" "}
@@ -285,7 +281,7 @@ export default async function LayoverGuide() {
           </p>
         </div>
 
-        <div id="stops" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="stops" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="stops">What is reachable fast, with real hours</GuideH2>
           <GuideFacts
             items={[
@@ -337,7 +333,7 @@ export default async function LayoverGuide() {
           </p>
         </div>
 
-        <div id="eat" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="eat" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="eat">What to eat on a Da Nang layover</GuideH2>
           <p>
             Da Nang has its own dishes worth timing a stop around. <strong>Mi quang</strong> — yellow noodles with a
@@ -348,7 +344,7 @@ export default async function LayoverGuide() {
           </p>
         </div>
 
-        <div id="airside" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="airside" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="airside">Cannot leave? The airside plan B</GuideH2>
           <p>
             If your layover is under four hours, or you cannot enter Vietnam, the airport is modern and comfortable.
@@ -371,7 +367,7 @@ export default async function LayoverGuide() {
           />
         </div>
 
-        <div id="faq" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="faq" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="faq">Questions people ask</GuideH2>
           <GuideFAQ items={FAQ_ITEMS} />
         </div>

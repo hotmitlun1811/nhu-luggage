@@ -3,9 +3,9 @@ import type { Dictionary } from "@/content/types";
 
 export default function AnnouncementBar({ dict }: { dict: Dictionary["announcement"] }) {
   return (
-    <div className="w-full bg-[#16243F] text-white flex items-center justify-center h-9 px-4">
+    <div className="w-full bg-[#16243F] text-white flex items-center justify-center min-h-9 px-4 py-1.5">
       <p
-        className="text-[12.5px] font-medium text-center flex items-center gap-2"
+        className="text-[12.5px] font-medium text-center flex items-center justify-center flex-wrap gap-x-2 gap-y-0.5"
         style={{ fontFamily: "var(--font-inter)" }}
       >
         <Clock size={12} className="text-[#E8742C] flex-shrink-0" />

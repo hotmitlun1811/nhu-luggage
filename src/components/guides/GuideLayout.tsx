@@ -1,17 +1,26 @@
 import Link from "next/link";
-import { MessageCircle } from "lucide-react";
+import { MessageCircle, ChevronDown } from "lucide-react";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import PrimaryNav from "@/components/layout/PrimaryNav";
 import Footer from "@/components/layout/Footer";
+import ReadingProgress from "@/components/guides/ReadingProgress";
 import type { Dictionary } from "@/content/types";
 
+type TocItem = { id: string; label: string };
+
 /**
- * Shared shell for the /guides/* pages (content-engine playbook,
- * docs/aeo-seo/2026-08-15-content-engine-playbook.md). Mirrors
- * trust-safety/page.tsx's visual pattern (dark header, white body, CTA
- * footer) rather than introducing a new look. English-only for now, same
- * scope as trust-safety/privacy-policy/terms-of-service — no ko/ja
- * translation yet.
+ * Shared shell for the /guides/* pages. Dark header, white body, CTA footer —
+ * the same visual family as trust-safety/page.tsx.
+ *
+ * Reading layout (2026-09-15 redesign): on desktop the table of contents is a
+ * sticky sidebar (matching the legal pages' approved pattern — inline
+ * `top: 88px`, since `sticky top-24` resolves to 24px under this project's
+ * custom spacing scale and would hide behind the 72px nav). On mobile it
+ * collapses into a `<details>` at the top of the article. Sections carry
+ * `scroll-mt-[88px]` so anchor jumps clear the fixed nav. Pass the section list
+ * once via the `toc` prop; do not also render <GuideTOC> in the children.
+ *
+ * English-only for now, same scope as the legal pages.
  */
 export default function GuideLayout({
   dict,
@@ -19,6 +28,8 @@ export default function GuideLayout({
   eyebrow,
   title,
   subhead,
+  readingTime,
+  toc,
   children,
   related,
 }: {
@@ -27,17 +38,24 @@ export default function GuideLayout({
   eyebrow: string;
   title: string;
   subhead: string;
+  readingTime?: string;
+  toc?: TocItem[];
   children: React.ReactNode;
   related?: { title: string; href: string; blurb: string }[];
 }) {
+  const hasToc = toc && toc.length > 0;
+
   return (
     <main>
-      <AnnouncementBar dict={dict.announcement} />
       <PrimaryNav dict={dict.nav} locale="en" currentPath={currentPath} />
+      <ReadingProgress />
 
-      {/* Page header */}
-      <div className="bg-[#16243F] py-40 lg:py-64">
-        <div className="max-w-[900px] mx-auto px-6">
+      {/* Nav clearance + announcement + header as one navy block, so the
+          transparent fixed nav stays legible over navy and nothing hides
+          beneath it (the fixed nav overlays the top 72px). */}
+      <div className="bg-[#16243F] pt-[72px]">
+        <AnnouncementBar dict={dict.announcement} />
+        <div className="max-w-[1120px] mx-auto px-6 pt-[28px] pb-[56px] lg:pt-[44px] lg:pb-[72px]">
           <p
             className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#E8742C] mb-3"
             style={{ fontFamily: "var(--font-poppins)" }}
@@ -45,101 +63,161 @@ export default function GuideLayout({
             {eyebrow}
           </p>
           <h1
-            className="text-white font-bold leading-[1.08] mb-5"
-            style={{
-              fontFamily: "var(--font-poppins)",
-              fontSize: "clamp(28px, 4vw, 46px)",
-              letterSpacing: "-0.03em",
-            }}
+            className="text-white font-bold leading-[1.08] mb-5 max-w-[820px]"
+            style={{ fontFamily: "var(--font-poppins)", fontSize: "clamp(28px, 4vw, 46px)", letterSpacing: "-0.03em" }}
           >
             {title}
           </h1>
-          <p
-            className="text-white/50 text-[15px] max-w-xl leading-relaxed"
-            style={{ fontFamily: "var(--font-inter)" }}
-          >
+          <p className="text-white/55 text-[15px] max-w-[600px] leading-relaxed" style={{ fontFamily: "var(--font-inter)" }}>
             {subhead}
           </p>
+          <div
+            className="flex items-center flex-wrap gap-x-2 gap-y-1 mt-6 text-[12.5px] text-white/40"
+            style={{ fontFamily: "var(--font-inter)" }}
+          >
+            <span>By the Stow team</span>
+            {readingTime ? (
+              <>
+                <span aria-hidden="true">·</span>
+                <span>{readingTime}</span>
+              </>
+            ) : null}
+          </div>
         </div>
       </div>
 
       {/* Body */}
       <div className="bg-white">
-        <div className="max-w-[820px] mx-auto px-6 py-20 lg:py-28">
-          <article
-            className="flex flex-col gap-10 text-[15.5px] text-[#374151] leading-relaxed"
-            style={{ fontFamily: "var(--font-inter)" }}
-          >
-            {children}
-          </article>
-
-          {related && related.length > 0 && (
-            <div className="mt-16 pt-12 border-t border-[#E8E8E4]">
-              <p
-                className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#9CA3AF] mb-6"
-                style={{ fontFamily: "var(--font-poppins)" }}
-              >
-                Also useful
-              </p>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-                {related.map((r) => (
-                  <Link
-                    key={r.href}
-                    href={r.href}
-                    className="block rounded-xl border border-[#E8E8E4] p-5 hover:border-[#E8742C] transition-colors"
+        <div className="max-w-[1120px] mx-auto px-6 py-[40px] lg:py-[72px]">
+          <div className="lg:grid lg:grid-cols-[200px_minmax(0,1fr)] lg:gap-[56px]">
+            {/* Desktop sticky TOC */}
+            {hasToc && (
+              <aside className="hidden lg:block">
+                <nav style={{ position: "sticky", top: "88px" }}>
+                  <p
+                    className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9CA3AF] mb-4"
+                    style={{ fontFamily: "var(--font-poppins)" }}
                   >
-                    <p
-                      className="text-[14.5px] font-bold text-[#0D1829] mb-1.5"
-                      style={{ fontFamily: "var(--font-poppins)" }}
-                    >
-                      {r.title}
-                    </p>
-                    <p
-                      className="text-[13px] text-[#6B7280] leading-relaxed"
-                      style={{ fontFamily: "var(--font-inter)" }}
-                    >
-                      {r.blurb}
-                    </p>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
+                    On this page
+                  </p>
+                  <ul className="flex flex-col gap-[11px] border-l border-[#E8E8E4] pl-[18px]">
+                    {toc!.map((s) => (
+                      <li key={s.id}>
+                        <a
+                          href={`#${s.id}`}
+                          className="text-[13px] leading-snug text-[#4B5563] hover:text-[#E8742C] transition-colors block"
+                          style={{ fontFamily: "var(--font-inter)" }}
+                        >
+                          {s.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </nav>
+              </aside>
+            )}
 
-          {/* ── CTA ── */}
-          <div className="mt-16 pt-12 border-t border-[#E8E8E4] flex flex-col sm:flex-row items-center justify-between gap-6">
-            <div>
-              <p
-                className="text-[18px] font-bold text-[#0D1829] mb-2"
-                style={{ fontFamily: "var(--font-poppins)", letterSpacing: "-0.02em" }}
-              >
-                Need to drop off a bag?
-              </p>
-              <p
-                className="text-[14px] text-[#6B7280]"
+            {/* Article column */}
+            <div className="lg:max-w-[760px] min-w-0">
+              {/* Mobile collapsible TOC */}
+              {hasToc && (
+                <details className="lg:hidden group bg-[#F4F4F0] rounded-2xl mb-[32px]">
+                  <summary
+                    className="flex items-center justify-between cursor-pointer list-none [&::-webkit-details-marker]:hidden px-6 py-[14px] text-[13px] font-bold text-[#16243F]"
+                    style={{ fontFamily: "var(--font-poppins)" }}
+                  >
+                    On this page
+                    <ChevronDown size={16} strokeWidth={2} className="text-[#9CA3AF] transition-transform group-open:rotate-180" />
+                  </summary>
+                  <ul className="flex flex-col gap-3 px-6 pb-5 pt-1">
+                    {toc!.map((s) => (
+                      <li key={s.id}>
+                        <a
+                          href={`#${s.id}`}
+                          className="text-[14px] text-[#4B5563] hover:text-[#E8742C] transition-colors"
+                          style={{ fontFamily: "var(--font-inter)" }}
+                        >
+                          {s.label}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </details>
+              )}
+
+              <article
+                className="flex flex-col gap-10 text-[15.5px] text-[#374151] leading-relaxed"
                 style={{ fontFamily: "var(--font-inter)" }}
               >
-                55 Ba Bang Nhan, Ngu Hanh Son. Open 7am-10pm, every day.
-              </p>
-            </div>
-            <div className="flex gap-3 flex-wrap">
-              <a
-                href="https://wa.me/84905955161"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 border border-[#E2E2DE] text-[#16243F] text-[14px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#F4F4F0] transition-colors"
-                style={{ fontFamily: "var(--font-poppins)" }}
-              >
-                <MessageCircle size={15} strokeWidth={1.75} />
-                WhatsApp us
-              </a>
-              <Link
-                href="/#booking"
-                className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[14px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#C85E1E] transition-colors"
-                style={{ fontFamily: "var(--font-poppins)" }}
-              >
-                Book Storage
-              </Link>
+                {children}
+              </article>
+
+              {related && related.length > 0 && (
+                <div className="mt-[56px] pt-[40px] border-t border-[#E8E8E4]">
+                  <p
+                    className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#9CA3AF] mb-6"
+                    style={{ fontFamily: "var(--font-poppins)" }}
+                  >
+                    Also useful
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
+                    {related.map((r) => (
+                      <Link
+                        key={r.href}
+                        href={r.href}
+                        className="block rounded-xl border border-[#E8E8E4] p-5 hover:border-[#E8742C] hover:shadow-sm transition-all"
+                      >
+                        <p
+                          className="text-[14.5px] font-bold text-[#0D1829] mb-1.5"
+                          style={{ fontFamily: "var(--font-poppins)" }}
+                        >
+                          {r.title}
+                        </p>
+                        <p
+                          className="text-[13px] text-[#6B7280] leading-relaxed"
+                          style={{ fontFamily: "var(--font-inter)" }}
+                        >
+                          {r.blurb}
+                        </p>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* ── CTA ── */}
+              <div className="mt-[56px] pt-[40px] border-t border-[#E8E8E4] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                <div>
+                  <p
+                    className="text-[18px] font-bold text-[#0D1829] mb-2"
+                    style={{ fontFamily: "var(--font-poppins)", letterSpacing: "-0.02em" }}
+                  >
+                    Need to drop off a bag?
+                  </p>
+                  <p className="text-[14px] text-[#6B7280]" style={{ fontFamily: "var(--font-inter)" }}>
+                    55 Ba Bang Nhan, Ngu Hanh Son. Open 7am-10pm, every day.
+                  </p>
+                </div>
+                <div className="flex gap-3 flex-wrap">
+                  <a
+                    href="https://wa.me/84905955161"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 border border-[#E2E2DE] text-[#16243F] text-[14px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#F4F4F0] transition-colors"
+                    style={{ fontFamily: "var(--font-poppins)" }}
+                  >
+                    <MessageCircle size={15} strokeWidth={1.75} />
+                    WhatsApp us
+                  </a>
+                  <Link
+                    href="/#booking"
+                    className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[14px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#C85E1E] transition-colors"
+                    style={{ fontFamily: "var(--font-poppins)" }}
+                  >
+                    Book Storage
+                  </Link>
+                </div>
+              </div>
             </div>
           </div>
         </div>

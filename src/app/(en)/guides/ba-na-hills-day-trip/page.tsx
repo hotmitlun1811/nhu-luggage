@@ -11,7 +11,6 @@ import {
   GuideCallout,
   GuideStowCallout,
   GuideFAQ,
-  GuideTOC,
   GuideImage,
   GuideSources,
 } from "@/components/guides/GuideElements";
@@ -102,6 +101,20 @@ export default async function BaNaHillsGuide() {
         eyebrow="Day Trips"
         title="Ba Na Hills Day Trip"
         subhead="The Golden Bridge, a record-holding cable car, and a mountaintop park that runs 10 degrees colder than the beach you left that morning. Here is the honest version: prices, timing, fog, and all."
+        readingTime="11 min read"
+        toc={[
+          { id: "what", label: "What Ba Na Hills is" },
+          { id: "bridge", label: "The Golden Bridge" },
+          { id: "cable-car", label: "The record-setting cable car" },
+          { id: "tickets", label: "2026 tickets, in full" },
+          { id: "getting-there", label: "Getting there from Da Nang" },
+          { id: "timing", label: "Half-day vs full-day, and when to arrive" },
+          { id: "weather", label: "Weather, fog, and what to wear" },
+          { id: "food", label: "Food at the top" },
+          { id: "worth-it", label: "Is it worth it? An honest take" },
+          { id: "your-stuff", label: "Doing it on your arrival or departure day" },
+          { id: "faq", label: "Questions people ask" },
+        ]}
         related={[
           { title: "Da Nang to Hoi An Day Trip", href: "/guides/da-nang-to-hoi-an-day-trip", blurb: "The other big day trip from Da Nang, in the opposite direction." },
           { title: "Da Nang Layover Guide", href: "/guides/da-nang-layover-guide", blurb: "Ba Na Hills needs a full day. This covers shorter windows instead." },
@@ -123,23 +136,6 @@ export default async function BaNaHillsGuide() {
           10:30 AM to 2:30 PM). Is it worth it? If you go knowing it is a polished, very touristy fantasy park rather
           than raw nature, most people find the bridge, the cable car, and the cool air genuinely impressive.
         </GuideTLDR>
-
-        <GuideTOC
-          sections={[
-            { id: "what", label: "What Ba Na Hills is" },
-            { id: "bridge", label: "The Golden Bridge" },
-            { id: "cable-car", label: "The record-setting cable car" },
-            { id: "tickets", label: "2026 tickets, in full" },
-            { id: "getting-there", label: "Getting there from Da Nang" },
-            { id: "timing", label: "Half-day vs full-day, and when to arrive" },
-            { id: "weather", label: "Weather, fog, and what to wear" },
-            { id: "food", label: "Food at the top" },
-            { id: "worth-it", label: "Is it worth it? An honest take" },
-            { id: "your-stuff", label: "Doing it on your arrival or departure day" },
-            { id: "faq", label: "Questions people ask" },
-          ]}
-        />
-
         <GuideImage
           src="https://upload.wikimedia.org/wikipedia/commons/0/0c/Golden_Bridge_at_Ba_Na_Hills_20250718.jpg"
           alt="The Golden Bridge at Ba Na Hills, held up by two giant hands styled to look like weathered stone"
@@ -161,7 +157,7 @@ export default async function BaNaHillsGuide() {
           ]}
         />
 
-        <div id="what" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="what" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="what">What Ba Na Hills is</GuideH2>
           <p>
             Ba Na Hills is a Sun World resort built across a mountaintop about 1,487 to 1,500 metres up, west of Da
@@ -177,7 +173,7 @@ export default async function BaNaHillsGuide() {
           </p>
         </div>
 
-        <div id="bridge" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="bridge" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="bridge">The Golden Bridge (Cau Vang)</GuideH2>
           <p>
             The bridge that put Ba Na Hills on every feed. It opened in June 2018, runs 150 metres in a curve, and
@@ -197,7 +193,7 @@ export default async function BaNaHillsGuide() {
           </p>
         </div>
 
-        <div id="cable-car" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="cable-car" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="cable-car">The record-setting cable car</GuideH2>
           <p>
             You reach the top by cable car, and the ride is part of the attraction, not just a lift. Guinness World
@@ -208,7 +204,7 @@ export default async function BaNaHillsGuide() {
           </p>
         </div>
 
-        <div id="tickets" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="tickets" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="tickets">2026 tickets, in full</GuideH2>
           <p>
             One ticket covers the round-trip cable car and almost everything built into the resort: the Golden
@@ -238,7 +234,7 @@ export default async function BaNaHillsGuide() {
           </p>
         </div>
 
-        <div id="getting-there" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="getting-there" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="getting-there">Getting there from Da Nang</GuideH2>
           <p>
             The resort is about 25 to 42 km west of the city — the wide range is because the road winds — so about 45
@@ -259,7 +255,7 @@ export default async function BaNaHillsGuide() {
           </p>
         </div>
 
-        <div id="timing" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="timing" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="timing">Half-day vs full-day, and when to arrive</GuideH2>
           <p>
             The most important decision is the arrival time. Aim to be at the base cable-car station by about 8 AM.
@@ -279,7 +275,7 @@ export default async function BaNaHillsGuide() {
           </p>
         </div>
 
-        <div id="weather" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="weather" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="weather">Weather, fog, and what to wear</GuideH2>
           <p>
             This is the detail most guides skip, and it changes the day. The top sits around 1,487 metres and runs 8
@@ -296,7 +292,7 @@ export default async function BaNaHillsGuide() {
           </GuideCallout>
         </div>
 
-        <div id="food" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="food" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="food">Food at the top</GuideH2>
           <p>
             There is a spread of buffet restaurants up top serving Vietnamese, Asian, and European food, with lunch
@@ -307,7 +303,7 @@ export default async function BaNaHillsGuide() {
           </p>
         </div>
 
-        <div id="worth-it" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="worth-it" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="worth-it">Is Ba Na Hills worth it? An honest take</GuideH2>
           <p>Opinions split, and both sides are right about different things.</p>
           <GuideTable
@@ -332,7 +328,7 @@ export default async function BaNaHillsGuide() {
           </p>
         </div>
 
-        <div id="your-stuff" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="your-stuff" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="your-stuff">Doing it on your arrival or departure day</GuideH2>
           <p>
             Ba Na Hills is a common first-or-last-day plan. You land in the morning before hotel check-in, or you
@@ -373,7 +369,7 @@ export default async function BaNaHillsGuide() {
           />
         </div>
 
-        <div id="faq" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="faq" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="faq">Questions people ask</GuideH2>
           <GuideFAQ items={FAQ_ITEMS} />
         </div>

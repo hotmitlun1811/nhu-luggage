@@ -59,7 +59,7 @@ export function GuideH2({ id, children }: { id?: string; children: React.ReactNo
   return (
     <h2
       id={id}
-      className="text-[#0D1829] font-bold leading-[1.15] scroll-mt-24"
+      className="text-[#0D1829] font-bold leading-[1.15] scroll-mt-[88px]"
       style={{ fontFamily: "var(--font-poppins)", fontSize: "24px", letterSpacing: "-0.02em" }}
     >
       {children}
@@ -336,7 +336,7 @@ export function GuideStowCallout({
   facts?: { label: string; value: string }[];
 }) {
   return (
-    <div className="rounded-2xl bg-[#16243F] px-7 py-7 md:px-9 md:py-8">
+    <div className="rounded-2xl bg-[#16243F] px-6 py-7 md:px-9 md:py-9">
       <p
         className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#E8742C] mb-2.5"
         style={{ fontFamily: "var(--font-poppins)" }}

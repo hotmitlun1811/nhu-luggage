@@ -58,11 +58,13 @@ export default async function GuidesIndex() {
     <>
       <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumb) }} />
       <main>
-        <AnnouncementBar dict={dict.announcement} />
         <PrimaryNav dict={dict.nav} locale="en" currentPath="/guides" />
 
-        <div className="bg-[#16243F] py-40 lg:py-64">
-          <div className="max-w-[900px] mx-auto px-6">
+        {/* Nav clearance + announcement + header as one navy block — the fixed
+            nav overlays the top 72px, so the announcement sits below it. */}
+        <div className="bg-[#16243F] pt-[72px]">
+          <AnnouncementBar dict={dict.announcement} />
+          <div className="max-w-[900px] mx-auto px-6 pt-[28px] pb-[56px] lg:pt-[44px] lg:pb-[72px]">
             <p
               className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#E8742C] mb-3"
               style={{ fontFamily: "var(--font-poppins)" }}

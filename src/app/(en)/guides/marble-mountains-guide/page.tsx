@@ -12,7 +12,6 @@ import {
   GuideCallout,
   GuideStowCallout,
   GuideFAQ,
-  GuideTOC,
   GuideImage,
   GuideSources,
 } from "@/components/guides/GuideElements";
@@ -104,6 +103,20 @@ export default async function MarbleMountainsGuide() {
         eyebrow="Marble Mountains"
         title="Marble Mountains (Ngu Hanh Son) Guide"
         subhead="Five limestone-and-marble hills named for the five elements, one of them full of caves and pagodas, in the same district as Stow. Here is what is actually there, cave by cave, and what to pay in 2026."
+        readingTime="12 min read"
+        toc={[
+          { id: "what", label: "What the Marble Mountains are" },
+          { id: "five", label: "The five mountains, and why you climb one" },
+          { id: "history", label: "History: Cham, emperors, and war" },
+          { id: "caves", label: "The caves (the real reason to come)" },
+          { id: "pagodas", label: "Pagodas and the Xa Loi tower" },
+          { id: "viewpoints", label: "The two viewpoints" },
+          { id: "up", label: "Elevator or the 156 steps" },
+          { id: "tickets", label: "Tickets, hours, and dress code" },
+          { id: "village", label: "Non Nuoc marble village" },
+          { id: "plan", label: "Planning the visit" },
+          { id: "faq", label: "Questions people ask" },
+        ]}
         related={[
           { title: "Da Nang Layover Guide", href: "/guides/da-nang-layover-guide", blurb: "The best short-layover sight, about 20 minutes from the airport." },
           { title: "Da Nang to Hoi An Day Trip", href: "/guides/da-nang-to-hoi-an-day-trip", blurb: "The mountains sit right on the road to Hoi An, so combine them." },
@@ -126,23 +139,6 @@ export default async function MarbleMountainsGuide() {
           to beat the heat and the tour buses. Allow <strong>2 to 3 hours</strong>, dress modestly for the temples,
           and wear real shoes — the steps are steep and slippery when wet.
         </GuideTLDR>
-
-        <GuideTOC
-          sections={[
-            { id: "what", label: "What the Marble Mountains are" },
-            { id: "five", label: "The five mountains, and why you climb one" },
-            { id: "history", label: "History: Cham, emperors, and war" },
-            { id: "caves", label: "The caves (the real reason to come)" },
-            { id: "pagodas", label: "Pagodas and the Xa Loi tower" },
-            { id: "viewpoints", label: "The two viewpoints" },
-            { id: "up", label: "Elevator or the 156 steps" },
-            { id: "tickets", label: "Tickets, hours, and dress code" },
-            { id: "village", label: "Non Nuoc marble village" },
-            { id: "plan", label: "Planning the visit" },
-            { id: "faq", label: "Questions people ask" },
-          ]}
-        />
-
         <GuideFacts
           items={[
             { label: "Main entrance", value: "40,000 VND" },
@@ -154,7 +150,7 @@ export default async function MarbleMountainsGuide() {
           ]}
         />
 
-        <div id="what" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="what" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="what">What the Marble Mountains are</GuideH2>
           <p>
             The Marble Mountains are five marble-and-limestone hills that rise out of the flat coastal plain south of
@@ -169,7 +165,7 @@ export default async function MarbleMountainsGuide() {
           </p>
         </div>
 
-        <div id="five" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="five" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="five">The five mountains, and why you climb only one</GuideH2>
           <p>
             Emperor Minh Mang named the cluster in the early 1800s, giving each hill one of the five elements:{" "}
@@ -187,7 +183,7 @@ export default async function MarbleMountainsGuide() {
           </p>
         </div>
 
-        <div id="history" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="history" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="history">History: Cham shrines, Nguyen emperors, and a wartime hospital</GuideH2>
           <p>
             The caves were places of worship for the Cham centuries before they became Buddhist temples. Cham and
@@ -204,7 +200,7 @@ export default async function MarbleMountainsGuide() {
           </p>
         </div>
 
-        <div id="caves" className="flex flex-col gap-5 scroll-mt-24">
+        <div id="caves" className="flex flex-col gap-5 scroll-mt-[88px]">
           <GuideH2 id="caves">The caves, the real reason to come</GuideH2>
           <p>
             The pagodas are pleasant; the caves are the point. Thuy Son holds around nine of them, from a
@@ -251,7 +247,7 @@ export default async function MarbleMountainsGuide() {
           </p>
         </div>
 
-        <div id="pagodas" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="pagodas" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="pagodas">Pagodas and the Xa Loi tower</GuideH2>
 
           <GuideH3>Tam Thai Pagoda</GuideH3>
@@ -285,7 +281,7 @@ export default async function MarbleMountainsGuide() {
           />
         </div>
 
-        <div id="viewpoints" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="viewpoints" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="viewpoints">The two viewpoints</GuideH2>
           <p>
             Two clifftop platforms face opposite directions, and they are easy to confuse, since both are just
@@ -296,7 +292,7 @@ export default async function MarbleMountainsGuide() {
           </p>
         </div>
 
-        <div id="up" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="up" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="up">Elevator or the 156 steps?</GuideH2>
           <p>
             The free stone staircase is 156 steps, worn smooth and uneven in places, about 5 to 10 minutes of
@@ -319,7 +315,7 @@ export default async function MarbleMountainsGuide() {
           </p>
         </div>
 
-        <div id="tickets" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="tickets" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="tickets">Tickets, hours, and the dress code</GuideH2>
           <p>
             There is no combined ticket. It is a few separate purchases, and the total per person is usually about
@@ -356,7 +352,7 @@ export default async function MarbleMountainsGuide() {
           If a photo of a giant white Buddha is why you are coming, you want Son Tra, not here.
         </GuideCallout>
 
-        <div id="village" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="village" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="village">Non Nuoc marble-carving village</GuideH2>
           <p>
             At the foot of the mountains sits the village the whole site is named for. Around 500 stone-carving
@@ -369,7 +365,7 @@ export default async function MarbleMountainsGuide() {
           </p>
         </div>
 
-        <div id="plan" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="plan" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="plan">Planning the visit</GuideH2>
           <p>
             The mountains are compact and easy to fold into a bigger day. They sit right on the road to{" "}
@@ -410,7 +406,7 @@ export default async function MarbleMountainsGuide() {
           </GuideStowCallout>
         </div>
 
-        <div id="faq" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="faq" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="faq">Questions people ask</GuideH2>
           <GuideFAQ items={FAQ_ITEMS} />
         </div>

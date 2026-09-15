@@ -12,7 +12,6 @@ import {
   GuideCallout,
   GuideStowCallout,
   GuideFAQ,
-  GuideTOC,
   GuideImage,
   GuideSources,
 } from "@/components/guides/GuideElements";
@@ -103,6 +102,20 @@ export default async function VisaRunGuide() {
         eyebrow="Visa Runs"
         title="Da Nang Visa Run Guide"
         subhead="Whether you still need one, how the land border and the flight compare on money and time, the entry-point mistake that gets people turned away, and what to do with your bags."
+        readingTime="12 min read"
+        toc={[
+          { id: "what-it-is", label: "What a visa run is" },
+          { id: "still-need", label: "Do you still need one?" },
+          { id: "who", label: "Who runs, and how often" },
+          { id: "types", label: "Visa types, compared" },
+          { id: "land", label: "Option A: the Lao Bao land run" },
+          { id: "fly", label: "Option B: the fly-out run" },
+          { id: "land-vs-fly", label: "Land vs fly: which to pick" },
+          { id: "cost", label: "What it really costs" },
+          { id: "mistakes", label: "The mistakes that cost people" },
+          { id: "your-stuff", label: "What to do with your bags" },
+          { id: "faq", label: "Questions people ask" },
+        ]}
         related={[
           { title: "Da Nang Layover Guide", href: "/guides/da-nang-layover-guide", blurb: "Flying out for the run? The same airport steps apply on the way back in." },
           { title: "Marble Mountains Guide", href: "/guides/marble-mountains-guide", blurb: "Something to do with the spare day before or after your run." },
@@ -123,23 +136,6 @@ export default async function VisaRunGuide() {
           <strong>3 to 5 working days</strong> and must name your <strong>exact entry point</strong>. You will be
           away one to three days, so most people travel light and leave their heavy bags in storage.
         </GuideTLDR>
-
-        <GuideTOC
-          sections={[
-            { id: "what-it-is", label: "What a visa run is" },
-            { id: "still-need", label: "Do you still need one?" },
-            { id: "who", label: "Who runs, and how often" },
-            { id: "types", label: "Visa types, compared" },
-            { id: "land", label: "Option A: the Lao Bao land run" },
-            { id: "fly", label: "Option B: the fly-out run" },
-            { id: "land-vs-fly", label: "Land vs fly: which to pick" },
-            { id: "cost", label: "What it really costs" },
-            { id: "mistakes", label: "The mistakes that cost people" },
-            { id: "your-stuff", label: "What to do with your bags" },
-            { id: "faq", label: "Questions people ask" },
-          ]}
-        />
-
         <GuideFacts
           items={[
             { label: "E-visa fee", value: "US$25 single / US$50 multiple" },
@@ -151,7 +147,7 @@ export default async function VisaRunGuide() {
           ]}
         />
 
-        <div id="what-it-is" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="what-it-is" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="what-it-is">What a Da Nang visa run is</GuideH2>
           <p>
             A visa run means leaving Vietnam before your visa or visa-free stamp ends, then coming back on a new one.
@@ -166,7 +162,7 @@ export default async function VisaRunGuide() {
           </p>
         </div>
 
-        <div id="still-need" className="flex flex-col gap-5 scroll-mt-24">
+        <div id="still-need" className="flex flex-col gap-5 scroll-mt-[88px]">
           <GuideH2 id="still-need">Do you still need a visa run?</GuideH2>
           <p>
             Settle this first, because Vietnam&apos;s rules eased in 2023 to 2025 and a lot of old advice is wrong.
@@ -199,7 +195,7 @@ export default async function VisaRunGuide() {
           </GuideCallout>
         </div>
 
-        <div id="who" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="who" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="who">Who runs, and how often</GuideH2>
           <p>
             If your passport is not on the exemption list, or you want to stay past the 90 days an e-visa gives you,
@@ -214,7 +210,7 @@ export default async function VisaRunGuide() {
           </p>
         </div>
 
-        <div id="types" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="types" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="types">Visa types, compared</GuideH2>
           <p>
             Before you plan the trip, be clear on what you are renewing. These are the options a long-stayer in Da
@@ -236,7 +232,7 @@ export default async function VisaRunGuide() {
           </p>
         </div>
 
-        <div id="land" className="flex flex-col gap-5 scroll-mt-24">
+        <div id="land" className="flex flex-col gap-5 scroll-mt-[88px]">
           <GuideH2 id="land">Option A: the Lao Bao land run to Laos</GuideH2>
           <p>
             The overland run from Da Nang goes west to the Lao Bao crossing into Laos — about 250 km, or 4 to 6
@@ -267,7 +263,7 @@ export default async function VisaRunGuide() {
           </GuideCallout>
         </div>
 
-        <div id="fly" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="fly" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="fly">Option B: the fly-out run</GuideH2>
           <p>
             Flying out and back is faster and more predictable, and it tends to draw fewer questions than a repeat
@@ -295,7 +291,7 @@ export default async function VisaRunGuide() {
           </p>
         </div>
 
-        <div id="land-vs-fly" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="land-vs-fly" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="land-vs-fly">Land vs fly: which should you pick?</GuideH2>
           <GuideTable
             columns={["Real cost", "Time away", "What it is like"]}
@@ -321,7 +317,7 @@ export default async function VisaRunGuide() {
           />
         </div>
 
-        <div id="cost" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="cost" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="cost">What a Da Nang visa run really costs</GuideH2>
           <p>
             Per trip, add up three things: the route, the new e-visa, and the extras. A land run is about US$85 to
@@ -337,7 +333,7 @@ export default async function VisaRunGuide() {
           </p>
         </div>
 
-        <div id="mistakes" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="mistakes" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="mistakes">The mistakes that cost people</GuideH2>
           <GuideList
             items={[
@@ -361,7 +357,7 @@ export default async function VisaRunGuide() {
           </p>
         </div>
 
-        <div id="your-stuff" className="flex flex-col gap-4 scroll-mt-24">
+        <div id="your-stuff" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="your-stuff">What to do with your bags while you are gone</GuideH2>
           <p>
             A run takes you out of Vietnam for one to three days and then drops you right back in Da Nang. So there
@@ -409,7 +405,7 @@ export default async function VisaRunGuide() {
           />
         </div>
 
-        <div id="faq" className="flex flex-col gap-3 scroll-mt-24">
+        <div id="faq" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="faq">Questions people ask</GuideH2>
           <GuideFAQ items={FAQ_ITEMS} />
         </div>
