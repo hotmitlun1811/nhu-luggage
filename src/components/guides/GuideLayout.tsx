@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { MessageCircle, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import AnnouncementBar from "@/components/layout/AnnouncementBar";
 import PrimaryNav from "@/components/layout/PrimaryNav";
 import Footer from "@/components/layout/Footer";
 import ReadingProgress from "@/components/guides/ReadingProgress";
+import HeroBookingForm from "@/components/booking/HeroBookingForm";
 import type { Dictionary } from "@/content/types";
 
 type TocItem = { id: string; label: string };
@@ -185,37 +186,39 @@ export default function GuideLayout({
                 </div>
               )}
 
-              {/* ── CTA ── */}
-              <div className="mt-[56px] pt-[40px] border-t border-[#E8E8E4] flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-                <div>
-                  <p
-                    className="text-[18px] font-bold text-[#0D1829] mb-2"
-                    style={{ fontFamily: "var(--font-poppins)", letterSpacing: "-0.02em" }}
-                  >
-                    Need to drop off a bag?
-                  </p>
-                  <p className="text-[14px] text-[#6B7280]" style={{ fontFamily: "var(--font-inter)" }}>
-                    55 Ba Bang Nhan, Ngu Hanh Son. Open 7am-10pm, every day.
-                  </p>
-                </div>
-                <div className="flex gap-3 flex-wrap">
+              {/* ── Reserve / booking form ── */}
+              <div id="reserve" className="mt-[56px] pt-[40px] border-t border-[#E8E8E4] scroll-mt-[88px]">
+                <p
+                  className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#E8742C] mb-3"
+                  style={{ fontFamily: "var(--font-poppins)" }}
+                >
+                  Reserve your storage
+                </p>
+                <h2
+                  className="text-[#0D1829] font-bold leading-[1.15] mb-2.5"
+                  style={{ fontFamily: "var(--font-poppins)", fontSize: "24px", letterSpacing: "-0.02em" }}
+                >
+                  Book a bag drop in under two minutes
+                </h2>
+                <p
+                  className="text-[14.5px] text-[#6B7280] leading-relaxed mb-6 max-w-[560px]"
+                  style={{ fontFamily: "var(--font-inter)" }}
+                >
+                  Pick a plan and a time, and we confirm on WhatsApp. There is no payment now. We are at 55 Ba Bang
+                  Nhan, Ngu Hanh Son, about ten minutes from the airport, open 7am to 10pm every day. Prefer to
+                  message us?{" "}
                   <a
                     href="https://wa.me/84905955161"
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 border border-[#E2E2DE] text-[#16243F] text-[14px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#F4F4F0] transition-colors"
-                    style={{ fontFamily: "var(--font-poppins)" }}
+                    className="text-[#E8742C] font-semibold underline underline-offset-2"
                   >
-                    <MessageCircle size={15} strokeWidth={1.75} />
                     WhatsApp us
                   </a>
-                  <Link
-                    href="/#booking"
-                    className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[14px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#C85E1E] transition-colors"
-                    style={{ fontFamily: "var(--font-poppins)" }}
-                  >
-                    Book Storage
-                  </Link>
+                  .
+                </p>
+                <div className="rounded-2xl bg-[#16243F] overflow-hidden">
+                  <HeroBookingForm dict={dict.booking} locale="en" />
                 </div>
               </div>
             </div>

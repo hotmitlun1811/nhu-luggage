@@ -80,13 +80,13 @@ const FAQ_ITEMS = [
 ];
 
 const SOURCES = [
-  { label: "Danang Fantasticity — official Da Nang City tourism portal (Hoi An tickets)", url: "https://danangfantasticity.com/en/discovery/hoi-an-ancient-town-entrance-tickets-2026", note: "the official 2026 ticket tiers, up-to-3-day validity, and the car-free pedestrian hours" },
-  { label: "hoianit.com — Da Nang to Hoi An by public bus", url: "https://hoianit.com/da-nang-to-hoi-an-by-public-bus/", note: "the LK02-replaces-route-01 change, fares, the luggage fee, hours, and the VKU departure point" },
-  { label: "north-vietnam.com — Da Nang to Hoi An transport overview", url: "https://north-vietnam.com/da-nang-to-hoi-an/", note: "distance and per-mode cost and time ranges, and named shuttle operators" },
-  { label: "dananghoian.net — 2026 all transport options", url: "https://dananghoian.net/en/explore/travel-da-nang-hoi-an-2026-all-transportation-options/", note: "specific VND fares for Grab, private cars, and shared vans" },
-  { label: "Hidden Hoi An — the Ancient Town ticket, explained", url: "https://hiddenhoian.com/general/hoi-an-old-town-ticket-fees-sites/", note: "the door-not-street enforcement reality and the five-of-many coupon system" },
-  { label: "Gastrotravelogue — Hoi An lantern festival dates", url: "https://www.gastrotravelogue.com/travel/hoi-an-lantern-festival/", note: "the 14th-of-the-lunar-month timing, the traffic-free dimmed-light evenings, and that it is free" },
-  { label: "Vietnam Tourism — luggage storage in Vietnam", url: "https://www.vietnamtourism.com/en/luggage-storage-in-vietnam-where-to-leave-bags-between-trains-flights-and-hotels", note: "hotel and airport storage norms, and why storing in Da Nang beats Hoi An for a day trip" },
+  { label: "Danang Fantasticity: official Da Nang City tourism portal (Hoi An tickets)", url: "https://danangfantasticity.com/en/discovery/hoi-an-ancient-town-entrance-tickets-2026", note: "the official 2026 ticket tiers, up-to-3-day validity, and the car-free pedestrian hours" },
+  { label: "hoianit.com: Da Nang to Hoi An by public bus", url: "https://hoianit.com/da-nang-to-hoi-an-by-public-bus/", note: "the LK02-replaces-route-01 change, fares, the luggage fee, hours, and the VKU departure point" },
+  { label: "north-vietnam.com: Da Nang to Hoi An transport overview", url: "https://north-vietnam.com/da-nang-to-hoi-an/", note: "distance and per-mode cost and time ranges, and named shuttle operators" },
+  { label: "dananghoian.net: 2026 all transport options", url: "https://dananghoian.net/en/explore/travel-da-nang-hoi-an-2026-all-transportation-options/", note: "specific VND fares for Grab, private cars, and shared vans" },
+  { label: "Hidden Hoi An: the Ancient Town ticket, explained", url: "https://hiddenhoian.com/general/hoi-an-old-town-ticket-fees-sites/", note: "the door-not-street enforcement reality and the five-of-many coupon system" },
+  { label: "Gastrotravelogue: Hoi An lantern festival dates", url: "https://www.gastrotravelogue.com/travel/hoi-an-lantern-festival/", note: "the 14th-of-the-lunar-month timing, the traffic-free dimmed-light evenings, and that it is free" },
+  { label: "Vietnam Tourism: luggage storage in Vietnam", url: "https://www.vietnamtourism.com/en/luggage-storage-in-vietnam-where-to-leave-bags-between-trains-flights-and-hotels", note: "hotel and airport storage norms, and why storing in Da Nang beats Hoi An for a day trip" },
 ];
 
 export default async function HoiAnGuide() {
@@ -353,8 +353,8 @@ export default async function HoiAnGuide() {
         <GuideSources items={SOURCES} />
 
         <p className="text-[13px] text-[#9CA3AF]">
-          Transport fares, ticket prices, and bus routes change — the public route in particular was reorganised in
-          2024 — so treat the figures here as ranges that were current at the time of writing, and confirm anything
+          Transport fares, ticket prices, and bus routes change, the public route in particular was reorganised in
+          2024, so treat the figures here as ranges that were current at the time of writing, and confirm anything
           you are planning tightly around on the day.
         </p>
       </GuideLayout>

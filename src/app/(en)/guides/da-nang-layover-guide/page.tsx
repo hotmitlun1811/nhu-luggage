@@ -80,13 +80,13 @@ const FAQ_ITEMS = [
 ];
 
 const SOURCES = [
-  { label: "vietnam-visa.com — transit in Vietnam", url: "https://www.vietnam-visa.com/transit-in-vietnam/", note: "the core rule: you must clear immigration (with a visa or exemption) to leave the terminal; airside transit under 24 hours needs no visa" },
-  { label: "evisasvietnam.com — Vietnam visa-exemption list", url: "https://evisasvietnam.com/blog/vietnam-visa-exemption-list/", note: "which nationalities can enter visa-free and for how long, plus e-visa cost and validity" },
-  { label: "Traveloka — Vietnam Digital Arrival Card", url: "https://www.traveloka.com/en-en/explore/tips/vietnam-digital-arrival-card/1007396", note: "the online pre-arrival declaration and where it currently applies" },
-  { label: "kisstour.com — Vietnam airport immigration wait times", url: "https://kisstour.com/travel-guide/vietnam-airport-immigration-wait-times/", note: "Da Nang immigration times, off-peak and peak" },
-  { label: "hiddenhoian.com — Da Nang airport guide", url: "https://hiddenhoian.com/travel/da-nang-airport/", note: "the third-party left-luggage desk prices and hours, lounges, and airport-to-city fares" },
-  { label: "entryvn.com — Da Nang airport guide", url: "https://entryvn.com/da-nang-airport-guide/", note: "distances, Grab and taxi fare ranges, and the Hoi An transfer" },
-  { label: "hoiandaytrip.com — Dragon Bridge fire and water show", url: "https://hoiandaytrip.com/dragon-bridge-fire-water-show-da-nang/", note: "the Friday-to-Sunday 9:00 PM schedule and where to watch" },
+  { label: "vietnam-visa.com: transit in Vietnam", url: "https://www.vietnam-visa.com/transit-in-vietnam/", note: "the core rule: you must clear immigration (with a visa or exemption) to leave the terminal; airside transit under 24 hours needs no visa" },
+  { label: "evisasvietnam.com: Vietnam visa-exemption list", url: "https://evisasvietnam.com/blog/vietnam-visa-exemption-list/", note: "which nationalities can enter visa-free and for how long, plus e-visa cost and validity" },
+  { label: "Traveloka: Vietnam Digital Arrival Card", url: "https://www.traveloka.com/en-en/explore/tips/vietnam-digital-arrival-card/1007396", note: "the online pre-arrival declaration and where it currently applies" },
+  { label: "kisstour.com: Vietnam airport immigration wait times", url: "https://kisstour.com/travel-guide/vietnam-airport-immigration-wait-times/", note: "Da Nang immigration times, off-peak and peak" },
+  { label: "hiddenhoian.com: Da Nang airport guide", url: "https://hiddenhoian.com/travel/da-nang-airport/", note: "the third-party left-luggage desk prices and hours, lounges, and airport-to-city fares" },
+  { label: "entryvn.com: Da Nang airport guide", url: "https://entryvn.com/da-nang-airport-guide/", note: "distances, Grab and taxi fare ranges, and the Hoi An transfer" },
+  { label: "hoiandaytrip.com: Dragon Bridge fire and water show", url: "https://hoiandaytrip.com/dragon-bridge-fire-water-show-da-nang/", note: "the Friday-to-Sunday 9:00 PM schedule and where to watch" },
 ];
 
 export default async function LayoverGuide() {
@@ -148,8 +148,8 @@ export default async function LayoverGuide() {
           <GuideH2 id="can-you-leave">First, can you even leave the airport?</GuideH2>
           <p>
             Most layover guides skip this, and it matters more than the itinerary. Vietnam&apos;s rule turns on
-            whether you clear immigration, not on how long your layover is. Stay airside — never collect a checked
-            bag, never pass passport control — and you need no visa. Step into the city, and that counts as entering
+            whether you clear immigration, not on how long your layover is. Stay airside, never collect a checked
+            bag, never pass passport control, and you need no visa. Step into the city, and that counts as entering
             the country, like any other arrival. There is no short-transit scheme that lets you out for a few hours.
           </p>
 
@@ -221,7 +221,7 @@ export default async function LayoverGuide() {
             rows={[
               { label: "Airport desk (third-party)", values: ["60,000-100,000 VND, tiered", "~9:00 AM-11:30 PM", "Outside the domestic terminal, a short walk"] },
               { label: "City storage shop", values: ["From ~15,000 VND/hr or 60,000 VND/day", "Varies (Stow 7am-10pm)", "In town, near the beach and Marble Mountains"] },
-              { label: "Bring it with you", values: ["Free", "—", "Fine for very short stops only"] },
+              { label: "Bring it with you", values: ["Free", "n/a", "Fine for very short stops only"] },
             ]}
           />
           <p>
@@ -241,7 +241,7 @@ export default async function LayoverGuide() {
             ]}
           >
             Stow is at 55 Ba Bang Nhan in Ngu Hanh Son, about ten minutes from the airport and right by both My Khe
-            Beach and the Marble Mountains — the exact loop a good layover runs. We are open{" "}
+            Beach and the Marble Mountains, the exact loop a good layover runs. We are open{" "}
             <strong>7am to 10pm every day</strong>, including the evening hours after the airport desk has closed.
             Drop-off takes under three minutes: we tag the bag, take a photo receipt, and you go. By the hour is
             15,000 VND, billed as a full day past four hours, so a long layover simply becomes the 60,000 VND day
@@ -305,7 +305,7 @@ export default async function LayoverGuide() {
           />
 
           <p>
-            <strong>My Khe Beach</strong> is the closest stop worth making, 10 to 15 minutes from the airport — a
+            <strong>My Khe Beach</strong> is the closest stop worth making, 10 to 15 minutes from the airport, a
             long, clean strip of sand for a walk or a swim. The <strong>Marble Mountains</strong> are about 20
             minutes out and open 7:00 AM to 5:30 PM (there is more on tickets and the climb in our{" "}
             <Link href="/guides/marble-mountains-guide" className="text-[#E8742C] underline underline-offset-2">
@@ -336,8 +336,8 @@ export default async function LayoverGuide() {
         <div id="eat" className="flex flex-col gap-3 scroll-mt-[88px]">
           <GuideH2 id="eat">What to eat on a Da Nang layover</GuideH2>
           <p>
-            Da Nang has its own dishes worth timing a stop around. <strong>Mi quang</strong> — yellow noodles with a
-            little rich broth, herbs, and a shard of rice cracker — is the local signature.{" "}
+            Da Nang has its own dishes worth timing a stop around. <strong>Mi quang</strong>, yellow noodles with a
+            little rich broth, herbs, and a shard of rice cracker, is the local signature.{" "}
             <strong>Banh xeo</strong> (crispy stuffed rice pancakes you roll into rice paper with herbs) and{" "}
             <strong>bun cha ca</strong> (fishcake noodle soup) round out the shortlist. Near My Khe you will find
             plenty of seafood and beachside spots, so a beach stop and lunch fold into one.
@@ -348,8 +348,8 @@ export default async function LayoverGuide() {
           <GuideH2 id="airside">Cannot leave? The airside plan B</GuideH2>
           <p>
             If your layover is under four hours, or you cannot enter Vietnam, the airport is modern and comfortable.
-            The international terminal has lounges — about US$25 for three hours, usually with a buffet, showers, and
-            rest areas — and the domestic terminal a cheaper option around US$15. There is little within walking
+            The international terminal has lounges, about US$25 for three hours, usually with a buffet, showers, and
+            rest areas, and the domestic terminal a cheaper option around US$15. There is little within walking
             distance outside, so for a short connection a lounge is the sensible move.
           </p>
         </div>
@@ -359,10 +359,10 @@ export default async function LayoverGuide() {
           <GuideList
             items={[
               "Domestic flight: be back at the airport about 2 hours before departure (2.5 at the 5-8am and 4-7pm peaks)",
-              "International flight: about 3 hours before — the international terminal is the busy one",
+              "International flight: about 3 hours before, the international terminal is the busy one",
               "Do not schedule your return ride through Da Nang's rush hours, roughly 7:30-9am and 4:30-6pm",
               "If you stored bags in town, message the shop ahead if you will collect close to closing",
-              "Grab is reliable with airport wifi or a local SIM, but allow a few minutes — some drivers skip the airport pickup zone",
+              "Grab is reliable with airport wifi or a local SIM, but allow a few minutes, some drivers skip the airport pickup zone",
             ]}
           />
         </div>

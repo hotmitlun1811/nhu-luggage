@@ -8,7 +8,7 @@ import { getDictionary } from "@/content/dictionary";
 
 const pageTitle = "Da Nang Travel Guides";
 const pageDescription =
-  "Practical guides for Da Nang: visa runs, layovers, the Marble Mountains, and day trips to Hoi An and Ba Na Hills — from the team behind Stow's luggage storage.";
+  "Practical guides for Da Nang: visa runs, layovers, the Marble Mountains, and day trips to Hoi An and Ba Na Hills, from the team behind Stow's luggage storage.";
 
 export const metadata: Metadata = {
   title: pageTitle,
@@ -37,7 +37,7 @@ const GUIDES = [
   {
     href: "/guides/marble-mountains-guide",
     title: "Marble Mountains (Ngu Hanh Son) Guide",
-    blurb: "Hours, ticket prices, and what's actually there — 10 minutes from the airport.",
+    blurb: "Hours, ticket prices, and what's actually there, 10 minutes from the airport.",
   },
   {
     href: "/guides/da-nang-to-hoi-an-day-trip",
@@ -60,7 +60,7 @@ export default async function GuidesIndex() {
       <main>
         <PrimaryNav dict={dict.nav} locale="en" currentPath="/guides" />
 
-        {/* Nav clearance + announcement + header as one navy block — the fixed
+        {/* Nav clearance + announcement + header as one navy block, the fixed
             nav overlays the top 72px, so the announcement sits below it. */}
         <div className="bg-[#16243F] pt-[72px]">
           <AnnouncementBar dict={dict.announcement} />

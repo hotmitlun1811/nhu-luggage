@@ -79,13 +79,13 @@ const FAQ_ITEMS = [
 ];
 
 const SOURCES = [
-  { label: "Guinness World Records — longest non-stop single-track cable car", url: "https://www.guinnessworldrecords.com/world-records/longest-non-stop-single-track-cable-car", note: "the primary source for the 5,801 m record, the 2013 date, and the operator" },
-  { label: "Danang Fantasticity — 2026 Ba Na Hills three-day ticket validity", url: "https://danangfantasticity.com/en/news/from-2026-cable-car-tickets-at-sun-world-ba-na-hills-will-be-valid-for-up-to-three-consecutive-days", note: "the official 2026 policy: three-day validity, resident vs non-resident pricing, and inclusions" },
-  { label: "Wikipedia — Ba Na Hills", url: "https://en.wikipedia.org/wiki/B%C3%A0_N%C3%A0_Hills", note: "the 1919 French founding, the elevation and distance from Da Nang, and the cable-car history" },
-  { label: "Wikipedia — Golden Bridge (Vietnam)", url: "https://en.wikipedia.org/wiki/Golden_Bridge_(Vietnam)", note: "the June 2018 opening, the 150 m dimensions, the fiberglass-and-wire-mesh hands, and the architect" },
-  { label: "Sun Paradise Land — Ba Na Hills 2026 ticket prices", url: "https://sunparadiseland.com/en/SunParadiseLandDaNang/tin-tuc/ba-na-hills-ticket-prices-2026-cable-car-fares-and-saving-tips-7745", note: "the 2026 adult and child prices and the weekend/holiday surcharge" },
-  { label: "Hoi An Day Trip — Ba Na Hills tickets and buffet", url: "https://hoiandaytrip.com/ba-na-hills-tickets/", note: "what the standard ticket includes and excludes, and the combo and buffet pricing" },
-  { label: "Da Nang Journey — Is Ba Na Hills worth it?", url: "https://danangjourney.com/is-ba-na-hills-worth-it/", note: "a balanced local view of the pros and cons, and the crowd-timing advice" },
+  { label: "Guinness World Records: longest non-stop single-track cable car", url: "https://www.guinnessworldrecords.com/world-records/longest-non-stop-single-track-cable-car", note: "the primary source for the 5,801 m record, the 2013 date, and the operator" },
+  { label: "Danang Fantasticity: 2026 Ba Na Hills three-day ticket validity", url: "https://danangfantasticity.com/en/news/from-2026-cable-car-tickets-at-sun-world-ba-na-hills-will-be-valid-for-up-to-three-consecutive-days", note: "the official 2026 policy: three-day validity, resident vs non-resident pricing, and inclusions" },
+  { label: "Wikipedia: Ba Na Hills", url: "https://en.wikipedia.org/wiki/B%C3%A0_N%C3%A0_Hills", note: "the 1919 French founding, the elevation and distance from Da Nang, and the cable-car history" },
+  { label: "Wikipedia: Golden Bridge (Vietnam)", url: "https://en.wikipedia.org/wiki/Golden_Bridge_(Vietnam)", note: "the June 2018 opening, the 150 m dimensions, the fiberglass-and-wire-mesh hands, and the architect" },
+  { label: "Sun Paradise Land: Ba Na Hills 2026 ticket prices", url: "https://sunparadiseland.com/en/SunParadiseLandDaNang/tin-tuc/ba-na-hills-ticket-prices-2026-cable-car-fares-and-saving-tips-7745", note: "the 2026 adult and child prices and the weekend/holiday surcharge" },
+  { label: "Hoi An Day Trip: Ba Na Hills tickets and buffet", url: "https://hoiandaytrip.com/ba-na-hills-tickets/", note: "what the standard ticket includes and excludes, and the combo and buffet pricing" },
+  { label: "Da Nang Journey: Is Ba Na Hills worth it?", url: "https://danangjourney.com/is-ba-na-hills-worth-it/", note: "a balanced local view of the pros and cons, and the crowd-timing advice" },
 ];
 
 export default async function BaNaHillsGuide() {
@@ -182,7 +182,7 @@ export default async function BaNaHillsGuide() {
           </p>
           <GuideCallout label="The detail people get wrong">
             The giant hands are not stone. They are built from fiberglass over a wire-mesh frame and finished to look
-            like old carved rock — convincing in photos, less so up close. It is a stage set, brilliantly done, and
+            like old carved rock, convincing in photos, less so up close. It is a stage set, brilliantly done, and
             knowing that beforehand tends to make people enjoy it more, not less. The bridge sits at about 1,414
             metres, with eight arches spanning the drop.
           </GuideCallout>
@@ -218,7 +218,7 @@ export default async function BaNaHillsGuide() {
               { label: "Child 1 - 1.4 m", values: ["~800,000 VND", "~550,000 VND"] },
               { label: "Child under 1 m", values: ["Free", "Free"] },
               { label: "Weekend / holiday surcharge", values: ["+50,000 VND", "+50,000 VND"] },
-              { label: "Combo with lunch buffet (adult)", values: ["~1,300,000 VND", "—"] },
+              { label: "Combo with lunch buffet (adult)", values: ["~1,300,000 VND", "n/a"] },
             ]}
           />
           <p>
@@ -237,7 +237,7 @@ export default async function BaNaHillsGuide() {
         <div id="getting-there" className="flex flex-col gap-4 scroll-mt-[88px]">
           <GuideH2 id="getting-there">Getting there from Da Nang</GuideH2>
           <p>
-            The resort is about 25 to 42 km west of the city — the wide range is because the road winds — so about 45
+            The resort is about 25 to 42 km west of the city, the wide range is because the road winds, so about 45
             minutes to an hour by car. Every option below is separate from the cable-car ticket you buy at the base.
           </p>
           <GuideTable
@@ -286,7 +286,7 @@ export default async function BaNaHillsGuide() {
           <GuideCallout label="On the fog">
             Fog and low cloud are common up here, pushed up off the sea, and there is no reliable live forecast for
             the top, so it is a gamble either way. The consolation: fog often clears around midday, so arriving to a
-            whiteout does not mean the day is ruined — the views may open up later. For the best odds of a clear
+            whiteout does not mean the day is ruined, the views may open up later. For the best odds of a clear
             Golden Bridge, the dry season (roughly February to September) beats the foggier, quieter October to
             February stretch.
           </GuideCallout>

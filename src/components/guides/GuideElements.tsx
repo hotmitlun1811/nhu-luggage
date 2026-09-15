@@ -306,7 +306,7 @@ export function GuideSources({ items }: { items: { label: string; url: string; n
               >
                 {item.label}
               </a>
-              {item.note ? ` — ${item.note}` : null}
+              {item.note ? ` · ${item.note}` : null}
             </span>
           </li>
         ))}
@@ -376,7 +376,7 @@ export function GuideStowCallout({
 
       <div className="flex flex-wrap gap-3 mt-6">
         <Link
-          href="/#booking"
+          href="#reserve"
           className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[13.5px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#C85E1E] transition-colors"
           style={{ fontFamily: "var(--font-poppins)" }}
         >

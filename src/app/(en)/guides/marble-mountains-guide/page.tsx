@@ -80,14 +80,14 @@ const FAQ_ITEMS = [
 ];
 
 const SOURCES = [
-  { label: "Wikipedia — Ngu Hanh Son", url: "https://en.wikipedia.org/wiki/Ng%C5%A9_H%C3%A0nh_S%C6%A1n", note: "the five element peaks, the 156 steps, only Thuy Son being open, and the 2019 National Special Relic status" },
-  { label: "VietnamNet — Five Element Mountains", url: "https://vietnamnet.vn/en/five-element-mountains-amaze-visitors-E90045.html", note: "the element names and Emperor Minh Mang's early-19th-century naming of the cluster" },
-  { label: "Vietnam Law Magazine — Ngu Hanh Son", url: "https://vietnamlawmagazine.vn/ngu-hanh-son-a-timeless-spiritual-symbol-of-da-nang-city-79664.html", note: "Thuy Son's dimensions and summit points, and the site's Cham heritage" },
+  { label: "Wikipedia: Ngu Hanh Son", url: "https://en.wikipedia.org/wiki/Ng%C5%A9_H%C3%A0nh_S%C6%A1n", note: "the five element peaks, the 156 steps, only Thuy Son being open, and the 2019 National Special Relic status" },
+  { label: "VietnamNet: Five Element Mountains", url: "https://vietnamnet.vn/en/five-element-mountains-amaze-visitors-E90045.html", note: "the element names and Emperor Minh Mang's early-19th-century naming of the cluster" },
+  { label: "Vietnam Law Magazine: Ngu Hanh Son", url: "https://vietnamlawmagazine.vn/ngu-hanh-son-a-timeless-spiritual-symbol-of-da-nang-city-79664.html", note: "Thuy Son's dimensions and summit points, and the site's Cham heritage" },
   { label: "Official Ngu Hanh Son tourist-area site", url: "http://english.nguhanhson.org/index.php/culture-art/1010-overvier-of-ngu-hanh-son-tourist-area", note: "the site operator's own overview and cave descriptions" },
-  { label: "VinWonders — Huyen Khong and Am Phu caves", url: "https://vinwonders.com/en/wonderpedia/news/huyen-khong-cave-da-nang/", note: "the skylights, the 1960 Sakyamuni statue, the 1968 field-hospital history, and Am Phu Cave detail" },
-  { label: "Da Nang Government Portal — Non Nuoc heritage", url: "https://danang.gov.vn/web/en/detail?id=16205&_c=16407387", note: "the 2014 National Intangible Cultural Heritage recognition of the Non Nuoc stone-carving village" },
-  { label: "Jungle Boss Tours — Marble Mountains 2026 guide", url: "https://junglebosstours.com/explorer/tourism-blog/vietnam-marble-mountains-danang", note: "current 2026 ticket prices, opening hours, and elevator times" },
-  { label: "Hoi An Day Trip — Marble Mountains tickets", url: "https://hoiandaytrip.com/marble-mountain-da-nang-tickets/", note: "the 2026 ticket breakdown and the Am Phu Cave separate fee" },
+  { label: "VinWonders: Huyen Khong and Am Phu caves", url: "https://vinwonders.com/en/wonderpedia/news/huyen-khong-cave-da-nang/", note: "the skylights, the 1960 Sakyamuni statue, the 1968 field-hospital history, and Am Phu Cave detail" },
+  { label: "Da Nang Government Portal: Non Nuoc heritage", url: "https://danang.gov.vn/web/en/detail?id=16205&_c=16407387", note: "the 2014 National Intangible Cultural Heritage recognition of the Non Nuoc stone-carving village" },
+  { label: "Jungle Boss Tours: Marble Mountains 2026 guide", url: "https://junglebosstours.com/explorer/tourism-blog/vietnam-marble-mountains-danang", note: "current 2026 ticket prices, opening hours, and elevator times" },
+  { label: "Hoi An Day Trip: Marble Mountains tickets", url: "https://hoiandaytrip.com/marble-mountain-da-nang-tickets/", note: "the 2026 ticket breakdown and the Am Phu Cave separate fee" },
 ];
 
 export default async function MarbleMountainsGuide() {
@@ -137,7 +137,7 @@ export default async function MarbleMountainsGuide() {
           <strong>Huyen Khong cave</strong>, the hell-and-heaven <strong>Am Phu cave</strong> (a separate 20,000 VND
           ticket), two clifftop viewpoints, and the 1825 Linh Ung pagoda. Go <strong>early, 7:00 to 8:30 AM</strong>,
           to beat the heat and the tour buses. Allow <strong>2 to 3 hours</strong>, dress modestly for the temples,
-          and wear real shoes — the steps are steep and slippery when wet.
+          and wear real shoes, the steps are steep and slippery when wet.
         </GuideTLDR>
         <GuideFacts
           items={[
@@ -160,7 +160,7 @@ export default async function MarbleMountainsGuide() {
             became a National Special Relic.
           </p>
           <p>
-            It is compact — a couple of hours of climbing and ducking into caves, not a sprawling park — and it sits
+            It is compact, a couple of hours of climbing and ducking into caves, not a sprawling park, and it sits
             about ten minutes from the airport. That is why it turns up on so many arrival-day and layover plans.
           </p>
         </div>
@@ -193,8 +193,8 @@ export default async function MarbleMountainsGuide() {
           </p>
           <p>
             The most striking history is recent. During the war, the largest cave, Huyen Khong, was a secret base and
-            field hospital for liberation fighters, and it was bombed in 1968. That layered past — Cham shrine,
-            imperial Buddhist site, wartime refuge — is part of what makes the place more than a photo stop. It is
+            field hospital for liberation fighters, and it was bombed in 1968. That layered past, Cham shrine,
+            imperial Buddhist site, wartime refuge, is part of what makes the place more than a photo stop. It is
             also why the marble-carving tradition at the foot of the mountains, brought here in the late 1600s, is
             treated as living heritage rather than a souvenir gimmick.
           </p>
@@ -238,7 +238,7 @@ export default async function MarbleMountainsGuide() {
 
           <GuideH3>Tang Chon, Van Thong, and Linh Nham: the smaller caves</GuideH3>
           <p>
-            <strong>Tang Chon</strong>, behind Linh Ung pagoda, is easy to miss — you duck under a low arch into a
+            <strong>Tang Chon</strong>, behind Linh Ung pagoda, is easy to miss, you duck under a low arch into a
             quiet temple grotto where the mountain&apos;s first monks are said to have lived.{" "}
             <strong>Van Thong</strong> is the &ldquo;stairway to heaven&rdquo;: a narrow tunnel, single file in
             places, that you climb through a tight opening to reach the summit rock. Skip it if you are claustrophobic
@@ -288,7 +288,7 @@ export default async function MarbleMountainsGuide() {
             &ldquo;the viewpoint&rdquo; in casual talk. <strong>Vong Hai Dai</strong> (the sea-watching tower) looks
             out over Non Nuoc Beach and the sea. <strong>Vong Giang Dai</strong> (the river-watching tower) faces
             inland over the rivers, the marble village, and the city. Between them you get both the coast and the
-            countryside — worth the few extra steps on a clear morning.
+            countryside, worth the few extra steps on a clear morning.
           </p>
         </div>
 
@@ -347,7 +347,7 @@ export default async function MarbleMountainsGuide() {
 
         <GuideCallout label="Do not mix this up: the Lady Buddha">
           There are three pagodas named Linh Ung in Da Nang, and the Marble Mountains have the oldest, smallest, and
-          quietest of them (1825). The famous one — the 67-metre Lady Buddha statue most people picture — is a
+          quietest of them (1825). The famous one, the 67-metre Lady Buddha statue most people picture, is a
           separate, much larger site on the Son Tra Peninsula (Monkey Mountain), about 20 minutes away on the coast.
           If a photo of a giant white Buddha is why you are coming, you want Son Tra, not here.
         </GuideCallout>
@@ -399,7 +399,7 @@ export default async function MarbleMountainsGuide() {
           >
             There are no visitor lockers on the mountain, and between the 156 steps, the tight Van Thong squeeze, and
             the heat, the last thing you want is a bag on your back. Stow is a luggage-storage shop at 55 Ba Bang
-            Nhan, <strong>in the Ngu Hanh Son district itself</strong> — minutes from the entrance and about ten from
+            Nhan, <strong>in the Ngu Hanh Son district itself</strong>, minutes from the entrance and about ten from
             the airport. So it is the natural first or last stop, whether you climb on your arrival day, wait out a
             few hours before a late flight, or pass through on the way to Hoi An. We are open 7am to 10pm, drop-off
             takes under three minutes, and every bag gets a photo-and-tag receipt.

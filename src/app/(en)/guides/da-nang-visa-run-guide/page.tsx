@@ -39,7 +39,7 @@ const breadcrumb = breadcrumbJsonLd([
 const FAQ_ITEMS = [
   {
     q: "Do I still need a visa run from Da Nang?",
-    a: "Yes, if you want to stay past your current e-visa or visa-free days. Vietnam has no digital-nomad visa, and you cannot extend an e-visa from inside the country. So the only way to stay longer is to leave and come back on a fresh entry. The 90-day e-visa has made runs less frequent than before — about every three months instead of monthly — but it has not removed them.",
+    a: "Yes, if you want to stay past your current e-visa or visa-free days. Vietnam has no digital-nomad visa, and you cannot extend an e-visa from inside the country. So the only way to stay longer is to leave and come back on a fresh entry. The 90-day e-visa has made runs less frequent than before, about every three months instead of monthly, but it has not removed them.",
   },
   {
     q: "How much does a visa run from Da Nang cost?",
@@ -51,7 +51,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "Does my e-visa work at the Lao Bao crossing?",
-    a: "Only if you chose it. The Vietnam e-visa is tied to the exact entry and exit points you pick on the form. If you pick the wrong point — or leave it as an airport when you cross by land — border officers can turn you away. For the Lao Bao land run, choose Lao Bao as your entry point.",
+    a: "Only if you chose it. The Vietnam e-visa is tied to the exact entry and exit points you pick on the form. If you pick the wrong point, or leave it as an airport when you cross by land, border officers can turn you away. For the Lao Bao land run, choose Lao Bao as your entry point.",
   },
   {
     q: "Is the e-visa single or multiple entry, and what does it cost?",
@@ -67,7 +67,7 @@ const FAQ_ITEMS = [
   },
   {
     q: "How often can I do a visa run before it is a problem?",
-    a: "There is no fixed limit on paid e-visa runs — each one is a new, legal visa. But officers can question travelers with a long line of back-to-back tourist entries, and near-constant runs can draw extra checks. Three or four runs a year is normal. If you run every few weeks for a year or more, look at a longer-term visa instead.",
+    a: "There is no fixed limit on paid e-visa runs, each one is a new, legal visa. But officers can question travelers with a long line of back-to-back tourist entries, and near-constant runs can draw extra checks. Three or four runs a year is normal. If you run every few weeks for a year or more, look at a longer-term visa instead.",
   },
   {
     q: "Is it faster to fly or take the bus?",
@@ -80,13 +80,13 @@ const FAQ_ITEMS = [
 ];
 
 const SOURCES = [
-  { label: "Vietnam Immigration Department — official e-visa portal (evisa.gov.vn)", url: "https://evisa.xuatnhapcanh.gov.vn/trang-chu-ttdt", note: "the primary source for e-visa validity (up to 90 days, single or multiple entry), the official application domains, and current fees" },
-  { label: "myvietnamvisa.com — e-visa fee and visa-exemption pages", url: "https://www.myvietnamvisa.com/vietnam-visa-exemption.html", note: "the US$25 and US$50 fees, the full visa-exemption country list, and the 45-day exemption window" },
-  { label: "Vietcetera — Vietnam tightens overstay fines and deportation rules", url: "https://vietcetera.com/en/vietnam-tightens-regulations-on-foreigners-higher-fines-and-deportation-for-overstays", note: "the Decree 282/2025 fine brackets and the Decree 59/2026 deportation rules" },
-  { label: "Vietnam News — new decree on penalties for foreign overstays", url: "https://vietnamnews.vn/society/1731763/viet-nam-tightens-penalties-for-foreign-overstays-under-new-decree.html", note: "state-media confirmation of the fine amounts" },
-  { label: "danangvisarun.com — 2026 visa-run cost breakdown", url: "https://danangvisarun.com/blog/vietnam-visa-run-cost-2026-breakdown-en/", note: "Da Nang-specific land-run costs, the Lao Bao distance and timing, and the Laos fees" },
-  { label: "The Digital Nomad Asia — Vietnam and the missing nomad visa", url: "https://www.thedigitalnomad.asia/digital-nomad-visa/vietnam-digital-nomad-visa/", note: "why there is no nomad visa and why long-stayers rely on the 90-day e-visa plus runs" },
-  { label: "Shipped Away — Vietnam e-visa guide", url: "https://shippedaway.com/vietnam-e-visa/", note: "the port-specific rule: your entry and exit points must match what you chose on the form" },
+  { label: "Vietnam Immigration Department: official e-visa portal (evisa.gov.vn)", url: "https://evisa.xuatnhapcanh.gov.vn/trang-chu-ttdt", note: "the primary source for e-visa validity (up to 90 days, single or multiple entry), the official application domains, and current fees" },
+  { label: "myvietnamvisa.com: e-visa fee and visa-exemption pages", url: "https://www.myvietnamvisa.com/vietnam-visa-exemption.html", note: "the US$25 and US$50 fees, the full visa-exemption country list, and the 45-day exemption window" },
+  { label: "Vietcetera: Vietnam tightens overstay fines and deportation rules", url: "https://vietcetera.com/en/vietnam-tightens-regulations-on-foreigners-higher-fines-and-deportation-for-overstays", note: "the Decree 282/2025 fine brackets and the Decree 59/2026 deportation rules" },
+  { label: "Vietnam News: new decree on penalties for foreign overstays", url: "https://vietnamnews.vn/society/1731763/viet-nam-tightens-penalties-for-foreign-overstays-under-new-decree.html", note: "state-media confirmation of the fine amounts" },
+  { label: "danangvisarun.com: 2026 visa-run cost breakdown", url: "https://danangvisarun.com/blog/vietnam-visa-run-cost-2026-breakdown-en/", note: "Da Nang-specific land-run costs, the Lao Bao distance and timing, and the Laos fees" },
+  { label: "The Digital Nomad Asia: Vietnam and the missing nomad visa", url: "https://www.thedigitalnomad.asia/digital-nomad-visa/vietnam-digital-nomad-visa/", note: "why there is no nomad visa and why long-stayers rely on the 90-day e-visa plus runs" },
+  { label: "Shipped Away: Vietnam e-visa guide", url: "https://shippedaway.com/vietnam-e-visa/", note: "the port-specific rule: your entry and exit points must match what you chose on the form" },
 ];
 
 export default async function VisaRunGuide() {
@@ -128,7 +128,7 @@ export default async function VisaRunGuide() {
         </GuideLead>
 
         <GuideTLDR>
-          Yes — you still need a <strong>visa run</strong> to stay past your current e-visa or visa-free days.
+          Yes, you still need a <strong>visa run</strong> to stay past your current e-visa or visa-free days.
           Vietnam has no digital-nomad visa, and you cannot extend an e-visa from inside the country. You have two
           choices. A <strong>land trip to the Lao Bao border with Laos</strong> costs about US$85 to US$115 and
           takes a long 10 to 12 hour day. A <strong>flight to Bangkok, Kuala Lumpur, or Vientiane</strong> is faster
@@ -179,7 +179,7 @@ export default async function VisaRunGuide() {
             leave and come back.
           </p>
 
-          <GuideH3>Visa exemptions — check whether you are on the list</GuideH3>
+          <GuideH3>Visa exemptions, check whether you are on the list</GuideH3>
           <p>
             About 39 nationalities can enter Vietnam visa-free for a set number of days. A group of European
             countries, plus Japan and South Korea, get 45 days under a tourism programme that runs for a limited
@@ -205,8 +205,8 @@ export default async function VisaRunGuide() {
           <p>
             Three or four runs a year is normal and unremarkable. The thing to watch is the pattern. A passport full
             of back-to-back tourist entries can draw questions from immigration, and in rare cases extra checks on
-            re-entry. If the cycle has become permanent, a longer-term route — a business visa, or a temporary
-            residence card tied to work — removes it. It is worth pricing against a year of runs.
+            re-entry. If the cycle has become permanent, a longer-term route, a business visa, or a temporary
+            residence card tied to work, removes it. It is worth pricing against a year of runs.
           </p>
         </div>
 
@@ -235,7 +235,7 @@ export default async function VisaRunGuide() {
         <div id="land" className="flex flex-col gap-5 scroll-mt-[88px]">
           <GuideH2 id="land">Option A: the Lao Bao land run to Laos</GuideH2>
           <p>
-            The overland run from Da Nang goes west to the Lao Bao crossing into Laos — about 250 km, or 4 to 6
+            The overland run from Da Nang goes west to the Lao Bao crossing into Laos, about 250 km, or 4 to 6
             hours each way. It is the cheapest option, and the usual choice if you are on a budget and have a full
             day to spare.
           </p>
@@ -249,15 +249,14 @@ export default async function VisaRunGuide() {
             keeps daytime hours, so leave early. Crossing outside those hours can bring a small extra fee.
           </p>
           <p>
-            Two warnings come up again and again. First, <strong>bring cash in small US dollar notes</strong> —
-            there are no reliable ATMs at the crossing, and the Laos fee is cash only. Second, a same-day turnaround
+            Two warnings come up again and again. First, <strong>bring cash in small US dollar notes</strong>, there are no reliable ATMs at the crossing, and the Laos fee is cash only. Second, a same-day turnaround
             only works if your new Vietnam e-visa is <em>already approved</em>. You cannot get one at the border.
           </p>
 
           <GuideCallout label="The mistake that gets people turned away">
             The Vietnam e-visa is <strong>tied to the entry and exit points you choose on the form</strong>. It is
             only valid at those points. For the Lao Bao land run, you must choose <strong>Lao Bao</strong> as your
-            entry point — not a Da Nang or Hanoi airport, and not a different land gate. Choose wrong, and officers
+            entry point, not a Da Nang or Hanoi airport, and not a different land gate. Choose wrong, and officers
             can refuse you on an otherwise valid visa. It is the most common reason a run goes wrong, and most
             run-service pages skip it.
           </GuideCallout>
@@ -346,11 +345,11 @@ export default async function VisaRunGuide() {
             ]}
           />
 
-          <GuideH3>Overstay fines got stricter — do not test them</GuideH3>
+          <GuideH3>Overstay fines got stricter, do not test them</GuideH3>
           <p>
             Vietnam tightened its overstay rules under Decree 282/2025 (in force from late 2025), with more
             deportation rules under Decree 59/2026. A 1 to 15 day overstay is fined about 500,000 to 2,000,000 VND,
-            and you can usually pay at the airport on the way out. Beyond that it climbs fast — millions of dong for
+            and you can usually pay at the airport on the way out. Beyond that it climbs fast, millions of dong for
             a few weeks, up to tens of millions and forced deportation with a multi-year re-entry ban in serious
             cases. Even a small fine leaves a record. Give yourself a buffer so you never find out where the
             brackets start.
@@ -397,7 +396,7 @@ export default async function VisaRunGuide() {
             items={[
               "New e-visa applied for and approved before you leave, with the correct entry point selected",
               "Passport valid at least 6 months, with 2 or more blank pages",
-              "Land run: cash in small US dollars for the Laos visa on arrival and border fees — no ATMs at the crossing",
+              "Land run: cash in small US dollars for the Laos visa on arrival and border fees, no ATMs at the crossing",
               "Fly-out: return flight booked, in case your airline asks for proof of onward travel",
               "A timing buffer: travel 5 to 7 days before your stamp ends, not on the last day",
               "Heavy bags left in storage in Da Nang if they are not coming on the run",
