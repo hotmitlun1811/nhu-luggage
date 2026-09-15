@@ -25,9 +25,39 @@ const breadcrumb = breadcrumbJsonLd([
 
 const GUIDES = [
   {
+    href: "/guides/da-nang-itinerary",
+    title: "The Perfect Da Nang Itinerary",
+    blurb: "A day-by-day plan for 3 days (with 1, 2, 4 and 5-day options), real timings, and the arrival and departure days most plans get wrong.",
+  },
+  {
+    href: "/guides/where-to-stay-in-da-nang",
+    title: "Where to Stay in Da Nang",
+    blurb: "The city's areas ranked by who each suits, real price ranges, and the check-in gap nobody warns you about.",
+  },
+  {
+    href: "/guides/da-nang-vs-hoi-an",
+    title: "Da Nang or Hoi An?",
+    blurb: "An honest side-by-side, who each suits, and the strategy that beats choosing: base in one, day-trip the other.",
+  },
+  {
+    href: "/guides/da-nang-airport-guide",
+    title: "Da Nang Airport (DAD) Guide",
+    blurb: "Arrival steps, SIM cards, real fares to the city, My Khe and Hoi An, lounges, and the truth about left luggage.",
+  },
+  {
+    href: "/guides/getting-around-da-nang",
+    title: "Getting Around Da Nang",
+    blurb: "Grab, Xanh SM, motorbikes and taxis, with real fares and the licence law nobody spells out.",
+  },
+  {
+    href: "/guides/da-nang-food-guide",
+    title: "Da Nang Food Guide",
+    blurb: "15 dishes and where to eat them, several Michelin-listed, plus how to eat street food without getting sick.",
+  },
+  {
     href: "/guides/da-nang-visa-run-guide",
     title: "Da Nang Visa Run Guide",
-    blurb: "Land border vs. flying out, real costs, and what to do with your bags while you're gone.",
+    blurb: "Land border or flying out, real costs, the entry-point mistake that gets people turned away, and where your bags go.",
   },
   {
     href: "/guides/da-nang-layover-guide",
@@ -37,17 +67,17 @@ const GUIDES = [
   {
     href: "/guides/marble-mountains-guide",
     title: "Marble Mountains (Ngu Hanh Son) Guide",
-    blurb: "Hours, ticket prices, and what's actually there, 10 minutes from the airport.",
+    blurb: "Cave by cave, the full 2026 ticket prices, the dress code, and what's actually there, 10 minutes from the airport.",
   },
   {
     href: "/guides/da-nang-to-hoi-an-day-trip",
     title: "Da Nang to Hoi An Day Trip",
-    blurb: "Transport options, real timing, and what to do with luggage if you're flying out that night.",
+    blurb: "Transport compared, the Old Town ticket explained, and what to do with luggage if you're flying out that night.",
   },
   {
     href: "/guides/ba-na-hills-day-trip",
     title: "Ba Na Hills Day Trip",
-    blurb: "Cable car tickets, timing, and planning a full day up the mountain.",
+    blurb: "Cable car tickets, the Golden Bridge, the fog problem, and planning a full day up the mountain.",
   },
 ];
 
