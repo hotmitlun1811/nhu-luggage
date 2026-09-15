@@ -3,6 +3,8 @@
  *  the layout dictating section order. */
 
 import Image from "next/image";
+import Link from "next/link";
+import { MessageCircle } from "lucide-react";
 
 /** Editorial photo with mandatory license attribution — every /guides/*
  *  image comes from Wikimedia Commons under a verified reusable license
@@ -242,5 +244,155 @@ export function GuideTOC({ sections }: { sections: { id: string; label: string }
         ))}
       </ul>
     </nav>
+  );
+}
+
+/** Direct-answer "short answer" block for the very top of a guide — the
+ *  2-4 sentences an AI answer engine or a featured-snippet box is most
+ *  likely to lift verbatim, so it must answer the guide's headline question
+ *  outright before the reader scrolls. This is the single biggest AEO lever
+ *  the first draft of these guides was missing. Accepts rich children so the
+ *  load-bearing facts can be <strong>-ed for scannability. Keep it factual
+ *  and self-contained — no "read on below," no CTA. */
+export function GuideTLDR({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="rounded-2xl bg-[#F4F4F0] border-l-[3px] border-[#E8742C] px-6 py-5">
+      <p
+        className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#E8742C] mb-2"
+        style={{ fontFamily: "var(--font-poppins)" }}
+      >
+        The short answer
+      </p>
+      <div
+        className="text-[15.5px] text-[#0D1829] leading-relaxed [&_strong]:font-semibold"
+        style={{ fontFamily: "var(--font-inter)" }}
+      >
+        {children}
+      </div>
+    </div>
+  );
+}
+
+/** Visible, numbered sources list — the E-E-A-T / AI-citation signal the
+ *  first draft of these guides lacked entirely. Cite primary or
+ *  authoritative pages only (government portals, official operators,
+ *  reputable publications), and keep the same facts on the page as the
+ *  source supports. `note` says what each source backs up so a future
+ *  editor (and a reader) can weigh it at a glance. */
+export function GuideSources({ items }: { items: { label: string; url: string; note?: string }[] }) {
+  return (
+    <div className="rounded-2xl border border-[#E8E8E4] px-6 py-6">
+      <p
+        className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#9CA3AF] mb-4"
+        style={{ fontFamily: "var(--font-poppins)" }}
+      >
+        Sources
+      </p>
+      <ol className="flex flex-col gap-3">
+        {items.map((item, i) => (
+          <li key={item.url} className="flex gap-3 text-[13px] leading-relaxed">
+            <span
+              className="text-[#E8742C] font-bold flex-shrink-0"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            >
+              {i + 1}.
+            </span>
+            <span className="text-[#6B7280]">
+              <a
+                href={item.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-[#16243F] font-semibold underline decoration-[#D1D5DB] underline-offset-2 hover:text-[#E8742C] hover:decoration-[#E8742C] transition-colors"
+              >
+                {item.label}
+              </a>
+              {item.note ? ` — ${item.note}` : null}
+            </span>
+          </li>
+        ))}
+      </ol>
+    </div>
+  );
+}
+
+/** The one on-page luggage-storage moment per guide. Brief calls it "tinh
+ *  tế": the COPY stays tactful and contextual (it answers the reader's real
+ *  logistics problem — "where does my bag go while I do this?" — instead of
+ *  pitching), while the BLOCK is visually loud (dark navy card, orange
+ *  accent, real buttons) so it can't be missed. Place it once, at the
+ *  natural point in the article where the bag actually becomes a problem —
+ *  not stacked at the top, not repeated. `facts` shows the few numbers that
+ *  matter for THIS guide (distance, price, hours), pulled from the live
+ *  plan facts in src/lib/plans.ts — never invent a price here. */
+export function GuideStowCallout({
+  eyebrow = "Where your bag goes",
+  heading,
+  children,
+  facts,
+}: {
+  eyebrow?: string;
+  heading: string;
+  children: React.ReactNode;
+  facts?: { label: string; value: string }[];
+}) {
+  return (
+    <div className="rounded-2xl bg-[#16243F] px-7 py-7 md:px-9 md:py-8">
+      <p
+        className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#E8742C] mb-2.5"
+        style={{ fontFamily: "var(--font-poppins)" }}
+      >
+        {eyebrow}
+      </p>
+      <p
+        className="text-white font-bold text-[19px] leading-snug mb-3"
+        style={{ fontFamily: "var(--font-poppins)", letterSpacing: "-0.02em" }}
+      >
+        {heading}
+      </p>
+      <div
+        className="text-white/70 text-[14.5px] leading-relaxed [&_strong]:text-white [&_strong]:font-semibold"
+        style={{ fontFamily: "var(--font-inter)" }}
+      >
+        {children}
+      </div>
+
+      {facts && facts.length > 0 && (
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-x-6 gap-y-4 mt-6 pt-6 border-t border-white/[0.14]">
+          {facts.map((f) => (
+            <div key={f.label}>
+              <p
+                className="text-[9.5px] font-bold uppercase tracking-[0.12em] text-white/40 mb-1"
+                style={{ fontFamily: "var(--font-poppins)" }}
+              >
+                {f.label}
+              </p>
+              <p className="text-[14px] font-semibold text-white" style={{ fontFamily: "var(--font-inter)" }}>
+                {f.value}
+              </p>
+            </div>
+          ))}
+        </div>
+      )}
+
+      <div className="flex flex-wrap gap-3 mt-6">
+        <Link
+          href="/#booking"
+          className="inline-flex items-center justify-center bg-[#E8742C] text-white text-[13.5px] font-semibold px-5 py-2.5 rounded-xl hover:bg-[#C85E1E] transition-colors"
+          style={{ fontFamily: "var(--font-poppins)" }}
+        >
+          Book a bag drop
+        </Link>
+        <a
+          href="https://wa.me/84905955161"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 border border-white/25 text-white text-[13.5px] font-semibold px-5 py-2.5 rounded-xl hover:bg-white/10 transition-colors"
+          style={{ fontFamily: "var(--font-poppins)" }}
+        >
+          <MessageCircle size={15} strokeWidth={1.75} />
+          WhatsApp us
+        </a>
+      </div>
+    </div>
   );
 }

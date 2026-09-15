@@ -119,7 +119,7 @@ export default function GuideLayout({
                 className="text-[14px] text-[#6B7280]"
                 style={{ fontFamily: "var(--font-inter)" }}
               >
-                55 Bà Bang Nhãn, Ngũ Hành Sơn. Open 7am–10pm, every day.
+                55 Ba Bang Nhan, Ngu Hanh Son. Open 7am-10pm, every day.
               </p>
             </div>
             <div className="flex gap-3 flex-wrap">

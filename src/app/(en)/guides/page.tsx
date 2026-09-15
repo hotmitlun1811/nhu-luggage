@@ -36,7 +36,7 @@ const GUIDES = [
   },
   {
     href: "/guides/marble-mountains-guide",
-    title: "Marble Mountains (Ngũ Hành Sơn) Guide",
+    title: "Marble Mountains (Ngu Hanh Son) Guide",
     blurb: "Hours, ticket prices, and what's actually there — 10 minutes from the airport.",
   },
   {
