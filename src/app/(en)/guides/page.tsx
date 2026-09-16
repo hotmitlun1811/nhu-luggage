@@ -85,6 +85,36 @@ const GUIDES = [
     blurb: "The free Dragon Bridge fire show, the An Thuong bar strip, rooftop sky bars, night markets, and a Han River cruise.",
   },
   {
+    href: "/guides/best-day-trips-from-da-nang",
+    title: "The Best Day Trips from Da Nang",
+    blurb: "Eight trips ranked, from the easy Hoi An run to the temples of My Son and the forests of Bach Ma, with real costs and timings.",
+  },
+  {
+    href: "/guides/best-coffee-shops-in-da-nang",
+    title: "The Best Coffee Shops in Da Nang",
+    blurb: "Specialty roasters and Vietnamese classics, what the signature drinks are, and where to find a great cup with a view.",
+  },
+  {
+    href: "/guides/best-cafes-to-work-from-in-da-nang",
+    title: "The Best Cafes to Work From in Da Nang",
+    blurb: "Ten laptop-friendly cafes ranked for wifi, power, and quiet, plus where the nomad cluster is.",
+  },
+  {
+    href: "/guides/best-coworking-spaces-in-da-nang",
+    title: "The Best Coworking Spaces in Da Nang",
+    blurb: "Ten spaces ranked for community, wifi, price, and location, with real day-pass and monthly costs.",
+  },
+  {
+    href: "/guides/da-nang-hidden-gems",
+    title: "Da Nang Hidden Gems",
+    blurb: "Ten offbeat places most visitors miss, from Son Tra's quiet coves to a dawn fish auction, with honest access notes.",
+  },
+  {
+    href: "/guides/best-photo-spots-in-da-nang",
+    title: "The Best Photo Spots in Da Nang",
+    blurb: "Twelve landmarks and viewpoints, and the exact time of day to shoot each one, from sunrise on Son Tra to the fire show.",
+  },
+  {
     href: "/guides/da-nang-visa-run-guide",
     title: "Da Nang Visa Run Guide",
     blurb: "Land border or flying out, real costs, the entry-point mistake that gets people turned away, and where your bags go.",

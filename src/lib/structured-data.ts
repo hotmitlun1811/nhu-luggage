@@ -179,6 +179,30 @@ export function breadcrumbJsonLd(items: { name: string; path: string }[]) {
   } as const;
 }
 
+/** ItemList for /guides/* "Top X" listicles — pass the same ranked picks the
+ *  page shows so AI engines and rich-result carousels get an explicit, ordered
+ *  list instead of inferring one from prose. Same drift-proof discipline as
+ *  guideFaqJsonLd: build it from the array the page renders. `url` is optional
+ *  (most picks are third-party places we don't link out to); when present it
+ *  should be an internal anchor or an official URL, never an invented one. */
+export function itemListJsonLd(
+  items: { name: string; url?: string; description?: string }[],
+  listName?: string
+) {
+  return {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    ...(listName ? { name: listName } : {}),
+    itemListElement: items.map((item, index) => ({
+      "@type": "ListItem",
+      position: index + 1,
+      name: item.name,
+      ...(item.url ? { url: item.url } : {}),
+      ...(item.description ? { description: item.description } : {}),
+    })),
+  } as const;
+}
+
 /** Homepage FAQPage — flattens the dictionary's grouped Q&A into schema.org's
  *  flat mainEntity list. Grouping is a visual/scannability affordance in
  *  FAQSection.tsx; schema.org's FAQPage has no concept of it. */
