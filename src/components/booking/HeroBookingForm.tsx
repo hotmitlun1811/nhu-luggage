@@ -210,11 +210,32 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   // never `curText` — see plans.ts's note on why those two network
   // boundaries must always stay English regardless of site locale.
   const curFacts = PLAN_FACTS[plan];
-  // Long Stay is intentionally uncapped: the customer picks any future
-  // pick-up date and staff confirm the price for 4+ month stays on WhatsApp
-  // (client decision, 2026-09-15 — a customer wanting 8 months literally
-  // couldn't select the date before). Mini/Strand keep their tier caps.
-  const maxPickup = date && curFacts.maxDays && plan !== "longstay" ? addDays(date, curFacts.maxDays) : "";
+  // Flat-rate is billed PER PERIOD now (owner decision, 2026-09-16): the plan
+  // price covers one `maxDays` block (Mini = 1 week, Strand = 1 month, Long
+  // Stay = 4 months) and the pick-up date multiplies it. So every flat plan
+  // is uncapped — a longer pick-up simply costs more — and the old tier caps
+  // are gone. `flatPeriods` is the block count between drop-off and pick-up,
+  // rounded up, min 1 (same ceil rule as "By the Day"'s day count).
+  const flatPeriods = lane === "flatrate" && date && pickupDate && curFacts.maxDays
+    ? Math.max(1, Math.ceil(diffDays(date, pickupDate) / curFacts.maxDays))
+    : 1;
+  // English label for the two network boundaries (WhatsApp + Lark), which
+  // stay English regardless of site locale. Long Stay bills in 4-month
+  // blocks, so it reads "2 × 4 months", not a plain month count.
+  const flatDurationEn = plan === "mini"
+    ? `${flatPeriods} week${flatPeriods > 1 ? "s" : ""}`
+    : plan === "strand"
+    ? `${flatPeriods} month${flatPeriods > 1 ? "s" : ""}`
+    : `${flatPeriods} × 4 months`;
+  // The singular period unit, for the English WhatsApp plan line (so it reads
+  // "300.000 ₫ / month / bag", never a stale "flat fee").
+  const flatUnitEn = plan === "mini" ? "week" : plan === "strand" ? "month" : "4 months";
+  // Localized version of the period count, for the on-page total label + summary.
+  const flatPeriodLabel = plan === "mini"
+    ? `${flatPeriods} ${pluralizeWord(flatPeriods, dict.weekUnit)}`
+    : plan === "strand"
+    ? `${flatPeriods} ${pluralizeWord(flatPeriods, dict.monthUnit)}`
+    : `${flatPeriods} × 4 ${pluralizeWord(4, dict.monthUnit)}`;
 
   // The number of oversized bags actually billed: 0 when the toggle is off,
   // otherwise clamped to the total bag count (you can't have more oversized
@@ -240,11 +261,12 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   const total = useMemo(() => {
     const base = hourlyBillsAsDay
       ? PLAN_FACTS.daily.price
-      : (plan === "hourly" || plan === "daily") ? curFacts.price * effectiveQuantity : curFacts.price;
-    // Surcharge is per oversized bag now, not a single flat add-on — 2
-    // oversized bags cost 2× the surcharge (client fix, 2026-09-15).
+      : (plan === "hourly" || plan === "daily") ? curFacts.price * effectiveQuantity : curFacts.price * flatPeriods;
+    // Surcharge is per oversized bag, not a single flat add-on — 2 oversized
+    // bags cost 2× (client fix, 2026-09-15). It's a one-time handling fee,
+    // deliberately NOT multiplied by flat periods.
     return base * pax + oversizedCount * curFacts.oversizeSurcharge;
-  }, [curFacts, oversizedCount, plan, effectiveQuantity, pax, hourlyBillsAsDay]);
+  }, [curFacts, oversizedCount, plan, effectiveQuantity, flatPeriods, pax, hourlyBillsAsDay]);
 
   function validate() {
     const e: Record<string, string> = {};
@@ -297,14 +319,16 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
       // without them staff can't tell when the customer is coming back.
       periodLine = `📅 Period: ${formatShortDate(date, "en")}${time ? ` ${time}` : ""} → ${formatShortDate(pickupDate, "en")}${pickupTime ? ` ${pickupTime}` : ""} (${effectiveQuantity} day${effectiveQuantity > 1 ? "s" : ""})`;
     } else if (lane === "flatrate" && date && pickupDate) {
-      periodLine = `📅 Period: ${formatShortDate(date, "en")} → ${formatShortDate(pickupDate, "en")}`;
+      // Period count included so staff can see the price scales with the
+      // pick-up date (owner decision 2026-09-16) — not a single flat fee.
+      periodLine = `📅 Period: ${formatShortDate(date, "en")} → ${formatShortDate(pickupDate, "en")} (${flatDurationEn})`;
     }
 
     return [
       `Hello Stow! 👋 I'd like to book luggage storage.`,
       ``,
       `📋 Ref: ${ref}`,
-      `📦 Plan: ${curFacts.canonicalName} — ${vnd(curFacts.price)}${curFacts.unit === "flat" ? " flat fee" : curFacts.unit} / bag`,
+      `📦 Plan: ${curFacts.canonicalName} — ${vnd(curFacts.price)}${curFacts.unit === "flat" ? ` / ${flatUnitEn}` : curFacts.unit} / bag`,
       `🧳 Bags: ${pax}`,
       oversized ? `📏 Item: Oversized ×${oversizedCount} (+${vnd(oversizedCount * curFacts.oversizeSurcharge)})` : `📏 Item: Standard size`,
       `📅 Drop-off: ${date ? formatLongDate(date, "en") : "TBD"}${time ? ` at ${time}` : ""}`,
@@ -328,7 +352,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
       ? `${hourlyQuantity} hour${hourlyQuantity > 1 ? "s" : ""}${hourlyBillsAsDay ? " (billed as 1 day)" : ""}`
       : plan === "daily"
       ? `${dailyQuantity} day${dailyQuantity > 1 ? "s" : ""}`
-      : curFacts.canonicalDuration;
+      : flatDurationEn;
     // Fire-and-forget — the WhatsApp handoff below is the customer's actual
     // confirmation path, so a Lark hiccup must never block or delay it.
     fetch("/api/lark/booking", {
@@ -853,7 +877,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
                   style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
                 >
                   <option value="">{dict.selectPlaceholder}</option>
-                  {TIME_SLOTS.map((t) => <option key={t} value={t}>{t}</option>)}
+                  {dropoffSlots.map((t) => <option key={t} value={t}>{t}</option>)}
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
               </div>
@@ -866,25 +890,18 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
                 type="date"
                 value={pickupDate}
                 min={date || today}
-                max={maxPickup || undefined}
                 onChange={(e) => { setPickupDate(e.target.value); clearErr("pickupDate"); }}
                 className={`${INPUT} ${errors.pickupDate ? ERR : ""}`}
                 style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
               />
             </div>
-            {/* Long Stay is uncapped (see maxPickup) — this tells the
-                customer why they can pick a far-out date and that the price
-                for 4+ months is confirmed by staff on WhatsApp. */}
-            {plan === "longstay" && (
-              <p className="col-span-2 lg:col-span-3 text-[11px] text-[#E8742C]" style={{ fontFamily: "var(--font-inter)" }}>
-                {dict.longStayNotice}
-              </p>
-            )}
-            {/* Mini/Strand cap the pick-up date at the tier length — explain
-                the otherwise-silent limit instead of a dead-end date picker. */}
-            {(plan === "mini" || plan === "strand") && (
+            {/* Period summary — shows the billed block count and the date
+                range so the customer sees the price scaling with the pick-up
+                date (owner decision 2026-09-16). Replaces the old "up to X"
+                cap notices; flat-rate is now uncapped and priced per period. */}
+            {date && pickupDate && (
               <p className="col-span-2 lg:col-span-3 text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
-                {dict.flatCapNotice}
+                <span className="text-white font-semibold">{flatPeriodLabel}</span> · {fmtShort(date)} → {fmtShort(pickupDate)}
               </p>
             )}
             {noSlotsToday && (
@@ -1032,7 +1049,10 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
       <div className="flex items-center justify-between pt-0.5">
         <span className="text-[11.5px] text-white/30" style={{ fontFamily: "var(--font-inter)" }}>
           {curFacts.unit === "flat"
-            ? dict.totalFlatFee
+            /* Flat rate now bills per period — once it's more than one block
+               the label shows the count ("Total (2 months)") so "flat fee"
+               never contradicts a multiplied number. */
+            ? (flatPeriods > 1 ? `${dict.totalPrefix}${flatPeriodLabel}${dict.totalSuffix}` : dict.totalFlatFee)
             : hourlyBillsAsDay
               /* Says "1 day", not "5 hours" — the label has to match the
                  number beside it, which is now the daily rate. */

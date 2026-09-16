@@ -58,6 +58,11 @@ export const booking = {
   hourUnit: { singular: "hour", plural: "hours" },
   dayUnit: { singular: "day", plural: "days" },
   bagUnit: { singular: "bag", plural: "bags" },
+  /* Flat-rate is billed per period (Mini per week, Strand per month) — these
+     label the period count in the total + summary. Long Stay reads "N × 4
+     months", built from monthUnit. */
+  weekUnit: { singular: "week", plural: "weeks" },
+  monthUnit: { singular: "month", plural: "months" },
 
   nameLabel: "Name",
   namePlaceholder: "Your name",
@@ -72,13 +77,6 @@ export const booking = {
   /* aria-label for the "how many oversized bags" counter revealed when the
      Oversized toggle is on and there's more than one bag. */
   oversizedCountLabel: "Oversized bags",
-  /* Shown when Long Stay is selected — that plan's pick-up date cap is
-     removed (client decision, 2026-09-15) so any future date is
-     selectable; staff confirm the exact price for 4+ month stays. */
-  longStayNotice: "Stays over 4 months — we'll confirm the final price on WhatsApp.",
-  /* Mini/Strand keep a pick-up date cap at their tier length; this explains
-     the otherwise-silent limit and points to a longer plan. */
-  flatCapNotice: "Pick-up is limited to this plan's length. Choose a longer plan above for more time.",
   /* Same-day drop-off hints when the fixed 07:00–22:00 slot list has run out
      of valid options for the chosen day. */
   noSlotsTodayNotice: "No more time slots today — pick a later drop-off date.",

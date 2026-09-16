@@ -40,6 +40,8 @@ export const booking = {
   hourUnit: { singular: "시간", plural: "시간" },
   dayUnit: { singular: "일", plural: "일" },
   bagUnit: { singular: "개", plural: "개" },
+  weekUnit: { singular: "주", plural: "주" },
+  monthUnit: { singular: "개월", plural: "개월" },
 
   nameLabel: "이름",
   namePlaceholder: "성함을 입력하세요",
@@ -52,8 +54,6 @@ export const booking = {
   oversizedLabel: "초과 크기?",
   oversizedHelpPrefix: "28인치 이상, 자전거, 서프보드 · +",
   oversizedCountLabel: "초과 크기 짐",
-  longStayNotice: "4개월 이상 보관은 WhatsApp에서 최종 요금을 확인해 드립니다.",
-  flatCapNotice: "픽업은 이 요금제 기간 내로 제한됩니다. 더 길게 맡기려면 위의 더 긴 요금제를 선택하세요.",
   noSlotsTodayNotice: "오늘 남은 시간대가 없습니다. 다른 맡기는 날짜를 선택하세요.",
   noLaterSlotsNotice: "더 늦은 시간대가 없습니다. 맡기는 시간을 앞당겨 주세요.",
   optionalTag: "선택",

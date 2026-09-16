@@ -40,6 +40,8 @@ export const booking = {
   hourUnit: { singular: "時間", plural: "時間" },
   dayUnit: { singular: "日", plural: "日" },
   bagUnit: { singular: "個", plural: "個" },
+  weekUnit: { singular: "週間", plural: "週間" },
+  monthUnit: { singular: "か月", plural: "か月" },
 
   nameLabel: "お名前",
   namePlaceholder: "お名前をご入力ください",
@@ -52,8 +54,6 @@ export const booking = {
   oversizedLabel: "サイズ超過ですか？",
   oversizedHelpPrefix: "28インチ以上、自転車、サーフボード · +",
   oversizedCountLabel: "サイズ超過の荷物",
-  longStayNotice: "4か月を超える保管は、WhatsAppで最終料金をご確認いたします。",
-  flatCapNotice: "受け取りはこのプランの期間内に限られます。長期をご希望の場合は上の長いプランをお選びください。",
   noSlotsTodayNotice: "本日の時間枠はもうありません。別の預け入れ日をお選びください。",
   noLaterSlotsNotice: "これより遅い枠がありません。預け入れ時間を早めてください。",
   optionalTag: "任意",
