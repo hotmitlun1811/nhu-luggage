@@ -55,6 +55,36 @@ const GUIDES = [
     blurb: "15 dishes and where to eat them, several Michelin-listed, plus how to eat street food without getting sick.",
   },
   {
+    href: "/guides/best-beaches-in-da-nang",
+    title: "The Best Beaches in Da Nang",
+    blurb: "My Khe, Non Nuoc, and the hidden Son Tra coves, with beach clubs, surfing seasons, and rip-current safety.",
+  },
+  {
+    href: "/guides/best-time-to-visit-da-nang",
+    title: "Best Time to Visit Da Nang",
+    blurb: "A month-by-month weather guide: the best months, the ones to avoid, and when the sea and prices are right.",
+  },
+  {
+    href: "/guides/da-nang-with-kids",
+    title: "Da Nang With Kids",
+    blurb: "A family playbook: what to do by age with real prices, a sane pace, car seats and strollers, and the checkout-day fix.",
+  },
+  {
+    href: "/guides/son-tra-peninsula",
+    title: "Son Tra Peninsula and the Lady Buddha",
+    blurb: "Monkey Mountain, the 67 m Lady Buddha, the viewpoints, the endangered doucs, and the scooter rules that changed.",
+  },
+  {
+    href: "/guides/da-nang-to-hue-day-trip",
+    title: "Da Nang to Hue Day Trip",
+    blurb: "The Hai Van Pass or the tunnel, every way to get there with real prices, the scenic train, and one day in the imperial city.",
+  },
+  {
+    href: "/guides/da-nang-nightlife",
+    title: "Da Nang at Night",
+    blurb: "The free Dragon Bridge fire show, the An Thuong bar strip, rooftop sky bars, night markets, and a Han River cruise.",
+  },
+  {
     href: "/guides/da-nang-visa-run-guide",
     title: "Da Nang Visa Run Guide",
     blurb: "Land border or flying out, real costs, the entry-point mistake that gets people turned away, and where your bags go.",
