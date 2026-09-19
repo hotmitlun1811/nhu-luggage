@@ -393,6 +393,18 @@ export function GuideStowCallout({
           WhatsApp us
         </a>
       </div>
+
+      {/* Secondary text link to the homepage with an exact-match keyword
+          anchor. Kept muted and below the CTAs so it never competes with the
+          on-page booking button, while passing internal-link authority from
+          every guide to the money page. */}
+      <p className="text-white/45 text-[12.5px] mt-4" style={{ fontFamily: "var(--font-inter)" }}>
+        New to Stow?{" "}
+        <Link href="/" className="text-white/70 underline underline-offset-2 hover:text-white">
+          See how luggage storage in Da Nang works
+        </Link>
+        .
+      </p>
     </div>
   );
 }

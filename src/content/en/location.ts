@@ -1,6 +1,6 @@
 export const location = {
   label: "Find Us",
-  headlineLines: ["Near Marble Mountains,", "Da Nang."],
+  headlineLines: ["Luggage storage near the", "Marble Mountains, Da Nang."],
   /* Street address — DO NOT translate in ko/zh. A Vietnamese address
      transliterated into Korean/Chinese script is useless to a taxi
      driver or Grab app; keep byte-identical across every locale. */

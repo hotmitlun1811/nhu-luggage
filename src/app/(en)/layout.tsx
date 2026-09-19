@@ -44,7 +44,7 @@ export const metadata: Metadata = {
      AI search engines (Perplexity, ChatGPT) pull exact facts from descriptions —
      specifics beat adjectives every time. */
   description:
-    "Luggage storage in Da Nang from 15,000₫/hr or 60,000₫/day. Flat-rate plans for expats from 150,000₫/week. CCTV monitored. Open 7am–10pm daily at 55 Ba Bang Nhan, Ngu Hanh Son.",
+    "Luggage storage in Da Nang from 15,000 VND/hr or 60,000 VND/day. Flat-rate plans for expats from 150,000 VND/week. CCTV monitored. Open 7am to 10pm daily at 55 Ba Bang Nhan, Ngu Hanh Son.",
 
   /* Meta keywords carries ~zero direct Google ranking weight (deprecated
      since 2009) — kept aligned anyway since it's free and some
@@ -93,14 +93,14 @@ export const metadata: Metadata = {
     siteName: "Stow — Luggage Storage Da Nang",
     title: "Luggage Storage Da Nang | Stow",
     description:
-      "Store your bags in Da Nang from 15,000₫/hr or 60,000₫/day. Flat-rate plans for expats and visa runners from 150,000₫/week. Open 7am–10pm daily.",
+      "Store your bags in Da Nang from 15,000 VND/hr or 60,000 VND/day. Flat-rate plans for expats and visa runners from 150,000 VND/week. Open 7am to 10pm daily.",
   },
 
   twitter: {
     card: "summary_large_image",
     title: "Luggage Storage Da Nang | Stow",
     description:
-      "From 15,000₫/hr or flat-rate monthly plans. CCTV monitored, open 7am–10pm daily. 55 Ba Bang Nhan, Ngu Hanh Son, Da Nang.",
+      "From 15,000 VND/hr or flat-rate monthly plans. CCTV monitored, open 7am to 10pm daily. 55 Ba Bang Nhan, Ngu Hanh Son, Da Nang.",
   },
 
   robots: {
