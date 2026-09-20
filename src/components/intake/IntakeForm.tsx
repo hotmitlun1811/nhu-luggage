@@ -4,6 +4,7 @@ import { useState, useMemo, useEffect } from "react";
 import { CheckCircle2, Send, RotateCcw, ChevronDown } from "lucide-react";
 import { PLAN_FACTS, FLEX_PLANS, FLAT_PLANS, vnd, generateTimeSlots, type PlanKey, type Lane } from "@/lib/plans";
 import { POST_BOOKING_EMAIL_ENABLED } from "@/lib/features";
+import { generateReference } from "@/lib/reference";
 
 /* This tool is staff-only (noindex, out of scope for the i18n build —
    single operating language) so its display text stays a local English
@@ -97,12 +98,6 @@ export default function IntakeForm() {
     return e;
   }
 
-  function generateRef() {
-    const d = date.replace(/-/g, "").slice(2); // YYMMDD
-    const n = Math.floor(Math.random() * 9000 + 1000);
-    return `STW-${d}-${n}`;
-  }
-
   // Same switch as the public booking form — see src/lib/features.ts.
   // The counter tool must not send either, or a walk-in customer gets an
   // email the online customer no longer does.
@@ -168,7 +163,7 @@ export default function IntakeForm() {
       return;
     }
     const booking: Confirmed = {
-      ref: generateRef(),
+      ref: generateReference(date),
       lane,
       planName: cur.name,
       planDuration: cur.duration,
