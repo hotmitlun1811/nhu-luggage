@@ -5,6 +5,7 @@ export const nav = {
     { label: "Pricing", href: "#pricing" },
     { label: "What We Store", href: "#trust-safety" },
     { label: "Location", href: "#location" },
+    { label: "Guides", href: "/guides" },
   ],
   chatWithUs: "Chat with us",
   language: "Language",

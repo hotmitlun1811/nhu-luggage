@@ -76,6 +76,9 @@ export default async function IntlLayout({
   return (
     <html
       lang={lang}
+      /* See the same attribute in (en)/layout.tsx: keeps Link navigations
+         instant despite the global `scroll-behavior: smooth`. */
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${poppins.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
     >
       <body>

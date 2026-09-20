@@ -5,6 +5,7 @@ export const nav = {
     { label: "料金", href: "#pricing" },
     { label: "お預かりできるもの", href: "#trust-safety" },
     { label: "アクセス", href: "#location" },
+    { label: "ガイド", href: "/guides" },
   ],
   chatWithUs: "チャットで相談",
   language: "言語",

@@ -126,6 +126,10 @@ export default async function RootLayout({
   return (
     <html
       lang="en"
+      /* Next 16 no longer overrides globals.css's `scroll-behavior: smooth`
+         on route changes unless this is set, so without it a Link click
+         (e.g. nav → Guides) glides up from the old scroll position. */
+      data-scroll-behavior="smooth"
       className={`${inter.variable} ${poppins.variable} ${geistMono.variable} ${playfair.variable} antialiased`}
     >
       <body>

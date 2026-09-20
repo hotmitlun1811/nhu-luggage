@@ -8,6 +8,8 @@ import type { Dictionary } from "@/content/types";
 import type { AppLocale } from "@/content/locales";
 import LanguageSwitcher from "./LanguageSwitcher";
 
+const isSectionLink = (href: string) => href.startsWith("#");
+
 export default function PrimaryNav({
   dict,
   locale,
@@ -52,7 +54,10 @@ export default function PrimaryNav({
           : "bg-transparent"
       }`}
     >
-      <div className="max-w-[1280px] mx-auto px-6 h-[72px] flex items-center gap-10">
+      {/* Six links no longer fit at the old 40px gap / 18px padding below
+          xl (Book Now got pushed off-screen), so both tighten there and
+          return to the approved spacing from 1280px up. */}
+      <div className="max-w-[1280px] mx-auto px-6 h-[72px] flex items-center gap-6 xl:gap-10">
 
         {/* Logo */}
         <Link href="/" className="flex-shrink-0 flex items-center">
@@ -68,21 +73,32 @@ export default function PrimaryNav({
 
         {/* Desktop nav */}
         <nav className="hidden md:flex items-center gap-2 flex-1">
-          {dict.links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={(e) => scrollTo(e, link.href)}
-              className={`text-[11.5px] font-bold uppercase tracking-[0.07em] transition-colors whitespace-nowrap px-[18px] py-1 ${
-                scrolled
-                  ? "text-[#6B7280] hover:text-[#16243F]"
-                  : "text-white/80 hover:text-white"
-              }`}
-              style={{ fontFamily: "var(--font-poppins)" }}
-            >
-              {link.label}
-            </a>
-          ))}
+          {dict.links.map((link) => {
+            const className = `text-[11.5px] font-bold uppercase tracking-[0.07em] transition-colors whitespace-nowrap px-[12px] xl:px-[18px] py-1 ${
+              scrolled
+                ? "text-[#6B7280] hover:text-[#16243F]"
+                : "text-white/80 hover:text-white"
+            }`;
+            const style = { fontFamily: "var(--font-poppins)" };
+
+            /* "#section" links scroll within the homepage; anything else
+               (e.g. /guides) is a real route and must navigate. */
+            return isSectionLink(link.href) ? (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => scrollTo(e, link.href)}
+                className={className}
+                style={style}
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link key={link.href} href={link.href} className={className} style={style}>
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
 
         {/* Right actions */}
@@ -152,17 +168,36 @@ export default function PrimaryNav({
               anchor="left"
             />
           </div>
-          {dict.links.map((link) => (
-            <a
-              key={link.href}
-              href={link.href}
-              onClick={(e) => scrollTo(e, link.href)}
-              className="text-[16px] font-medium text-[#16243F] hover:text-[#E8742C] transition-colors"
-              style={{ fontFamily: "var(--font-inter)" }}
-            >
-              {link.label}
-            </a>
-          ))}
+          {dict.links.map((link) => {
+            const className =
+              "text-[16px] font-medium text-[#16243F] hover:text-[#E8742C] transition-colors";
+            const style = { fontFamily: "var(--font-inter)" };
+
+            /* Close the drawer on route links too: tapping Guides while
+               already on /guides doesn't remount the nav, so it would
+               otherwise stay open. */
+            return isSectionLink(link.href) ? (
+              <a
+                key={link.href}
+                href={link.href}
+                onClick={(e) => scrollTo(e, link.href)}
+                className={className}
+                style={style}
+              >
+                {link.label}
+              </a>
+            ) : (
+              <Link
+                key={link.href}
+                href={link.href}
+                onClick={() => setMenuOpen(false)}
+                className={className}
+                style={style}
+              >
+                {link.label}
+              </Link>
+            );
+          })}
           <div className="pt-2 border-t border-[#EAEAE6] flex flex-col gap-3">
             <a
               href="https://wa.me/84905955161"

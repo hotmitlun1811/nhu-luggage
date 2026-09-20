@@ -5,6 +5,7 @@ export const nav = {
     { label: "요금", href: "#pricing" },
     { label: "보관 가능 품목", href: "#trust-safety" },
     { label: "위치", href: "#location" },
+    { label: "가이드", href: "/guides" },
   ],
   chatWithUs: "채팅하기",
   language: "언어",
