@@ -30,6 +30,7 @@ def opts(*pairs):
 
 WHEN = {"format": "yyyy-MM-dd HH:mm"}
 DAY = {"format": "yyyy-MM-dd"}
+MONEY = {"type": "plain", "precision": 0, "thousands_separator": True}
 
 FIELDS = [
     # ── the request (what the customer said) ──
@@ -49,6 +50,10 @@ FIELDS = [
     {"type": "datetime", "name": "Pick-up Now", "style": WHEN, "description": "The booking's pick-up when the request came in."},
     {"type": "datetime", "name": "Plan End", "style": WHEN, "description": "When the plan the customer paid for ends, from the booking. Blank if the booking never recorded it."},
     {"type": "number", "name": "Days Past Plan End", "style": {"type": "plain", "precision": 0}, "description": "How many days after Plan End the new date falls. 0 = inside the plan already paid for. Blank when the booking has no Plan End."},
+    # ── the price the customer was shown (same rules as the booking form) ──
+    {"type": "number", "name": "Oversized to Extend", "style": {"type": "plain", "precision": 0}, "description": "How many of the extended bags are oversized. The customer is asked only when it could be either (some bags extended, and the booking has both kinds); otherwise it is worked out from the booking. Blank if the booking never recorded its oversized bags."},
+    {"type": "number", "name": "Extension Total (VND)", "style": MONEY, "description": "The price the customer was shown for the extra time, worked out with the same pricing rules as the booking form (the cheapest mix of plans for the days after Plan End, per bag, plus the oversized surcharge). 0 = the new date is inside the plan already paid for. Blank when it could not be worked out: staff quote it. The money actually collected goes in Extension Fee on the booking row."},
+    {"type": "text", "name": "Price Detail", "description": "How that price was worked out, step by step. The same lines staff see in the group chat."},
     # ── staff ──
     {"type": "text", "name": "Note", "description": "Filled by staff. Put the Extension Fee on the booking row, as before, so the money stays in one place."},
     {"type": "auto_number", "name": "Row No.", "style": {"rules": [{"type": "incremental_number", "length": 5}]},

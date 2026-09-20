@@ -1,18 +1,18 @@
 # Form gia hạn: khách xin để hành lý lâu hơn
 
-**Trạng thái (2026-09-20):** code, bảng Lark và bài kiểm tra đã xong, **chưa bật trên website thật**. Chưa commit. Các bước bật nằm ở mục 5.
+**Trạng thái (2026-09-20):** đã chạy trên website thật (bản đầu, không có giá). Bản có **giá** (mục 9) đã làm xong và thử ở máy, **chưa push**.
 
-Khách đang có đơn muốn giữ hành lý thêm. Nhân viên gửi cho họ một đường link. Khách mở link và chỉ trả lời **hai câu hỏi**: giữ mấy túi, và ngày lấy mới. Tên, WhatsApp, email khách không phải gõ lại: hệ thống lấy từ đơn của họ.
+Khách đang có đơn muốn giữ hành lý thêm. Nhân viên gửi cho họ một đường link. Khách mở link và chỉ trả lời **hai câu hỏi**: giữ mấy túi, và ngày lấy mới. Khách thấy ngay **giá** cho phần gia hạn, tính bằng đúng công thức của form đặt chỗ. Tên, WhatsApp, email khách không phải gõ lại: hệ thống lấy từ đơn của họ.
 
 ## 1. Cách nó chạy (để giải thích cho khách hàng của bạn)
 
 1. **Nhân viên gửi link.** Link có mã đơn của khách: `https://www.stowdanang.com/extend/STW-260921-K7M2QX`. Nhân viên lấy link từ cột "Extend Link" trong bảng Bookings (mục 5, bước 2), dán vào WhatsApp.
 2. **Khách mở link.** Trang tự nhận ra đơn nhờ mã trong link. Khách thấy đơn của mình để tự kiểm tra: mã đơn, tên (đầy đủ), WhatsApp và email (che bớt), số túi, ngày lấy hiện tại. Nếu không phải đơn của mình, có nút nhắn WhatsApp cho Stow.
-3. **Khách trả lời hai câu hỏi.** Số túi muốn gia hạn (không hỏi nếu đơn chỉ có 1 túi) và ngày lấy mới (chỉ chọn được ngày sau ngày lấy hiện tại).
+3. **Khách trả lời hai câu hỏi.** Số túi muốn gia hạn (không hỏi nếu đơn chỉ có 1 túi) và ngày lấy mới (chỉ chọn được ngày sau ngày lấy hiện tại). Chọn xong ngày, khách thấy **tổng tiền** và bảng "How we calculated this price" giống form đặt chỗ (mục 9). Chỉ khi cần mới có câu hỏi thứ ba: gia hạn một phần số túi mà đơn có cả túi cồng kềnh lẫn túi thường thì hỏi "How many of these bags are oversized?".
 4. **Hệ thống kiểm tra trước khi lưu.** Đơn phải tồn tại và còn mở (không phải Complete hay Cancel), số túi không vượt số túi đã đặt, ngày hợp lệ. Sai thì khách thấy câu giải thích rõ và nút WhatsApp, **không lưu gì cả**, nên không có yêu cầu nào nằm đó mà không ai liên lạc được.
-5. **Lưu vào bảng Extensions.** Mỗi yêu cầu là một dòng: mã đơn, số túi, ngày mới, giờ gửi. Tên, WhatsApp, email được sao chép từ dòng đơn (đúng từng ký tự). Kèm số túi đã đặt, ngày lấy hiện tại, ngày hết gói (Plan End) và số ngày ngày mới vượt quá gói đã trả. Dòng có liên kết tới đúng dòng đơn trong Bookings. Trạng thái bắt đầu là "Requested".
-6. **Báo ngay vào nhóm chat Stow Bookings.** Tin đầy đủ: yêu cầu, đơn hiện tại (gói, ngày gửi, ngày lấy, Plan End, số túi, tổng tiền, trạng thái) và liên hệ (tên, WhatsApp, email) đầy đủ, chia phần giống tin đặt đơn.
-7. **Khách thấy "Request sent".** Stow nhắn WhatsApp để xác nhận giá và giờ lấy.
+5. **Lưu vào bảng Extensions.** Mỗi yêu cầu là một dòng: mã đơn, số túi, ngày mới, giờ gửi. Tên, WhatsApp, email được sao chép từ dòng đơn (đúng từng ký tự). Kèm số túi đã đặt, ngày lấy hiện tại, ngày hết gói (Plan End), số ngày ngày mới vượt quá gói đã trả, và **giá khách đã thấy cùng cách tính** (máy chủ tính lại, không tin con số từ trình duyệt). Dòng có liên kết tới đúng dòng đơn trong Bookings. Trạng thái bắt đầu là "Requested".
+6. **Báo ngay vào nhóm chat Stow Bookings.** Tin đầy đủ: yêu cầu kèm **giá khách đã thấy và cách tính**, đơn hiện tại (gói, ngày gửi, ngày lấy, Plan End, số túi, tổng tiền, trạng thái) và liên hệ (tên, WhatsApp, email) đầy đủ, chia phần giống tin đặt đơn.
+7. **Khách thấy "Request sent"** cùng tổng tiền. Stow nhắn WhatsApp để xác nhận và hẹn giờ lấy.
 8. **Nhân viên làm nốt như hiện nay** (mục 4).
 
 ## 2. Khách thấy gì
@@ -29,6 +29,8 @@ Trang có nền xanh đậm cùng kiểu với form đặt chỗ. Nếu không m
 | Chưa cấu hình trên website | This page is not available right now |
 
 Trang chỉ có tiếng Anh (giống form nhân viên). Bản ko/ja chưa làm.
+
+Thẻ thông tin đơn có thêm dòng **Paid until** (gói đã trả tới lúc nào), vì giá dựa vào đó. Dòng "Two questions. We already have your contact details..." đã bỏ theo yêu cầu.
 
 **Che bớt thông tin:** WhatsApp chỉ hiện 4 số cuối (`+XXXXXXX5161`). Email hiện phần đầu, giấu phần giữa, giữ tên miền (`mackas****@hotmail.com`), luôn giấu ít nhất 3 ký tự. Tên hiện đầy đủ để khách biết tên đã ghi đúng chưa. Việc che làm trên máy chủ: số điện thoại và email đầy đủ không bao giờ tới trình duyệt của khách.
 
@@ -47,6 +49,9 @@ Trang chỉ có tiếng Anh (giống form nhân viên). Bản ko/ja chưa làm.
 | Pick-up Now | Form (từ đơn) | Ngày giờ lấy của đơn lúc khách gửi |
 | Plan End | Form (từ đơn) | Gói đã trả kết thúc lúc nào |
 | Days Past Plan End | Form (tính) | Ngày mới vượt Plan End bao nhiêu ngày. 0 = vẫn trong gói đã trả. Trống nếu đơn không có Plan End |
+| Oversized to Extend | Form | Trong số túi gia hạn, bao nhiêu túi cồng kềnh (khách chỉ được hỏi khi có thể là nhiều đáp án; còn lại tính từ đơn) |
+| Extension Total (VND) | Form (tính) | Giá khách đã thấy cho phần gia hạn. 0 = nằm trong gói đã trả. Trống = không tính được, nhân viên báo giá |
+| Price Detail | Form (tính) | Cách tính từng bước, cùng các dòng nhân viên thấy trong nhóm chat |
 | Note | Nhân viên | Ghi chú |
 | Row No. | Tự động | Số Lark không bao giờ lặp |
 
@@ -55,7 +60,7 @@ View **To do** chỉ hiện các yêu cầu còn "Requested". Một đơn có th
 ## 4. Nhân viên xử lý một yêu cầu
 
 1. Thấy tin trong nhóm chat, hoặc mở view **To do**.
-2. Nhắn khách qua WhatsApp: báo giá gia hạn và giờ lấy. **Form không báo giá** vì khi chỉ gia hạn một số túi, phụ phí túi cồng kềnh không tính chắc được. Giá do nhân viên quyết như hiện nay.
+2. Nhắn khách qua WhatsApp: xác nhận **giá khách đã thấy** (nằm trong tin nhóm chat và cột Extension Total), hẹn giờ lấy và cách thanh toán. Nếu ô Extension Total trống (đơn không có Plan End hoặc số túi cồng kềnh), nhân viên tự báo giá như trước.
 3. Khách đồng ý: chuyển Status sang **Confirm**. Khách trả tiền: **Paid**.
 4. Cập nhật dòng đơn trong Bookings như trước: Pick-up, Plan End, **Extension Fee** (tiền nằm ở một chỗ duy nhất, cột "Thực nhận" vẫn đúng). Bấm cột Booking để mở đúng dòng.
 5. Xong: Status **Complete**. Khách rút lại: **Cancel**.
@@ -92,16 +97,37 @@ Bảng Extensions đã tạo. Còn lại, theo thứ tự:
 
 ## 7. Đã kiểm tra những gì
 
-- 62 bài test mới trong `src/lib/extension.test.ts` (tổng 159 bài đạt): dạng mã đơn, giờ Việt Nam, đọc dữ liệu Lark, chọn đúng dòng khi một mã có hai dòng (đơn gia hạn kiểu cũ, đơn Cancel trùng), khoảng ngày cho phép, số túi, che thông tin, phát hiện gửi trùng, dòng ghi vào Lark, nội dung tin nhóm chat.
+- 99 bài test cho form gia hạn: 76 trong `src/lib/extension.test.ts` và 23 trong `src/lib/extension-price.test.ts` (cả dự án 196 bài đạt): dạng mã đơn, giờ Việt Nam, đọc dữ liệu Lark, chọn đúng dòng khi một mã có hai dòng (đơn gia hạn kiểu cũ, đơn Cancel trùng), khoảng ngày cho phép, số túi, che thông tin, phát hiện gửi trùng, dòng ghi vào Lark, nội dung tin nhóm chat, và giá (so từng số với hàm tính của form đặt chỗ, gồm câu hỏi túi cồng kềnh).
 - Bản build production chạy cục bộ, với **bảng Lark thật** và tắt tin nhóm chat: các yêu cầu sai (11 kiểu) đều bị từ chối và không ghi gì; một yêu cầu đúng được lưu; gửi lại y hệt chỉ lưu một dòng; yêu cầu khác cho cùng đơn là dòng mới. Số liệu trong dòng đúng (số ngày vượt Plan End 4 và 6), liên kết trỏ đúng dòng đơn, tên/WhatsApp/email sao chép giống hệt nguồn. Đã xem giao diện trên điện thoại và máy tính, và kiểm tra HTML của trang không chứa số điện thoại hay email đầy đủ. Các dòng thử đã xóa (bản sao lưu ở `~/stow-lark-backup/extension-form-2026-09-20/`).
 - Bộ chọn ngày dùng chung với form đặt chỗ được thêm chế độ "chỉ ngày"; form đặt chỗ đã xem lại, hoạt động như cũ.
+- Bản có giá: chạy thử với đơn thật STW-260916-9132 (2 túi, thêm 4 ngày sau Plan End): trang hiện 300.000 ₫ và bảng cách tính, chọn ngày trong gói đã trả hiện 0 ₫ "Nothing extra to pay"; máy chủ lưu đúng 300.000, Oversized to Extend = 0 và Price Detail; màn hình xác nhận hiện đúng số máy chủ tính. Câu hỏi túi cồng kềnh thử trên trang tạm với dữ liệu giả (3 túi, 1 cồng kềnh): gia hạn 2 túi thì hỏi (mặc định 1, giá 350.000), chọn 0 thì 300.000, gia hạn cả 3 túi thì không hỏi (500.000). Dòng thử và trang tạm đã xóa.
 
 ## 8. Giới hạn và việc còn để ngỏ
 
-- **Không có giá trên form.** Nhân viên báo giá (mục 4). Có thể thêm ước tính sau nếu chủ tiệm chốt quy tắc cho gia hạn từng phần.
-- **Chỉ hỏi ngày, không hỏi giờ.** Giờ thỏa thuận qua WhatsApp.
+- **Chỉ hỏi ngày, không hỏi giờ.** Giờ thỏa thuận qua WhatsApp. Giá tính cho việc lấy **trước giờ hết gói** (mục 9).
 - **Các đơn chuyển từ bảng cũ** lưu giờ lấy là 00:00 (bảng cũ không ghi giờ). Trang và tin nhóm chat bỏ chữ "at 00:00", chỉ ghi ngày.
 - **Đơn không có số túi** (bảng cũ có 3 dòng): khách chọn tới tối đa 20 túi (giới hạn của form đặt chỗ) và nhân viên kiểm lại.
 - **Đơn không có WhatsApp lẫn email**: không nhận yêu cầu, khách được chuyển sang WhatsApp.
 - Chưa có bản ko/ja. Chưa có giới hạn số lần thử ở phía website.
 - Đơn kiểu cũ dùng hai dòng cho một mã (gia hạn thành dòng thứ hai): form dùng dòng còn mở có ngày lấy muộn nhất.
+
+## 9. Giá gia hạn (bản cập nhật, chưa push)
+
+Khách hỏi "sao không có giá minh bạch". Form giờ hiện giá, tính bằng **đúng bộ máy giá của form đặt chỗ** (`src/lib/pricing.ts`), và cùng bảng giải thích giá.
+
+**Cách tính** (`src/lib/extension-price.ts`, 23 bài test):
+
+1. Khách đã trả một gói kết thúc lúc **Plan End**. Ngày lấy mới **trong hoặc trước** ngày Plan End thì **không phải trả thêm** (0 ₫), trang nói rõ.
+2. Sau Plan End: tính như gói **Custom** cho số ngày thêm, đếm từ Plan End tới ngày mới: **tổ hợp gói rẻ nhất phủ đủ số ngày đó, cho mỗi túi**, cộng phụ phí túi cồng kềnh theo gói (30.000 gói ngày, 50.000 gói tuần/tháng/4 tháng, mỗi túi cồng kềnh, mỗi chu kỳ). Ví dụ 2 túi, thêm 4 ngày: một gói Mini 150.000 mỗi túi (rẻ hơn 4 ngày lẻ là 240.000) nên 300.000 ₫. Có bài test so từng số với hàm tính của form đặt chỗ cho 1 đến 130 ngày.
+3. Chỉ tính cho số túi được gia hạn.
+4. Form chỉ hỏi ngày, nên giá là cho việc **lấy trước giờ hết gói** (cùng giờ với lúc gửi). Trang ghi rõ ("The price is for pick-up by 15:30 on ..."). Quy định của tiệm: 1 ngày là 24 giờ, cộng 60 phút du di; lấy trễ hơn thì tính thêm một ngày.
+
+**Câu hỏi thứ ba (chỉ khi cần):** phụ phí tính theo từng túi cồng kềnh. Nếu chỉ gia hạn một phần số túi mà đơn có cả túi cồng kềnh lẫn túi thường thì không biết túi nào được gia hạn nên phải hỏi. Nếu gia hạn tất cả túi, hoặc đơn không có túi cồng kềnh thì không hỏi. Mặc định là số cao nhất có thể, để giá không bao giờ thấp hơn thực tế.
+
+**Khi không tính được:** đơn không có Plan End (đơn tạo ở quầy) hoặc không ghi số túi cồng kềnh, hoặc quá 1095 ngày: trang ghi "Stow will work out the price and confirm it on WhatsApp", ô Extension Total để trống, nhân viên báo giá.
+
+**Cần chủ tiệm xác nhận:** (a) gia hạn tính như Custom cho các ngày sau Plan End, mỗi túi (khớp với đơn STW-260821-7499: Extension Fee 600.000 = Strand 300.000 x 2 túi, nhưng đây là suy luận); (b) trong gói đã trả thì không tính thêm.
+
+**Giá chỉ đúng khi Plan End đúng.** Trang hiện "Paid until" để khách tự thấy. **Đơn STW-260821-7499 có Plan End (20/09 12:00) nhiều khả năng bị thấp** vì đơn đã trả phí gia hạn 600.000 (xem ghi chú ở bảng Bookings). Cần sửa Plan End của đơn đó trước khi gửi link, nếu không khách sẽ thấy giá cao hơn thực tế. Nhân viên nên cập nhật Plan End mỗi khi khách gia hạn xong.
+
+**Thêm cột Lark:** `python3 docs/lark/create-extensions.py --apply` đã thêm Oversized to Extend, Extension Total (VND), Price Detail vào bảng Extensions (bảng đang trống, không mất dữ liệu).
