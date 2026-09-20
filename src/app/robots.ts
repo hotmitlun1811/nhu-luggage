@@ -21,7 +21,8 @@ const AI_BOTS = [
 ];
 
 export default function robots(): MetadataRoute.Robots {
-  const disallow = ["/intake", "/api/"];
+  // /extend/<Booking ID> is a private link Stow sends one customer; it is also noindex on the page.
+  const disallow = ["/intake", "/extend", "/api/"];
 
   return {
     rules: [

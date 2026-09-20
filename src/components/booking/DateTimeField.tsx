@@ -55,19 +55,20 @@ export default function DateTimeField({
   className,
   locale,
   date,
-  time,
+  time = "",
   onDateChange,
-  onTimeChange,
+  onTimeChange = () => {},
   minDate,
   maxDate,
   today,
   dateLocked = false,
+  dateOnly = false,
   disabled = false,
-  slotsFor,
-  emptySlotsNote,
+  slotsFor = () => [],
+  emptySlotsNote = "",
   popupAlign = "start",
   dateWord,
-  timeWord,
+  timeWord = "",
   prevMonthLabel,
   nextMonthLabel,
 }: {
@@ -79,27 +80,35 @@ export default function DateTimeField({
   className: string;
   locale: AppLocale;
   date: string;
-  time: string;
+  /** Not used when `dateOnly`. */
+  time?: string;
   onDateChange: (iso: string) => void;
-  onTimeChange: (t: string) => void;
+  /** Not used when `dateOnly`. */
+  onTimeChange?: (t: string) => void;
   minDate: string;
   maxDate?: string;
   today: string;
   /** The date is decided elsewhere (By the Hour is same-day): only the time is chosen here. */
   dateLocked?: boolean;
+  /**
+   * Only a date is asked for (the "extend my storage" form): no time step, the
+   * panel closes on the day tapped, and the closed field reads "Sat, 27 September 2026".
+   * The time props are not needed then.
+   */
+  dateOnly?: boolean;
   disabled?: boolean;
   /**
    * The times selectable on a given date. A function, not a list, so the
    * calendar can grey out any day that has no valid time (a plan's last day
    * might only allow the early hours, today may have none left).
    */
-  slotsFor: (iso: string) => string[];
+  slotsFor?: (iso: string) => string[];
   /** Shown instead of the time list when the chosen date has no times. */
-  emptySlotsNote: string;
+  emptySlotsNote?: string;
   /** Which edge of the field the popup lines up with (the right-hand field of a row uses "end"). */
   popupAlign?: "start" | "end";
   dateWord: string;
-  timeWord: string;
+  timeWord?: string;
   prevMonthLabel: string;
   nextMonthLabel: string;
 }) {
@@ -118,7 +127,7 @@ export default function DateTimeField({
     if (next) {
       const s = parseIso(date || minDate);
       setView({ y: s.y, m: s.m });
-      setStage(dateLocked ? "time" : !date ? "date" : !time ? "time" : "date");
+      setStage(dateOnly ? "date" : dateLocked ? "time" : !date ? "date" : !time ? "time" : "date");
     }
     setOpen(next);
   }
@@ -139,8 +148,8 @@ export default function DateTimeField({
   const maxParts = maxDate ? parseIso(maxDate) : null;
   const canPrev = viewIdx > minParts.y * 12 + minParts.m;
   const canNext = !maxParts || viewIdx < maxParts.y * 12 + maxParts.m;
-  const isOff = (iso: string) => iso < minDate || (!!maxDate && iso > maxDate) || slotsFor(iso).length === 0;
-  const slots = date ? slotsFor(date) : [];
+  const isOff = (iso: string) => iso < minDate || (!!maxDate && iso > maxDate) || (!dateOnly && slotsFor(iso).length === 0);
+  const slots = date && !dateOnly ? slotsFor(date) : [];
 
   // The one day that is in the Tab order (the rest are reached with arrow keys).
   const anchorIso =
@@ -195,24 +204,37 @@ export default function DateTimeField({
         // On a phone the two fields share one row, so each gets about 130px:
         // less padding and no arrow keep "20 Sept · 09:00" whole. A cut-off
         // time would hide the half of the value that matters most.
-        className={`${className} flex items-center justify-between gap-2 max-sm:gap-1 max-sm:px-[10px] max-[360px]:text-[12px] max-[340px]:px-[8px] max-[340px]:text-[11.5px] text-left disabled:cursor-not-allowed disabled:opacity-60`}
+        className={`${className} flex items-center justify-between gap-2 ${
+          // A date-only field is full width, so it keeps its normal padding and text size.
+          dateOnly ? "" : "max-sm:gap-1 max-sm:px-[10px] max-[360px]:text-[12px] max-[340px]:px-[8px] max-[340px]:text-[11.5px]"
+        } text-left disabled:cursor-not-allowed disabled:opacity-60`}
       >
         <span id={valueId} className="min-w-0 flex-1 truncate">
-          {date ? (
-            <>
-              {/* The weekday only where there is room; a phone's half-width
-                  field shows "20 Sept" so the whole value stays on one line. */}
-              <span className="text-white max-sm:hidden">{formatWeekdayDate(date, locale)}</span>
-              <span className="text-white sm:hidden">{formatShortDate(date, locale)}</span>
-            </>
+          {dateOnly ? (
+            date ? (
+              <span className="text-white">{formatLongDate(date, locale)}</span>
+            ) : (
+              <span className="text-white/30" aria-hidden>{dateWord}</span>
+            )
           ) : (
-            // Empty-state hints are decoration: the label already says what the field is.
-            <span className="text-white/30" aria-hidden>{dateWord}</span>
+            <>
+              {date ? (
+                <>
+                  {/* The weekday only where there is room; a phone's half-width
+                      field shows "20 Sept" so the whole value stays on one line. */}
+                  <span className="text-white max-sm:hidden">{formatWeekdayDate(date, locale)}</span>
+                  <span className="text-white sm:hidden">{formatShortDate(date, locale)}</span>
+                </>
+              ) : (
+                // Empty-state hints are decoration: the label already says what the field is.
+                <span className="text-white/30" aria-hidden>{dateWord}</span>
+              )}
+              <span className="text-white/25" aria-hidden>{" · "}</span>
+              {time ? <span className="text-white/80">{time}</span> : <span className="text-white/30" aria-hidden>{timeWord}</span>}
+            </>
           )}
-          <span className="text-white/25" aria-hidden>{" · "}</span>
-          {time ? <span className="text-white/80">{time}</span> : <span className="text-white/30" aria-hidden>{timeWord}</span>}
         </span>
-        <ChevronDown size={14} className="flex-shrink-0 text-white/40 max-sm:hidden" aria-hidden />
+        <ChevronDown size={14} className={`flex-shrink-0 text-white/40 ${dateOnly ? "" : "max-sm:hidden"}`} aria-hidden />
       </Popover.Trigger>
 
       <Popover.Portal>
@@ -223,7 +245,8 @@ export default function DateTimeField({
             className="w-[296px] max-w-[calc(100vw-24px)] rounded-xl border border-white/[0.16] bg-[#16243F] p-3 text-white shadow-2xl outline-none transition-opacity duration-100 data-[ending-style]:opacity-0 data-[starting-style]:opacity-0"
             style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
           >
-            {/* Date / Time tabs — they show the current choice, and either can be tapped to go back to it. */}
+            {/* Date / Time tabs — they show the current choice, and either can be tapped to go back to it. Nothing to switch between when only a date is asked. */}
+            {!dateOnly && (
             <div className="flex gap-[3px] rounded-lg border border-white/[0.08] bg-white/[0.06] p-[3px]">
               <button
                 type="button"
@@ -246,9 +269,10 @@ export default function DateTimeField({
                 {time || timeWord}
               </button>
             </div>
+            )}
 
             {stage === "date" ? (
-              <div className="mt-3">
+              <div className={dateOnly ? "" : "mt-3"}>
                 <div className="mb-1.5 flex items-center justify-between">
                   <button type="button" aria-label={prevMonthLabel} disabled={!canPrev} onClick={() => goMonth(-1)} className={NAV_BTN}>
                     <ChevronLeft size={16} aria-hidden />
@@ -281,7 +305,8 @@ export default function DateTimeField({
                         onClick={() => {
                           if (off) return;
                           onDateChange(iso);
-                          setStage("time");
+                          if (dateOnly) setOpen(false);
+                          else setStage("time");
                         }}
                         onKeyDown={(e) => onDayKeyDown(e, iso)}
                         className={`h-[36px] rounded-lg text-[13px] transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#E8742C] ${
