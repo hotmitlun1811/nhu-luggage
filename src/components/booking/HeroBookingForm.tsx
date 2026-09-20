@@ -1,58 +1,76 @@
 "use client";
 
-import { useState, useMemo, useEffect, useRef, useSyncExternalStore } from "react";
-import { Send, CheckCircle2, ChevronDown, ChevronRight, MessageCircle } from "lucide-react";
-import { AnimatePresence, motion } from "framer-motion";
+import { useState, useMemo, useEffect, useRef, useId, useSyncExternalStore } from "react";
+import { Send, CheckCircle2, ChevronRight, LogIn, LogOut, MessageCircle } from "lucide-react";
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { EFFECTIVE as LEGAL_EFFECTIVE } from "@/components/legal/LegalShared";
+import { PLAN_FACTS, generateTimeSlots, vnd, type PlanKey } from "@/lib/plans";
 import {
-  PLAN_FACTS,
-  FLEX_PLANS,
-  FLAT_PLANS,
-  HOURLY_BILLS_AS_DAY_AFTER_HOURS,
-  vnd,
-  generateTimeSlots,
-  type PlanKey,
-  type Lane,
-} from "@/lib/plans";
-import { formatDateTime, formatShortDate, formatLongDate, pluralizeWord } from "@/lib/format";
+  MAX_CUSTOM_DAYS,
+  addDays,
+  compareStamps,
+  describePiecesEn,
+  isPickupValid,
+  latestPickup,
+  pickupSlots,
+  quote,
+  type PlanChoice,
+  type Stamp,
+} from "@/lib/pricing";
+import { COUNTRY_BY_ISO, DEFAULT_COUNTRY_ISO } from "@/lib/countries";
+import { formatDateTime, formatWeekdayDate, formatLongDate, pluralizeWord } from "@/lib/format";
 import { POST_BOOKING_EMAIL_ENABLED } from "@/lib/features";
 import type { Dictionary } from "@/content/types";
 import type { AppLocale } from "@/content/locales";
+import CountField from "./CountField";
+import DateTimeField from "./DateTimeField";
+import InfoTip from "./InfoTip";
+import PhoneField from "./PhoneField";
+import PlanSelect from "./PlanSelect";
+import PriceBreakdown from "./PriceBreakdown";
 
 // Client-only: renders via a document.body portal, which has no server
 // equivalent — skipping SSR avoids a hydration mismatch entirely instead of
 // papering over it with a mounted-after-effect gate.
 const ConsentModal = dynamic(() => import("./ConsentModal"), { ssr: false });
 
-function addDays(dateStr: string, days: number): string {
-  const d = new Date(dateStr + "T12:00:00");
-  d.setDate(d.getDate() + days);
-  return d.toISOString().split("T")[0];
-}
-
-function diffDays(fromStr: string, toStr: string): number {
-  const from = new Date(fromStr + "T12:00:00");
-  const to   = new Date(toStr + "T12:00:00");
-  return Math.round((to.getTime() - from.getTime()) / 86400000);
-}
-
-function diffMinutes(fromStr: string, toStr: string): number {
-  const [fh, fm] = fromStr.split(":").map(Number);
-  const [th, tm] = toStr.split(":").map(Number);
-  return (th * 60 + tm) - (fh * 60 + fm);
-}
-
 const TIME_SLOTS = generateTimeSlots();
+const ALL_PLANS: PlanChoice[] = [...(Object.keys(PLAN_FACTS) as PlanKey[]), "custom"];
 
 // A sane upper bound on bag count — enough for a tour group, low enough that a
-// fat-finger "22" for "2" can't ring up a runaway total or a 100-option
-// oversized selector. Over this, customers are told to message us.
+// fat-finger "22" for "2" can't ring up a runaway total. Over this, customers
+// are told to message us.
 const MAX_BAGS = 20;
 
 // localStorage key for the auto-saved draft (see the restore/save effects).
-const DRAFT_KEY = "stow-booking-draft-v1";
+// Bump it whenever the saved shape changes meaning, so an old draft is never
+// restored into a form that reads it differently.
+const DRAFT_KEY = "stow-booking-draft-v3";
+const LEGACY_DRAFT_KEYS = ["stow-booking-draft-v1", "stow-booking-draft-v2"];
+
+// English labels for the two network boundaries (WhatsApp + Lark), which stay
+// English regardless of site locale (i18n plan, decision #4).
+const PERIOD_UNIT_EN = { mini: "week", strand: "month", longstay: "4 months" } as const;
+const PERIOD_LABEL_EN = { daily: "1 day", mini: "1 week", strand: "1 month", longstay: "4 months" } as const;
+
+// "STW-YYMMDD-1234": the drop-off day plus a random 4-digit suffix. A plain
+// function outside the component — it is only ever called from the submit
+// handler, and keeping the randomness out of the component body keeps the
+// component itself pure.
+function generateRef(dropOffDate: string): string {
+  const d = dropOffDate.replace(/-/g, "").slice(2); // YYMMDD
+  const n = Math.floor(Math.random() * 9000 + 1000);
+  return `STW-${d}-${n}`;
+}
+
+// Best guess at the visitor's country for the phone box: the region in their
+// browser language ("en-US" → US), else the page language, else Vietnam.
+function guessCountryIso(locale: AppLocale): string {
+  const region = typeof navigator !== "undefined" ? navigator.language?.split("-")[1]?.toUpperCase() : undefined;
+  if (region && COUNTRY_BY_ISO[region]) return region;
+  return locale === "ko" ? "KR" : locale === "ja" ? "JP" : DEFAULT_COUNTRY_ISO;
+}
 
 // The visitor's LOCAL calendar date, "YYYY-MM-DD". Deliberately not
 // toISOString() (that's UTC and lands a day early for UTC+7 between midnight
@@ -75,18 +93,29 @@ function useIsClient(): boolean {
   return useSyncExternalStore(() => () => {}, () => true, () => false);
 }
 
-const LABEL = "block text-[10px] font-bold uppercase tracking-[0.12em] text-white/30 mb-1.5";
-const INPUT  = "w-full appearance-none bg-white/[0.07] border border-white/[0.12] rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/25 focus:outline-none focus:border-[#E8742C]/70 transition-colors";
-// iOS Safari draws its own light native chrome over <select> unless appearance is
-// reset, which also removes the native arrow — SELECT adds room + a custom one back.
-const SELECT = `${INPUT} pr-[32px]`;
+const LABEL_TEXT = "text-[10px] font-bold uppercase tracking-[0.12em] text-white/30";
+const LABEL = `block ${LABEL_TEXT} mb-1.5`;
+// scroll-mt: when a failed submit focuses the first bad field, keep it clear of
+// the fixed 72px nav instead of hiding it underneath.
+const INPUT  = "w-full appearance-none bg-white/[0.07] border border-white/[0.12] rounded-lg px-3 py-2 text-[13px] text-white placeholder-white/25 focus:outline-none focus:border-[#E8742C]/70 focus-visible:border-[#E8742C]/70 data-[popup-open]:border-[#E8742C]/70 transition-colors scroll-mt-[96px]";
 const ERR    = "border-red-400/70";
 const EMAIL_RE = /^\S+@\S+\.\S+$/;
+const SECTION_TITLE = "text-[11px] font-bold uppercase tracking-[0.12em] text-white/55 mb-2.5";
+const NOTE = "text-[11px] text-white/35";
+const NOTE_ERR = "text-[11px] text-red-400/80";
+
+// Every field in the order it appears — a failed submit focuses the first one.
+const FIELD_ORDER = ["date", "time", "pickupDate", "pickupTime", "pax", "name", "email", "phone", "consent"] as const;
+// Drop-off and pick-up are one control each, so a date error and a time error
+// on the same one both focus it.
+const FOCUS_ID: Record<string, string> = { date: "dropoff", time: "dropoff", pickupDate: "pickup", pickupTime: "pickup" };
 
 type EmailStatus = "idle" | "sending" | "sent" | "error";
 
 export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["booking"]; locale: AppLocale }) {
   const isClient = useIsClient();
+  const uid = useId();
+  const fid = (k: string) => `${uid}-${k}`;
   const nowClock = new Date();
   // SSR + the first client render use the UTC date (deterministic → hydration
   // matches); after mount we switch to the visitor's LOCAL date so "earliest
@@ -94,30 +123,30 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   const today = isClient ? localDateStr(nowClock) : nowClock.toISOString().split("T")[0];
   const nowMinutes = nowClock.getHours() * 60 + nowClock.getMinutes();
 
-  // Evidence trail for the scrollwrap consent + the daily/hourly period
-  // summaries — locale-aware via src/lib/format.ts, defaulting to English
-  // formatting until a real locale is passed in from a translated page.
-  const fmtDateTime = (d: Date) => formatDateTime(d, locale);
-  const fmtShort = (dateStr: string) => formatShortDate(dateStr, locale);
-  const fmtLong = (dateStr: string) => formatLongDate(dateStr, locale);
-
-  // Flexible is both the first tab and the pre-selected one (client
-  // request, 2026-08-15 — it used to open on flatrate/strand).
-  const [lane, setLane]             = useState<Lane>("flexible");
-  const [plan, setPlan]             = useState<PlanKey>("daily");
-  const [oversized, setOversized]   = useState(false);
-  // How many of the bags are oversized. Only relevant (and only shown) when
-  // `oversized` is on and there's more than one bag — the surcharge is now
-  // per oversized bag, not a single flat add-on (client fix, 2026-09-15).
-  const [oversizedBags, setOversizedBags] = useState(1);
+  // The lane is not a separate choice: it follows from the plan picked in the
+  // dropdown (Flexible: By the Hour / By the Day; Flat Rate: Mini / Strand /
+  // Long Stay; Custom: any dates, priced as the cheapest mix of those).
+  // There is NO default plan (owner request, 2026-09-19): it starts empty, and
+  // everything below the dropdown is locked until one is chosen.
+  const [chosenPlan, setChosenPlan] = useState<PlanChoice | null>(null);
+  const [planOpen, setPlanOpen]     = useState(false);
+  const locked = chosenPlan === null;
+  // While locked `plan` reads as Custom (no limit on dates, no price), so the
+  // checks below have something to work with and never decide anything for a
+  // plan nobody chose.
+  const plan: PlanChoice = chosenPlan ?? "custom";
+  // How many bags are oversized (0 = none). Kept ≤ bags by changePax().
+  const [oversizedInput, setOversizedInput] = useState(0);
   const [date, setDate]             = useState("");
   const [time, setTime]             = useState("");
   const [pax, setPax]               = useState(1);
-  const [paxInput, setPaxInput]     = useState("1");
   const [pickupDate, setPickupDate] = useState("");
   const [pickupTime, setPickupTime] = useState("");
   const [name, setName]             = useState("");
-  const [phone, setPhone]           = useState("");
+  // WhatsApp number = a country picker + the local number, kept apart so the
+  // picker can default to the visitor's country and a pasted "+84 …" splits.
+  const [phoneIso, setPhoneIso]       = useState(DEFAULT_COUNTRY_ISO);
+  const [phoneNumber, setPhoneNumber] = useState("");
   const [email, setEmail]           = useState("");
   const [consent, setConsent]       = useState(false);
   const [consentAt, setConsentAt]   = useState<Date | null>(null);
@@ -136,21 +165,63 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   // a WhatsApp open. A ref flips immediately.
   const submittingRef = useRef(false);
 
-  function switchLane(l: Lane) {
-    setLane(l);
-    setPlan(l === "flexible" ? "daily" : "strand");
-    setPickupDate("");
-    setPickupTime("");
+  function clearErr(...keys: string[]) {
+    setErrors(p => { const n = { ...p }; keys.forEach(k => delete n[k]); return n; });
   }
 
-  function switchPlan(pk: PlanKey) {
-    setPlan(pk);
-    setPickupDate("");
-    setPickupTime("");
+  // ── Dates: drop-off first, then a pick-up the plan allows ──
+  //
+  // The drop-off decides everything about the pick-up (a plan's window starts
+  // at the drop-off moment), so the pick-up field waits for it. By the Hour is
+  // always same-day, so its pick-up date isn't chosen: it follows the drop-off
+  // date and the field shows the date locked.
+  const dropOff: Stamp | null = date && time ? { date, time } : null;
+  const pickupDay = plan === "hourly" ? date : pickupDate;
+  const pickUp: Stamp | null = pickupDay && pickupTime ? { date: pickupDay, time: pickupTime } : null;
+
+  /* Same-day drop-off must not offer times that have already passed today (no
+     more booking "today at 09:00" at 3pm). Gated on isClient so SSR and the
+     first client render still emit the full list and hydration matches. */
+  const dropoffSlotsFor = (iso: string) =>
+    isClient && iso === today ? TIME_SLOTS.filter((t) => slotToMinutes(t) >= nowMinutes) : TIME_SLOTS;
+  // What the plan allows on a given pick-up date (pricing.ts owns the rule).
+  const pickupSlotsFor = (iso: string) => (dropOff ? pickupSlots(plan, dropOff, iso, TIME_SLOTS) : []);
+  const pickupLimit = dropOff ? latestPickup(plan, dropOff) : null;
+  const pickupMaxDate = dropOff ? (pickupLimit ? pickupLimit.date : addDays(dropOff.date, MAX_CUSTOM_DAYS)) : undefined;
+  const fmtStamp = (s: Stamp) => `${formatWeekdayDate(s.date, locale)} · ${s.time}`;
+
+  // After the plan or the drop-off changes, drop whatever part of the pick-up
+  // is no longer allowed, so a field can never show a stale value. The date
+  // is kept when it is still usable, so only the time has to be picked again.
+  function reconcilePickup(nextPlan: PlanChoice, nextDate: string, nextTime: string) {
+    if (!nextDate || !nextTime) { setPickupDate(""); setPickupTime(""); return; }
+    const drop: Stamp = { date: nextDate, time: nextTime };
+    if (nextPlan === "hourly") {
+      if (pickupTime && !pickupSlots(nextPlan, drop, nextDate, TIME_SLOTS).includes(pickupTime)) setPickupTime("");
+      return;
+    }
+    if (!pickupDate) return;
+    const slots = pickupSlots(nextPlan, drop, pickupDate, TIME_SLOTS);
+    if (slots.length === 0) { setPickupDate(""); setPickupTime(""); }
+    else if (pickupTime && !slots.includes(pickupTime)) setPickupTime("");
   }
 
-  function clearErr(k: string) {
-    setErrors(p => { const n = { ...p }; delete n[k]; return n; });
+  // Switching plan keeps whatever the customer already entered. Only what the
+  // new plan can't accept is dropped (see reconcilePickup).
+  function choosePlan(pk: PlanChoice) {
+    setChosenPlan(pk);
+    // By the Hour has no pick-up date of its own (it is always the drop-off
+    // date), so a pick-up can't carry across it in either direction: leaving
+    // it would show a time with no date, and entering it would silently move
+    // the pick-up to another day. Only a same-day pick-up survives the move
+    // into it; otherwise the customer picks the pick-up again.
+    if ((plan === "hourly") !== (pk === "hourly")) {
+      const keepTime = pk === "hourly" && pickupDate === date && !!dropOff && pickupSlots("hourly", dropOff, date, TIME_SLOTS).includes(pickupTime);
+      setPickupDate("");
+      if (!keepTime) setPickupTime("");
+      return;
+    }
+    reconcilePickup(pk, date, time);
   }
 
   // Restore a saved draft on mount so a reload / accidental navigation
@@ -161,8 +232,15 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   // outside React's synchronous commit — no cascading-render lint, and no
   // hydration mismatch (this runs after hydration regardless).
   useEffect(() => {
+    // Default the phone's country from the visitor's browser; a saved draft
+    // (applied right after, in order) overrides it.
+    Promise.resolve().then(() => setPhoneIso(guessCountryIso(locale)));
     let raw: string | null = null;
-    try { raw = localStorage.getItem(DRAFT_KEY); } catch { return; }
+    try {
+      // Old drafts hold name/phone/email — drop them rather than leave them behind.
+      LEGACY_DRAFT_KEYS.forEach((k) => localStorage.removeItem(k));
+      raw = localStorage.getItem(DRAFT_KEY);
+    } catch { return; }
     if (!raw) return;
     Promise.resolve().then(() => {
       let d: Record<string, unknown>;
@@ -171,168 +249,233 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
       // Ignore stale drafts (>12h) so we never restore a now-past date.
       if (typeof d.savedAt === "number" && Date.now() - d.savedAt > 12 * 3600 * 1000) return;
       const t = localDateStr(new Date());
-      if (d.lane === "flexible" || d.lane === "flatrate") setLane(d.lane);
-      const pool = d.lane === "flatrate" ? FLAT_PLANS : FLEX_PLANS;
-      if (typeof d.plan === "string" && pool.includes(d.plan as PlanKey)) setPlan(d.plan as PlanKey);
-      if (typeof d.oversized === "boolean") setOversized(d.oversized);
-      if (typeof d.oversizedBags === "number" && d.oversizedBags >= 1) setOversizedBags(d.oversizedBags);
+      const savedPlan = typeof d.plan === "string" && ALL_PLANS.includes(d.plan as PlanChoice) ? (d.plan as PlanChoice) : null;
+      if (savedPlan) setChosenPlan(savedPlan);
       // Only restore a still-future drop-off; carry its times only with it.
       if (typeof d.date === "string" && d.date >= t) {
         setDate(d.date);
         if (typeof d.time === "string") setTime(d.time);
-        if (typeof d.pickupDate === "string" && d.pickupDate >= d.date) setPickupDate(d.pickupDate);
-        if (typeof d.pickupTime === "string") setPickupTime(d.pickupTime);
+        // The pick-up comes back only if the saved plan still allows it (the
+        // rules for it changed since older drafts were written).
+        if (savedPlan && typeof d.time === "string" && typeof d.pickupTime === "string") {
+          const pickDay = savedPlan === "hourly" ? d.date : typeof d.pickupDate === "string" ? d.pickupDate : "";
+          if (pickDay && isPickupValid(savedPlan, { date: d.date, time: d.time }, { date: pickDay, time: d.pickupTime })) {
+            if (savedPlan !== "hourly") setPickupDate(pickDay);
+            setPickupTime(d.pickupTime);
+          }
+        }
       }
       if (typeof d.pax === "number" && d.pax >= 1) {
-        const p = Math.min(MAX_BAGS, d.pax);
-        setPax(p); setPaxInput(String(p));
+        const p = Math.min(MAX_BAGS, Math.floor(d.pax));
+        setPax(p);
+        if (typeof d.oversizedCount === "number" && d.oversizedCount >= 0) setOversizedInput(Math.min(p, Math.floor(d.oversizedCount)));
       }
       if (typeof d.name === "string") setName(d.name);
-      if (typeof d.phone === "string") setPhone(d.phone);
+      if (typeof d.phoneIso === "string" && COUNTRY_BY_ISO[d.phoneIso]) setPhoneIso(d.phoneIso);
+      if (typeof d.phoneNumber === "string") setPhoneNumber(d.phoneNumber);
       if (typeof d.email === "string") setEmail(d.email);
     });
-  }, []);
+  }, [locale]);
 
   // Persist the draft on every change. Writes only (no setState), so this is
   // a plain external-system sync; best-effort (private mode / quota throws).
   useEffect(() => {
     try {
       localStorage.setItem(DRAFT_KEY, JSON.stringify({
-        savedAt: Date.now(), lane, plan, oversized, oversizedBags,
-        date, time, pax, pickupDate, pickupTime, name, phone, email,
+        savedAt: Date.now(), plan: chosenPlan, oversizedCount: oversizedInput,
+        date, time, pax, pickupDate, pickupTime, name, phoneIso, phoneNumber, email,
       }));
     } catch { /* best-effort */ }
-  }, [lane, plan, oversized, oversizedBags, date, time, pax, pickupDate, pickupTime, name, phone, email]);
+  }, [chosenPlan, oversizedInput, date, time, pax, pickupDate, pickupTime, name, phoneIso, phoneNumber, email]);
 
-  // Facts (price/lane/surcharge — locale-invariant) vs. display text
-  // (translated, from the dictionary). buildMessage()/sendLarkBooking()
-  // below deliberately use `curFacts.canonicalName`/`canonicalDuration`,
-  // never `curText` — see plans.ts's note on why those two network
-  // boundaries must always stay English regardless of site locale.
-  const curFacts = PLAN_FACTS[plan];
-  // Flat-rate is billed PER PERIOD now (owner decision, 2026-09-16): the plan
-  // price covers one `maxDays` block (Mini = 1 week, Strand = 1 month, Long
-  // Stay = 4 months) and the pick-up date multiplies it. So every flat plan
-  // is uncapped — a longer pick-up simply costs more — and the old tier caps
-  // are gone. `flatPeriods` is the block count between drop-off and pick-up,
-  // rounded up, min 1 (same ceil rule as "By the Day"'s day count).
-  const flatPeriods = lane === "flatrate" && date && pickupDate && curFacts.maxDays
-    ? Math.max(1, Math.ceil(diffDays(date, pickupDate) / curFacts.maxDays))
-    : 1;
-  // English label for the two network boundaries (WhatsApp + Lark), which
-  // stay English regardless of site locale. Long Stay bills in 4-month
-  // blocks, so it reads "2 × 4 months", not a plain month count.
-  const flatDurationEn = plan === "mini"
-    ? `${flatPeriods} week${flatPeriods > 1 ? "s" : ""}`
-    : plan === "strand"
-    ? `${flatPeriods} month${flatPeriods > 1 ? "s" : ""}`
-    : `${flatPeriods} × 4 months`;
-  // The singular period unit, for the English WhatsApp plan line (so it reads
-  // "300.000 ₫ / month / bag", never a stale "flat fee").
-  const flatUnitEn = plan === "mini" ? "week" : plan === "strand" ? "month" : "4 months";
-  // Localized version of the period count, for the on-page total label + summary.
-  const flatPeriodLabel = plan === "mini"
-    ? `${flatPeriods} ${pluralizeWord(flatPeriods, dict.weekUnit)}`
-    : plan === "strand"
-    ? `${flatPeriods} ${pluralizeWord(flatPeriods, dict.monthUnit)}`
-    : `${flatPeriods} × 4 ${pluralizeWord(4, dict.monthUnit)}`;
+  // "+84 905955161": the dial code plus the local digits, with any leading 0
+  // dropped (people type 0905… but WhatsApp wants 905…). Empty until a number
+  // is typed. This string is what the WhatsApp message and Lark record carry.
+  const phoneDigits = phoneNumber.replace(/\D/g, "").replace(/^0+/, "");
+  const phone = phoneDigits ? `${(COUNTRY_BY_ISO[phoneIso] ?? COUNTRY_BY_ISO[DEFAULT_COUNTRY_ISO]).dial} ${phoneDigits}` : "";
 
-  // The number of oversized bags actually billed: 0 when the toggle is off,
-  // otherwise clamped to the total bag count (you can't have more oversized
-  // bags than bags). Because the count selector binds its value to this
-  // derived number, a shrinking bag count clamps the display for free — no
-  // effect syncing raw `oversizedBags` back down. Drives the surcharge, the
-  // help-line math, and the WhatsApp/Lark payloads.
-  const oversizedCount = oversized ? Math.min(Math.max(1, oversizedBags), pax) : 0;
+  // Oversized bags actually billed — never more than the bags themselves
+  // (the count field's max already stops that; this guards restored drafts).
+  const oversizedCount = Math.min(oversizedInput, pax);
 
-  // "By the Day" bills per calendar day between drop-off and pick-up, and
-  // "By the Hour" bills per hour between drop-off and pick-up time — the
-  // customer picks both ends directly instead of choosing a count.
-  const dailyQuantity  = plan === "daily"  && date && pickupDate ? Math.max(1, diffDays(date, pickupDate)) : 1;
-  const hourlyQuantity = plan === "hourly" && time && pickupTime ? Math.max(1, Math.ceil(diffMinutes(time, pickupTime) / 60)) : 1;
-  const effectiveQuantity = plan === "daily" ? dailyQuantity : plan === "hourly" ? hourlyQuantity : 1;
+  // What the stay costs. Every price rule lives in src/lib/pricing.ts (tested
+  // with exact figures): fixed plans, By the Hour's 4-hour cap, Custom's
+  // cheapest mix, and the oversized surcharge per lane and per plan period.
+  // It returns a price only when the dates are complete (a fixed plan also
+  // shows its list price before that).
+  const q = useMemo(
+    () => quote({
+      plan,
+      dropOff: date && time ? { date, time } : null,
+      pickUp: pickupDay && pickupTime ? { date: pickupDay, time: pickupTime } : null,
+      bags: pax,
+      oversizedBags: oversizedCount,
+    }),
+    [plan, date, time, pickupDay, pickupTime, pax, oversizedCount]
+  );
+  const quoted = q.ok ? q : null;
+  const total = quoted?.total ?? 0;
 
-  /* Over the threshold, an hourly booking is charged the daily rate — the
-     rule the form now states in `dict.hourlyCapNotice`. Without this the
-     printed total would contradict that sentence: 5 hours would ring up
-     75,000₫ when the note promises 60,000₫. */
-  const hourlyBillsAsDay = plan === "hourly" && hourlyQuantity > HOURLY_BILLS_AS_DAY_AFTER_HOURS;
+  // Changing the drop-off date keeps everything already chosen unless the new
+  // date makes it impossible: a drop-off time that has passed (when today is
+  // picked) or a pick-up the plan no longer allows.
+  function changeDate(v: string) {
+    setDate(v);
+    clearErr("date", "time", "pickupDate", "pickupTime");
+    const timeOk = !(v === today && time && slotToMinutes(time) < nowMinutes);
+    if (!timeOk) setTime("");
+    reconcilePickup(plan, v, timeOk ? time : "");
+  }
 
-  const total = useMemo(() => {
-    const base = hourlyBillsAsDay
-      ? PLAN_FACTS.daily.price
-      : (plan === "hourly" || plan === "daily") ? curFacts.price * effectiveQuantity : curFacts.price * flatPeriods;
-    // Surcharge is per oversized bag, not a single flat add-on — 2 oversized
-    // bags cost 2× (client fix, 2026-09-15). It's a one-time handling fee,
-    // deliberately NOT multiplied by flat periods.
-    return base * pax + oversizedCount * curFacts.oversizeSurcharge;
-  }, [curFacts, oversizedCount, plan, effectiveQuantity, flatPeriods, pax, hourlyBillsAsDay]);
+  function changeTime(v: string) {
+    setTime(v);
+    clearErr("time", "pickupTime");
+    reconcilePickup(plan, date, v);
+  }
+
+  function changePickupDate(v: string) {
+    setPickupDate(v);
+    clearErr("pickupDate", "pickupTime");
+    // A time picked for another date may not exist on this one.
+    if (dropOff && pickupTime && !pickupSlots(plan, dropOff, v, TIME_SLOTS).includes(pickupTime)) setPickupTime("");
+  }
+
+  function changePickupTime(v: string) {
+    setPickupTime(v);
+    clearErr("pickupTime");
+  }
+
+  function changePax(n: number) {
+    setPax(n);
+    setOversizedInput((o) => Math.min(o, n));
+    clearErr("pax");
+  }
 
   function validate() {
     const e: Record<string, string> = {};
-    if (!date)          e.date    = dict.required;
-    // Drop-off time is now required on every plan. It was optional for
-    // "By the Day" alone, which stopped making sense once that plan
-    // started asking for a pick-up time too — a booking can't have an end
-    // time and no start time.
-    if (!time)          e.time    = dict.required;
-    if (plan === "daily" && !pickupDate) e.pickupDate = dict.required;
-    // Flat-rate pick-up date was previously optional, so the form let you
-    // submit with an empty Pickup (client bug report, 2026-09-15). It's now
-    // required on every flat-rate plan.
-    if (lane === "flatrate" && !pickupDate) e.pickupDate = dict.required;
-    if ((plan === "hourly" || plan === "daily") && !pickupTime) e.pickupTime = dict.required;
-    if (!name.trim())   e.name    = dict.required;
+    if (!date) e.date = dict.required;
+    else if (date < today) e.date = dict.dateInPast;
+    // A time that has since passed (left selected while today's slots aged
+    // out) is no longer in the list, so it reads as "not chosen".
+    if (!time || !dropoffSlotsFor(date).includes(time)) e.time = dict.required;
+    // By the Hour has no pick-up date to fill in — it follows drop-off.
+    if (plan !== "hourly" && !pickupDate) e.pickupDate = dict.required;
+    if (!pickupTime) e.pickupTime = dict.required;
+    else if (dropOff && pickUp && !isPickupValid(plan, dropOff, pickUp)) {
+      e.pickupTime = compareStamps(pickUp, dropOff) <= 0 ? dict.pickupBeforeDropOff : dict.pickupOutsidePlan;
+    }
+    if (!pax || pax < 1) e.pax = dict.required;
+    if (!name.trim()) e.name = dict.required;
+    // Every field is required (owner decision, 2026-09-19) — email included,
+    // which used to be optional on the Flexible lane.
+    if (!email.trim()) e.email = dict.required;
+    else if (!EMAIL_RE.test(email.trim())) e.email = dict.invalidEmail;
     // Phone is the only callback path (WhatsApp handoff uses the business's
-    // own number, not this one), so reject obvious junk — need ≥8 digits.
-    if (!phone.trim())  e.phone   = dict.required;
-    else if (phone.replace(/\D/g, "").length < 8) e.phone = dict.invalidPhone;
-    // Email required on Flat Rate (expats/nomads — higher-value leads worth
-    // reaching), optional on Flexible (a tourist's quick drop shouldn't be
-    // blocked on it). When given, it must still be a valid address.
-    if (lane === "flatrate" && !email.trim()) e.email = dict.required;
-    else if (email.trim() && !EMAIL_RE.test(email.trim())) e.email = dict.invalidEmail;
-    if (!pax || pax < 1) e.pax    = dict.required;
-    if (!consent)       e.consent = dict.required;
+    // own number, not this one), so reject obvious junk. The country code is
+    // picked separately, so this counts the local digits only: 6 to 12 covers
+    // every real number (a Vietnamese mobile is 9).
+    if (!phoneNumber.trim()) e.phone = dict.required;
+    else if (phoneDigits.length < 6 || phoneDigits.length > 12) e.phone = dict.invalidPhone;
+    if (!consent) e.consent = dict.required;
     return e;
   }
 
-  function generateRef() {
-    const d = (date || today).replace(/-/g, "").slice(2); // YYMMDD
-    const n = Math.floor(Math.random() * 9000 + 1000);
-    return `STW-${d}-${n}`;
+  function focusFirstError(errs: Record<string, string>) {
+    const first = FIELD_ORDER.find((k) => errs[k]);
+    if (!first) return;
+    setTimeout(() => document.getElementById(fid(FOCUS_ID[first] ?? first))?.focus(), 0);
+  }
+
+  // ── What goes out over the network (always English, see the note at the top) ──
+
+  // Custom has its own Lane and Plan option in the Lark table. `fallback` is
+  // what to record instead if the table has not got that option yet: the plan
+  // that makes up most of the price. The Duration text spells out the mix either way.
+  function recordPlan(): {
+    lane: "flexible" | "flatrate" | "custom";
+    planName: string;
+    fallback?: { lane: "flexible" | "flatrate"; planName: string };
+  } {
+    if (plan !== "custom") return { lane: PLAN_FACTS[plan].lane, planName: PLAN_FACTS[plan].canonicalName };
+    const pieces = quoted?.pieces ?? [];
+    const main = pieces.reduce((a, b) => (b.count * b.unitPrice > a.count * a.unitPrice ? b : a), pieces[0]);
+    return {
+      lane: "custom",
+      planName: "Custom",
+      fallback: { lane: PLAN_FACTS[main.plan].lane, planName: PLAN_FACTS[main.plan].canonicalName },
+    };
+  }
+
+  function durationEn(): string {
+    if (!quoted) return "";
+    if (quoted.stayHours !== null) {
+      const hours = `${quoted.stayHours} hour${quoted.stayHours > 1 ? "s" : ""}${quoted.hourlyBilledAsDay ? " (billed as 1 day)" : ""}`;
+      return plan === "custom" ? `Custom: ${describePiecesEn(quoted.pieces)} (${hours})` : hours;
+    }
+    if (plan === "custom") return `Custom: ${describePiecesEn(quoted.pieces)} (${quoted.stayDays} day${quoted.stayDays > 1 ? "s" : ""})`;
+    return PERIOD_LABEL_EN[plan as Exclude<PlanKey, "hourly">];
+  }
+
+  // "2× Strand 50.000 ₫": the oversized surcharge, one term per plan in the price.
+  function surchargeTermsEn(q: NonNullable<typeof quoted>) {
+    return q.pieces
+      .map((p) => `${p.plan === "hourly" ? 1 : p.count}× ${PLAN_FACTS[p.plan].canonicalName} ${vnd(PLAN_FACTS[p.plan].oversizeSurcharge)}`)
+      .join(" + ");
+  }
+
+  // The price worked out, one step per line, for the Lark "Price Detail" column
+  // and the group chat: the same steps the customer sees under the total.
+  function priceDetailEn(): string {
+    if (!quoted) return "";
+    const stay = quoted.stayHours !== null
+      ? `Stay: ${quoted.stayHours} hour${quoted.stayHours > 1 ? "s" : ""}${quoted.hourlyBilledAsDay ? " (billed as 1 day)" : ""}`
+      : `Stay: ${quoted.stayDays} day${quoted.stayDays > 1 ? "s" : ""}`;
+    const lines = [
+      stay,
+      `Per bag: ${quoted.pieces.map((p) => `${p.count}× ${PLAN_FACTS[p.plan].canonicalName} (${vnd(p.unitPrice)})`).join(" + ")} = ${vnd(quoted.perBag)}`,
+      `Bags: ${pax} × ${vnd(quoted.perBag)} = ${vnd(quoted.perBag * pax)}`,
+    ];
+    if (oversizedCount > 0) {
+      lines.push(`Oversized: ${oversizedCount} × ${vnd(quoted.surchargePerOversizedBag)} (${surchargeTermsEn(quoted)}) = ${vnd(oversizedCount * quoted.surchargePerOversizedBag)}`);
+    }
+    lines.push(`Total: ${vnd(total)}`);
+    return lines.join("\n");
   }
 
   // Business-facing WhatsApp message — deliberately hardcoded English
   // regardless of site locale (i18n plan decision #4). Staff read this on
   // the business's own WhatsApp number; a translated message they can't
-  // action defeats the point. Uses curFacts.canonicalName/plain English
-  // pluralization, never the (possibly Korean/Chinese) dict/curText.
+  // action defeats the point. Uses canonical plan names, never the dictionary.
   function buildMessage(ref: string) {
-    let periodLine = "";
-    if (plan === "hourly" && date && time && pickupTime) {
-      // The "billed as 1 day" suffix matters to staff: it explains why the
-      // total below is the daily rate and not hours × the hourly rate.
-      periodLine = `⏱ Duration: ${effectiveQuantity} hour${effectiveQuantity > 1 ? "s" : ""} (${time} → ${pickupTime})${hourlyBillsAsDay ? " — billed as 1 day" : ""}`;
-    } else if (plan === "daily" && date && pickupDate) {
-      // Times included since By the Day started collecting a pick-up time —
-      // without them staff can't tell when the customer is coming back.
-      periodLine = `📅 Period: ${formatShortDate(date, "en")}${time ? ` ${time}` : ""} → ${formatShortDate(pickupDate, "en")}${pickupTime ? ` ${pickupTime}` : ""} (${effectiveQuantity} day${effectiveQuantity > 1 ? "s" : ""})`;
-    } else if (lane === "flatrate" && date && pickupDate) {
-      // Period count included so staff can see the price scales with the
-      // pick-up date (owner decision 2026-09-16) — not a single flat fee.
-      periodLine = `📅 Period: ${formatShortDate(date, "en")} → ${formatShortDate(pickupDate, "en")} (${flatDurationEn})`;
-    }
+    if (!quoted) return "";
+    const f = plan === "custom" ? null : PLAN_FACTS[plan];
+    const unit = plan === "mini" || plan === "strand" || plan === "longstay" ? PERIOD_UNIT_EN[plan] : null;
+    const planLine = f
+      ? `${f.canonicalName} — ${vnd(f.price)} ${f.unit === "flat" ? `/ ${unit}` : f.unit} / bag`
+      : "Custom — cheapest mix of our plans for these dates";
+    const priceLine = `🧾 Price per bag: ${quoted.pieces.map((p) => `${p.count}× ${PLAN_FACTS[p.plan].canonicalName} (${vnd(p.unitPrice)})`).join(" + ")} = ${vnd(quoted.perBag)}`;
+    // The oversized surcharge depends on the lane of each plan in the price
+    // (Flexible 30,000, Flat Rate 50,000, repeated per period), so spell out
+    // the sum for staff.
+    const surchargeDetail = surchargeTermsEn(quoted);
+    const oversizedLine = oversizedCount > 0
+      ? `📏 Item: Oversized ×${oversizedCount} (+${vnd(oversizedCount * quoted.surchargePerOversizedBag)} = ${oversizedCount} × ${vnd(quoted.surchargePerOversizedBag)}: ${surchargeDetail})`
+      : `📏 Item: Standard size`;
+    const stayLine = quoted.stayHours !== null
+      ? `⏱ Duration: ${quoted.stayHours} hour${quoted.stayHours > 1 ? "s" : ""}${quoted.hourlyBilledAsDay ? " — billed as 1 day" : ""}`
+      : `📅 Stay: ${quoted.stayDays} day${quoted.stayDays > 1 ? "s" : ""}`;
 
     return [
       `Hello Stow! 👋 I'd like to book luggage storage.`,
       ``,
       `📋 Ref: ${ref}`,
-      `📦 Plan: ${curFacts.canonicalName} — ${vnd(curFacts.price)}${curFacts.unit === "flat" ? ` / ${flatUnitEn}` : curFacts.unit} / bag`,
+      `📦 Plan: ${planLine}`,
       `🧳 Bags: ${pax}`,
-      oversized ? `📏 Item: Oversized ×${oversizedCount} (+${vnd(oversizedCount * curFacts.oversizeSurcharge)})` : `📏 Item: Standard size`,
-      `📅 Drop-off: ${date ? formatLongDate(date, "en") : "TBD"}${time ? ` at ${time}` : ""}`,
-      periodLine,
+      priceLine,
+      oversizedLine,
+      `📅 Drop-off: ${formatLongDate(date, "en")} at ${time}`,
+      `📅 Pick-up: ${formatLongDate(pickupDay, "en")} at ${pickupTime}`,
+      stayLine,
       `💰 Total: ${vnd(total)}`,
       ``,
       `👤 Name: ${name}`,
@@ -345,14 +488,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   }
 
   function sendLarkBooking(ref: string) {
-    const isHourly = plan === "hourly";
-    // English regardless of locale — same reasoning as buildMessage() above,
-    // this crosses into the ops team's Lark Base table.
-    const duration = isHourly
-      ? `${hourlyQuantity} hour${hourlyQuantity > 1 ? "s" : ""}${hourlyBillsAsDay ? " (billed as 1 day)" : ""}`
-      : plan === "daily"
-      ? `${dailyQuantity} day${dailyQuantity > 1 ? "s" : ""}`
-      : flatDurationEn;
+    const { lane, planName, fallback } = recordPlan();
     // Fire-and-forget — the WhatsApp handoff below is the customer's actual
     // confirmation path, so a Lark hiccup must never block or delay it.
     fetch("/api/lark/booking", {
@@ -362,22 +498,23 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         source: "Booking Form",
         reference: ref,
         lane,
-        planName: curFacts.canonicalName,
-        oversized,
+        planName,
+        fallback,
+        oversized: oversizedCount > 0,
         oversizedCount,
         dropOffDate: date,
         dropOffTime: time,
-        duration,
-        // Hourly has no separate pickup-date input (same-day, per the app's
-        // own quantity math) — daily/flatrate use their explicit date field.
-        pickupDate: isHourly ? date : pickupDate,
-        // Hourly and daily both collect one; flatrate doesn't, so it stays undefined.
-        pickupTime: pickupTime || undefined,
+        duration: durationEn(),
+        // Hourly follows the drop-off date; every other plan uses its own.
+        pickupDate: pickupDay,
+        pickupTime,
         name: name.trim(),
-        phone: phone.trim(),
+        // International format with no spaces ("+84905955161"), as the Lark table keeps it.
+        phone: phone.replace(/\s+/g, ""),
         email: email.trim(),
         pax,
         total,
+        priceDetail: priceDetailEn(),
       }),
     }).catch(() => {});
   }
@@ -390,6 +527,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     setEmailStatus("sending");
     setEmailError("");
     try {
+      const { lane } = recordPlan();
       const res = await fetch("/api/send-agreement", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -397,8 +535,8 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
           to: email.trim(),
           name: name.trim(),
           ref,
-          planName: curFacts.canonicalName,
-          planDuration: curFacts.canonicalDuration,
+          planName: plan === "custom" ? "Custom" : PLAN_FACTS[plan].canonicalName,
+          planDuration: plan === "custom" ? durationEn() : PLAN_FACTS[plan].canonicalDuration,
           lane,
           consentAt: consentAt ? consentAt.toISOString() : null,
           legalVersion: LEGAL_EFFECTIVE,
@@ -419,13 +557,13 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     e.preventDefault();
     // Guard a double-tap in the 600ms before the button disables + the
     // success screen mounts — otherwise it fires two WhatsApp opens.
-    if (submittingRef.current) return;
+    if (submittingRef.current || locked) return;
     const errs = validate();
-    if (Object.keys(errs).length) { setErrors(errs); return; }
+    if (Object.keys(errs).length || !quoted?.complete) { setErrors(errs); focusFirstError(errs); return; }
     setErrors({});
     submittingRef.current = true;
     setLoading(true);
-    const ref = generateRef();
+    const ref = generateRef(date || today);
     setBookingRef(ref);
     sendLarkBooking(ref);
     // Kept in state so the success screen can offer a manual re-open — the
@@ -439,60 +577,70 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     setTimeout(() => { submittingRef.current = false; setLoading(false); setSubmitted(true); }, 600);
   }
 
-  const plans = lane === "flexible" ? FLEX_PLANS : FLAT_PLANS;
+  // "Book again" starts a fresh booking. Contact details are kept (same
+  // person, likely the same phone), but the plan, dates, bags and the consent
+  // are cleared — consent must be re-given so the next booking carries its
+  // own read-in-full timestamp.
+  function bookAgain() {
+    setSubmitted(false);
+    setChosenPlan(null);
+    setDate(""); setTime(""); setPickupDate(""); setPickupTime("");
+    setPax(1); setOversizedInput(0);
+    setConsent(false); setConsentAt(null);
+    setErrors({});
+  }
 
-  /* Pick-up slots. Hourly is always same-day, so only later slots are
-     valid. Daily normally spans days — but the date input permits
-     same-day pick-up, and on that one day the same "must be later than
-     drop-off" rule applies. */
-  const pickupSameDay = plan === "hourly" || (!!date && pickupDate === date);
-  const pickupSlots = pickupSameDay && time
-    ? TIME_SLOTS.filter((t) => t > time)
-    : TIME_SLOTS;
-
-  /* Same-day drop-off must not offer times that have already passed today
-     (no more booking "today at 09:00" at 3pm). Gated on isClient so SSR and
-     the first client render still emit the full list and hydration matches. */
-  const dropoffIsToday = isClient && !!date && date === today;
-  const dropoffSlots = dropoffIsToday ? TIME_SLOTS.filter((t) => slotToMinutes(t) >= nowMinutes) : TIME_SLOTS;
-  const noSlotsToday = dropoffIsToday && dropoffSlots.length === 0;
-  // A late drop-off can leave no valid same-day pick-up slot — surface it
-  // instead of showing an empty dropdown the customer can't get past.
-  const noLaterPickupSlots = pickupSameDay && !!time && pickupSlots.length === 0;
-
-  /* Rendered in two different places depending on plan (see Row 2 below),
-     so it's defined once here rather than duplicated. */
-  const bagsField = (
-    <div className="min-w-0">
-      <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-        {dict.bagsLabel}{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
-      </label>
-      <input
-        type="text"
-        inputMode="numeric"
-        pattern="[0-9]*"
-        value={paxInput}
-        onChange={(e) => {
-          const digits = e.target.value.replace(/\D/g, "");
-          // Clamp the visible value too, not just `pax`, so the box never
-          // shows a number different from what's being charged (and "0"
-          // snaps to "1" immediately instead of on blur).
-          const n = digits ? Math.min(MAX_BAGS, Math.max(1, parseInt(digits, 10))) : 0;
-          setPaxInput(digits ? String(n) : "");
-          if (digits) setPax(n);
-          clearErr("pax");
-        }}
-        onBlur={() => {
-          const n = paxInput ? Math.min(MAX_BAGS, Math.max(1, parseInt(paxInput, 10))) : 1;
-          setPaxInput(String(n));
-          setPax(n);
-        }}
-        onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
-        className={`${INPUT} ${errors.pax ? ERR : ""}`}
-        style={{ fontFamily: "var(--font-inter)" }}
-      />
-    </div>
+  // A short message (Required) sits beside its label; anything longer (a
+  // date-order or past-date problem) goes on its own line under the field, so
+  // it can't wrap a narrow column's label into misaligned inputs.
+  const inlineErr = (k: string, always = false) =>
+    errors[k] && (always || errors[k] === dict.required) ? errors[k] : null;
+  const rowErr = (...keys: string[]) =>
+    keys.map((k) => errors[k]).find((m) => m && m !== dict.required);
+  const fieldLabel = (k: string, text: string, always = false) => (
+    <label htmlFor={fid(k)} className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
+      {text}
+      {inlineErr(k, always) && <span className="text-red-400/80 normal-case tracking-normal ml-1">({inlineErr(k, always)})</span>}
+    </label>
   );
+  // The label of a drop-off / pick-up field. It is a real <label> for the
+  // field's button, so the button is announced as "Drop-off date, <value>".
+  // No "(Required)" here: the two labels sit side by side in narrow columns and
+  // must each stay on one line, so problems are listed under the row instead.
+  const groupLabel = (k: "dropoff" | "pickup", text: string, Icon: typeof LogIn) => (
+    <label
+      id={fid(`${k}-label`)}
+      htmlFor={fid(k)}
+      className={`mb-1.5 flex items-center gap-1.5 ${LABEL_TEXT}`}
+      style={{ fontFamily: "var(--font-poppins)" }}
+    >
+      <Icon size={12} className="flex-shrink-0 text-[#E8742C]" aria-hidden />
+      <span className="truncate">{text}</span>
+    </label>
+  );
+
+  // Problems with the drop-off / pick-up row, named after the field they are
+  // about, e.g. "Pick-up date (Required)".
+  const dateRowMessages = [
+    (errors.date === dict.required || errors.time === dict.required) && `${dict.dropOffDateLabel} (${dict.required})`,
+    rowErr("date", "time"),
+    (errors.pickupDate === dict.required || errors.pickupTime === dict.required) && `${dict.pickupDateLabel} (${dict.required})`,
+    rowErr("pickupDate", "pickupTime"),
+  ].filter((m): m is string => typeof m === "string" && m.length > 0);
+
+  // The label beside the total has to match the number: "Total (46 days)", not a stale plan name.
+  const dayLabel = (n: number) => `${dict.totalPrefix}${n} ${pluralizeWord(n, dict.dayUnit)}${dict.totalSuffix}`;
+  const totalLabel = !quoted
+    ? dict.totalLabel
+    : quoted.stayHours !== null
+    ? quoted.hourlyBilledAsDay
+      ? dayLabel(1)
+      : `${dict.totalPrefix}${quoted.stayHours} ${pluralizeWord(quoted.stayHours, dict.hourUnit)}${dict.totalSuffix}`
+    : plan === "custom"
+    ? dayLabel(quoted.stayDays)
+    : plan === "daily"
+    ? dayLabel(1)
+    : dict.totalFlatFee;
 
   /* ── Success ── */
   if (submitted) {
@@ -579,7 +727,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
             {dict.backToHome}
           </Link>
           <button
-            onClick={() => setSubmitted(false)}
+            onClick={bookAgain}
             className="text-[13px] border border-white/12 text-white/45 px-5 py-2.5 rounded-lg hover:text-white/80 transition-colors"
             style={{ fontFamily: "var(--font-inter)" }}
           >
@@ -593,476 +741,219 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
   /* ── Form ── */
   return (
     /* pt-5, not pt-3: the panel's header strip above this was removed, so
-       the first field would otherwise crowd the rounded top edge. */
+       the first row would otherwise crowd the rounded top edge. */
     <form onSubmit={handleSubmit} noValidate className="px-5 pb-5 pt-5 flex flex-col gap-3.5">
 
-      {/* Lane */}
+      {/* Plan — one dropdown, grouped by lane, no default */}
       <div>
-        <p className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>{dict.laneLabel}</p>
-        <div className="flex p-[3px] bg-white/[0.06] rounded-lg border border-white/[0.08] gap-[3px]">
-          {(["flexible", "flatrate"] as Lane[]).map((l) => (
-            <button
-              key={l}
-              type="button"
-              onClick={() => switchLane(l)}
-              className={`flex-1 py-1.5 rounded-md text-[12px] font-semibold transition-all leading-none ${
-                lane === l ? "bg-white text-[#0D1829] shadow-sm" : "text-white/35 hover:text-white/60"
-              }`}
-              style={{ fontFamily: "var(--font-poppins)" }}
-            >
-              {l === "flexible" ? dict.laneFlexible : dict.laneFlatRate}
-            </button>
-          ))}
-        </div>
-        <p className="text-[11px] text-white/30 mt-1.5" style={{ fontFamily: "var(--font-inter)" }}>
-          {lane === "flexible" ? dict.laneFlexibleSub : dict.laneFlatRateSub}
-        </p>
+        <PlanSelect
+          value={chosenPlan}
+          onChange={choosePlan}
+          open={planOpen}
+          onOpenChange={setPlanOpen}
+          dict={dict}
+          className={INPUT}
+        />
+        {locked && <p className="mt-2 text-[11.5px] font-medium text-white/70" style={{ fontFamily: "var(--font-inter)" }}>{dict.planFirstHint}</p>}
       </div>
 
-      {/* Plan */}
-      <div>
-        <p className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>{dict.planLabel}</p>
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={lane}
-            className={`grid gap-1.5 ${plans.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-          >
-            {plans.map((pk) => {
-              const facts = PLAN_FACTS[pk];
-              const sel = plan === pk;
-              return (
-                <button
-                  key={pk}
-                  type="button"
-                  onClick={() => switchPlan(pk)}
-                  className={`relative flex flex-col items-start px-3 py-2 rounded-lg border transition-all text-left ${
-                    sel ? "bg-[#E8742C] border-[#E8742C]" : "bg-white/[0.05] border-white/[0.10] hover:border-white/20"
-                  }`}
-                >
-                  {facts.popular && (
-                    <span
-                      className="absolute -top-1.5 right-2 bg-white text-[#E8742C] text-[8px] font-bold px-1.5 rounded-full leading-[1.6]"
-                      style={{ fontFamily: "var(--font-poppins)" }}
-                    >
-                      {dict.planTopBadge}
-                    </span>
-                  )}
-                  <p className="text-[12px] font-semibold text-white leading-snug" style={{ fontFamily: "var(--font-poppins)" }}>
-                    {dict.planNames[pk]}
-                  </p>
-                  <p
-                    className={`text-[11px] font-bold mt-0.5 ${sel ? "text-white/70" : "text-[#E8742C]"}`}
-                    style={{ fontFamily: "var(--font-poppins)" }}
-                  >
-                    {vnd(facts.price)}<span className="font-medium opacity-70"> / {dict.bagUnit.singular}</span>
-                  </p>
-                  <p
-                    className={`text-[10px] mt-0.5 ${sel ? "text-white/60" : "text-white/35"}`}
-                    style={{ fontFamily: "var(--font-inter)" }}
-                  >
-                    {dict.planDurations[pk]}
-                  </p>
-                </button>
-              );
-            })}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+      {/* Everything below waits for a plan. A disabled <fieldset> locks every
+          field, button and picker inside it in one go (and announces them as
+          disabled), and the cover on top turns a tap anywhere on the dimmed
+          form into "open the plan dropdown", so a visitor is never stuck
+          wondering why nothing responds. */}
+      <div className="relative">
+      <fieldset
+        disabled={locked}
+        className={`m-0 flex min-w-0 flex-col gap-3.5 border-0 p-0 transition-opacity duration-200 ${locked ? "opacity-40" : ""}`}
+      >
 
-      {/* Notices for flexible plans */}
-      {lane === "flexible" && (
-        <div className="-mt-1 flex flex-col gap-1">
-          <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
-            {dict.laptopNotice}
-          </p>
-          {/* Shown on both flexible plans, not just hourly — it's the fact
-              that decides which of the two to pick, so hiding it until
-              hourly is selected would be too late to be useful. */}
-          <p
-            className={`text-[11px] ${hourlyBillsAsDay ? "text-[#E8742C]" : "text-white/35"}`}
-            style={{ fontFamily: "var(--font-inter)" }}
-          >
-            {dict.hourlyCapNotice}
-          </p>
-        </div>
-      )}
-
-      {/* Date / period fields — adapt per plan */}
-      <AnimatePresence mode="wait">
-        {lane === "flexible" ? (
-          <motion.div
-            key="flexible-dates"
-            className="flex flex-col gap-2"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-          >
-            {/* Row 1: Date + Time */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="min-w-0">
-                <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  {dict.dropOffDateLabel}{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
-                </label>
-                <input
-                  type="date"
-                  value={date}
-                  min={today}
-                  onChange={(e) => { setDate(e.target.value); setPickupDate(""); clearErr("date"); }}
-                  className={`${INPUT} ${errors.date ? ERR : ""}`}
-                  style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-                />
-              </div>
-              <div className="min-w-0">
-                <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  {dict.timeLabel}{errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
-                </label>
-                <div className="relative">
-                  <select
-                    value={time}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setTime(v);
-                      // Only invalidates the pick-up time when both fall on
-                      // the same day; a later-date pick-up is unaffected.
-                      const sameDay = plan === "hourly" || (!!date && pickupDate === date);
-                      if (sameDay && pickupTime && pickupTime <= v) setPickupTime("");
-                      clearErr("time");
-                    }}
-                    className={`${SELECT} ${errors.time ? ERR : ""}`}
-                    style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-                  >
-                    <option value="">{dict.selectPlaceholder}</option>
-                    {dropoffSlots.map((t) => <option key={t} value={t}>{t}</option>)}
-                  </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                </div>
-              </div>
-            </div>
-
-            {noSlotsToday && (
-              <p className="text-[11px] text-[#E8742C]" style={{ fontFamily: "var(--font-inter)" }}>
-                {dict.noSlotsTodayNotice}
-              </p>
-            )}
-
-            {/* Row 2 — the pick-up pair.
-                Hourly is same-day, so it needs only a time and Bags fits
-                alongside. Daily needs both a pick-up date and a pick-up
-                time (client request 2026-08-15: staff had no idea what
-                time a By-the-Day customer was coming back), so those take
-                the row and Bags drops to its own row below. */}
-            <div className="grid grid-cols-2 gap-2">
-              <div className="min-w-0">
-                <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                  {plan === "hourly"
-                    ? <>{dict.pickupTimeLabel}{errors.pickupTime && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupTime})</span>}</>
-                    : <>{dict.pickupDateLabel}{errors.pickupDate && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupDate})</span>}</>}
-                </label>
-                {plan === "hourly" ? (
-                  <div className="relative">
-                    <select
-                      value={pickupTime}
-                      onChange={(e) => { setPickupTime(e.target.value); clearErr("pickupTime"); }}
-                      className={`${SELECT} ${errors.pickupTime ? ERR : ""}`}
-                      style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-                    >
-                      <option value="">{dict.selectPlaceholder}</option>
-                      {pickupSlots.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                  </div>
-                ) : (
-                  <input
-                    type="date"
-                    value={pickupDate}
-                    min={date || today}
-                    max={date ? addDays(date, 30) : undefined}
-                    onChange={(e) => {
-                      const v = e.target.value;
-                      setPickupDate(v);
-                      // Same-day pick-up must still be after drop-off.
-                      if (v === date && time && pickupTime && pickupTime <= time) setPickupTime("");
-                      clearErr("pickupDate");
-                    }}
-                    className={`${INPUT} ${errors.pickupDate ? ERR : ""}`}
-                    style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-                  />
-                )}
-              </div>
-
-              {plan === "daily" ? (
-                <div className="min-w-0">
-                  <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                    {dict.pickupTimeLabel}{errors.pickupTime && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupTime})</span>}
-                  </label>
-                  <div className="relative">
-                    <select
-                      value={pickupTime}
-                      onChange={(e) => { setPickupTime(e.target.value); clearErr("pickupTime"); }}
-                      className={`${SELECT} ${errors.pickupTime ? ERR : ""}`}
-                      style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-                    >
-                      <option value="">{dict.selectPlaceholder}</option>
-                      {pickupSlots.map((t) => <option key={t} value={t}>{t}</option>)}
-                    </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-                  </div>
-                </div>
-              ) : (
-                bagsField
-              )}
-            </div>
-
-            {noLaterPickupSlots && (
-              <p className="text-[11px] text-[#E8742C]" style={{ fontFamily: "var(--font-inter)" }}>
-                {dict.noLaterSlotsNotice}
-              </p>
-            )}
-
-            {/* Bags, when the pick-up pair above took the whole row. */}
-            {plan === "daily" && (
-              <div className="grid grid-cols-2 gap-2">{bagsField}</div>
-            )}
-            <p className="text-[10.5px] text-white/25 -mt-0.5" style={{ fontFamily: "var(--font-inter)" }}>
-              {dict.bagsHelp}
-            </p>
-
-            {plan === "daily" && date && pickupDate && (
-              <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
-                <span className="text-white font-semibold">{dailyQuantity} {pluralizeWord(dailyQuantity, dict.dayUnit)}</span> · {fmtShort(date)}{time && ` ${time}`} → {fmtShort(pickupDate)}{pickupTime && ` ${pickupTime}`}
-              </p>
-            )}
-            {plan === "hourly" && time && pickupTime && (
-              <p className="text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
-                <span className="text-white font-semibold">{hourlyQuantity} {pluralizeWord(hourlyQuantity, dict.hourUnit)}</span> · {time} → {pickupTime}
-              </p>
-            )}
-          </motion.div>
-        ) : (
-          <motion.div
-            key="flatrate-dates"
-            className="grid grid-cols-2 lg:grid-cols-3 gap-2"
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-          >
-            <div className="min-w-0">
-              <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                {dict.dropOffLabel}{errors.date && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.date})</span>}
-              </label>
-              <input
-                type="date"
-                value={date}
-                min={today}
-                onChange={(e) => { setDate(e.target.value); setPickupDate(""); clearErr("date"); }}
-                className={`${INPUT} ${errors.date ? ERR : ""}`}
-                style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-              />
-            </div>
-            <div className="min-w-0">
-              <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                {dict.bringAtLabel}{errors.time && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.time})</span>}
-              </label>
-              <div className="relative">
-                <select
-                  value={time}
-                  onChange={(e) => { setTime(e.target.value); clearErr("time"); }}
-                  className={`${SELECT} ${errors.time ? ERR : ""}`}
-                  style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-                >
-                  <option value="">{dict.selectPlaceholder}</option>
-                  {dropoffSlots.map((t) => <option key={t} value={t}>{t}</option>)}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-white/40" />
-              </div>
-            </div>
-            <div className="col-span-2 lg:col-span-1 min-w-0">
-              <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-                {dict.pickupLabel}{errors.pickupDate && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pickupDate})</span>}
-              </label>
-              <input
-                type="date"
-                value={pickupDate}
-                min={date || today}
-                onChange={(e) => { setPickupDate(e.target.value); clearErr("pickupDate"); }}
-                className={`${INPUT} ${errors.pickupDate ? ERR : ""}`}
-                style={{ fontFamily: "var(--font-inter)", colorScheme: "dark" }}
-              />
-            </div>
-            {/* Period summary — shows the billed block count and the date
-                range so the customer sees the price scaling with the pick-up
-                date (owner decision 2026-09-16). Replaces the old "up to X"
-                cap notices; flat-rate is now uncapped and priced per period. */}
-            {date && pickupDate && (
-              <p className="col-span-2 lg:col-span-3 text-[11px] text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
-                <span className="text-white font-semibold">{flatPeriodLabel}</span> · {fmtShort(date)} → {fmtShort(pickupDate)}
-              </p>
-            )}
-            {noSlotsToday && (
-              <p className="col-span-2 lg:col-span-3 text-[11px] text-[#E8742C]" style={{ fontFamily: "var(--font-inter)" }}>
-                {dict.noSlotsTodayNotice}
-              </p>
-            )}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Name + WhatsApp + Email */}
-      <div className="grid grid-cols-2 lg:grid-cols-3 gap-2">
-        <div>
-          <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            {dict.nameLabel}{errors.name && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.name})</span>}
-          </label>
-          <input
-            type="text"
-            placeholder={dict.namePlaceholder}
-            value={name}
-            autoComplete="name"
-            onChange={(e) => { setName(e.target.value); clearErr("name"); }}
-            className={`${INPUT} ${errors.name ? ERR : ""}`}
-            style={{ fontFamily: "var(--font-inter)" }}
-          />
-        </div>
-        <div>
-          <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            {dict.whatsappLabel}{errors.phone && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.phone})</span>}
-          </label>
-          <input
-            type="tel"
-            placeholder={dict.whatsappPlaceholder}
-            value={phone}
-            autoComplete="tel"
-            onChange={(e) => { setPhone(e.target.value); clearErr("phone"); }}
-            className={`${INPUT} ${errors.phone ? ERR : ""}`}
-            style={{ fontFamily: "var(--font-inter)" }}
-          />
-        </div>
-        <div className="col-span-2 lg:col-span-1">
-          <label className={LABEL} style={{ fontFamily: "var(--font-poppins)" }}>
-            {dict.emailLabel}
-            {lane === "flexible" && !errors.email && <span className="text-white/25 normal-case tracking-normal ml-1 font-medium">· {dict.optionalTag}</span>}
-            {errors.email && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.email})</span>}
-          </label>
-          <input
-            type="email"
-            placeholder={dict.emailPlaceholder}
-            value={email}
-            autoComplete="email"
-            onChange={(e) => { setEmail(e.target.value); clearErr("email"); }}
-            className={`${INPUT} ${errors.email ? ERR : ""}`}
-            style={{ fontFamily: "var(--font-inter)" }}
-          />
-        </div>
-      </div>
-
-      {/* Pax (flat rate only — flexible has it next to "how many days") + Oversized */}
-      <div className={`grid gap-2 items-stretch ${lane === "flatrate" ? "grid-cols-2" : "grid-cols-1"}`}>
-        {lane === "flatrate" && (
-          <div className={`flex items-center justify-between px-3 py-2.5 bg-white/[0.05] rounded-lg border ${errors.pax ? ERR : "border-white/[0.09]"}`}>
-            <div className="min-w-0 mr-3">
-              <label className="text-[12.5px] font-semibold text-white/80 leading-none block" style={{ fontFamily: "var(--font-poppins)" }}>
-                {dict.bagsLabel}{errors.pax && <span className="text-red-400/80 normal-case tracking-normal ml-1">({errors.pax})</span>}
-              </label>
-              <p className="text-[11px] text-white/28 mt-1 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
-                {dict.bagsInlineHelp}
-              </p>
-            </div>
-            <input
-              type="text"
-              inputMode="numeric"
-              pattern="[0-9]*"
-              value={paxInput}
-              onChange={(e) => {
-                const digits = e.target.value.replace(/\D/g, "");
-                setPaxInput(digits);
-                if (digits) setPax(Math.min(MAX_BAGS, Math.max(1, parseInt(digits, 10))));
-                clearErr("pax");
-              }}
-              onBlur={() => {
-                const n = paxInput ? Math.min(MAX_BAGS, Math.max(1, parseInt(paxInput, 10))) : 1;
-                setPaxInput(String(n));
-                setPax(n);
-              }}
-              onFocus={(e) => { const el = e.currentTarget; setTimeout(() => el.select(), 0); }}
-              className="w-[44px] flex-shrink-0 bg-transparent border-0 text-white text-[18px] font-bold text-right focus:outline-none"
-              style={{ fontFamily: "var(--font-poppins)" }}
+      {/* Drop-off first, then pick-up: one date-and-time field each, side by
+          side. The pick-up waits for the drop-off because the plan decides how
+          late it can be (a day, a week, a month, ...; Custom has no limit).
+          By the Hour locks the pick-up date to the drop-off date. */}
+      <div className="flex flex-col gap-1.5">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="min-w-0">
+            {groupLabel("dropoff", dict.dropOffDateLabel, LogIn)}
+            <DateTimeField
+              id={fid("dropoff")}
+              labelId={fid("dropoff-label")}
+              className={`${INPUT} ${errors.date || errors.time ? ERR : ""}`}
+              locale={locale}
+              date={date}
+              time={time}
+              onDateChange={changeDate}
+              onTimeChange={changeTime}
+              minDate={today}
+              today={today}
+              slotsFor={dropoffSlotsFor}
+              emptySlotsNote={dict.noSlotsTodayNotice}
+              dateWord={dict.dateWord}
+              timeWord={dict.timeWord}
+              prevMonthLabel={dict.prevMonthLabel}
+              nextMonthLabel={dict.nextMonthLabel}
             />
           </div>
-        )}
-
-        <div className="flex items-center justify-between px-3 py-2.5 bg-white/[0.05] rounded-lg border border-white/[0.09]">
-          <div className="min-w-0 mr-3">
-            <p className="text-[12.5px] font-semibold text-white/80 leading-none" style={{ fontFamily: "var(--font-poppins)" }}>
-              {dict.oversizedLabel}
-            </p>
-            {/* Off: the descriptor + per-bag rate. On: the actual line-item
-                math (N bags × rate), so the surcharge is visibly counted —
-                the client's report was that it "wasn't calculating". */}
-            <p className="text-[11px] text-white/28 mt-1 leading-snug" style={{ fontFamily: "var(--font-inter)" }}>
-              {oversized
-                ? `${oversizedCount} ${pluralizeWord(oversizedCount, dict.bagUnit)} × ${vnd(curFacts.oversizeSurcharge)}`
-                : `${dict.oversizedHelpPrefix}${vnd(curFacts.oversizeSurcharge)}`}
-            </p>
+          <div className="min-w-0">
+            {groupLabel("pickup", dict.pickupDateLabel, LogOut)}
+            <DateTimeField
+              id={fid("pickup")}
+              labelId={fid("pickup-label")}
+              className={`${INPUT} ${errors.pickupDate || errors.pickupTime ? ERR : ""}`}
+              locale={locale}
+              date={pickupDay}
+              time={pickupTime}
+              onDateChange={changePickupDate}
+              onTimeChange={changePickupTime}
+              minDate={dropOff ? dropOff.date : today}
+              maxDate={pickupMaxDate}
+              today={today}
+              dateLocked={plan === "hourly"}
+              disabled={!dropOff}
+              slotsFor={pickupSlotsFor}
+              emptySlotsNote={dict.noLaterSlotsNotice}
+              popupAlign="end"
+              dateWord={dict.dateWord}
+              timeWord={dict.timeWord}
+              prevMonthLabel={dict.prevMonthLabel}
+              nextMonthLabel={dict.nextMonthLabel}
+            />
           </div>
-          <div className="flex items-center gap-2.5 flex-shrink-0">
-            {/* How many bags are oversized — only meaningful with more than
-                one bag; with a single bag the count can only be 1. */}
-            {oversized && pax > 1 && (
-              <div className="relative">
-                <select
-                  aria-label={dict.oversizedCountLabel}
-                  value={oversizedCount}
-                  onChange={(e) => setOversizedBags(parseInt(e.target.value, 10))}
-                  className="appearance-none bg-white/[0.07] border border-white/[0.14] rounded-md pl-2.5 pr-6 py-1 text-[14px] font-bold text-white focus:outline-none focus:border-[#E8742C]/70"
-                  style={{ fontFamily: "var(--font-poppins)", colorScheme: "dark" }}
-                >
-                  {Array.from({ length: pax }, (_, i) => i + 1).map((n) => (
-                    <option key={n} value={n}>{n}</option>
-                  ))}
-                </select>
-                <ChevronDown className="pointer-events-none absolute right-1.5 top-1/2 -translate-y-1/2 w-3 h-3 text-white/40" />
-              </div>
-            )}
-            <button
-              type="button"
-              onClick={() => setOversized(!oversized)}
-              aria-pressed={oversized}
-              className={`relative w-9 h-[19px] rounded-full transition-colors flex-shrink-0 ${oversized ? "bg-[#E8742C]" : "bg-white/15"}`}
-            >
-              <span
-                className={`absolute top-[2px] w-[15px] h-[15px] rounded-full bg-white shadow-sm transition-all ${
-                  oversized ? "left-[calc(100%_-_17px)]" : "left-[2px]"
-                }`}
-              />
-            </button>
+        </div>
+        {dateRowMessages.map((m) => (
+          <p key={m} role="alert" className={NOTE_ERR} style={{ fontFamily: "var(--font-inter)" }}>{m}</p>
+        ))}
+        {!locked && !dropOff && <p className={NOTE} style={{ fontFamily: "var(--font-inter)" }}>{dict.pickupFirstNote}</p>}
+        {plan === "hourly" && !locked && <p className={NOTE} style={{ fontFamily: "var(--font-inter)" }}>{dict.sameDayNote}</p>}
+        {/* Where this plan stops: the customer sees the limit before hitting it. */}
+        {dropOff && pickupLimit && plan !== "hourly" && (
+          <p className={NOTE} style={{ fontFamily: "var(--font-inter)" }}>
+            {dict.latestPickupPrefix}<span className="text-white/70 font-semibold">{fmtStamp(pickupLimit)}</span>
+          </p>
+        )}
+        {plan === "custom" && !locked && <p className={NOTE} style={{ fontFamily: "var(--font-inter)" }}>{dict.customHint}</p>}
+      </div>
+
+      {/* How many bags, and how many of them are oversized. */}
+      <div className="flex flex-col gap-2">
+        <div className="grid grid-cols-2 gap-2">
+          <div className="min-w-0">
+            {fieldLabel("pax", dict.bagsLabel)}
+            <CountField
+              id={fid("pax")}
+              value={pax}
+              min={1}
+              max={MAX_BAGS}
+              onChange={changePax}
+              decLabel={dict.decreaseLabel}
+              incLabel={dict.increaseLabel}
+              invalid={!!errors.pax}
+            />
+          </div>
+          <div className="min-w-0">
+            <div className="mb-1.5 flex items-center gap-1">
+              <label htmlFor={fid("oversized")} className={LABEL_TEXT} style={{ fontFamily: "var(--font-poppins)" }}>
+                {dict.oversizedCountLabel}
+              </label>
+              <InfoTip label={dict.oversizedTipLabel}>{dict.oversizedTipBody}</InfoTip>
+            </div>
+            <CountField
+              id={fid("oversized")}
+              value={oversizedCount}
+              min={0}
+              max={pax}
+              onChange={setOversizedInput}
+              decLabel={dict.decreaseLabel}
+              incLabel={dict.increaseLabel}
+            />
+          </div>
+        </div>
+        <div className="flex flex-col gap-0.5 text-[10.5px] text-white/25" style={{ fontFamily: "var(--font-inter)" }}>
+          <p>{dict.bagsHelp}</p>
+          {/* The surcharge differs by lane: Flexible plans 30,000, Flat Rate
+              plans 50,000. Custom mixes both, so it shows both. */}
+          <p className={locked ? "invisible" : undefined}>
+            {dict.oversizedHelpPrefix}
+            {plan === "custom"
+              ? `${vnd(PLAN_FACTS.daily.oversizeSurcharge)} ${dict.perDayLabel}, +${vnd(PLAN_FACTS.mini.oversizeSurcharge)} ${dict.perPeriodLabel}`
+              : vnd(PLAN_FACTS[plan].oversizeSurcharge)}
+          </p>
+        </div>
+      </div>
+
+      {/* Contact information */}
+      <div className="border-t border-white/[0.08] pt-3.5">
+        <p className={SECTION_TITLE} style={{ fontFamily: "var(--font-poppins)" }}>{dict.contactTitle}</p>
+        <div className="grid grid-cols-2 gap-2">
+          <div className="min-w-0">
+            {fieldLabel("name", dict.nameLabel, true)}
+            <input
+              id={fid("name")}
+              type="text"
+              placeholder={dict.namePlaceholder}
+              value={name}
+              autoComplete="name"
+              aria-invalid={errors.name ? true : undefined}
+              onChange={(e) => { setName(e.target.value); clearErr("name"); }}
+              className={`${INPUT} ${errors.name ? ERR : ""}`}
+              style={{ fontFamily: "var(--font-inter)" }}
+            />
+          </div>
+          <div className="min-w-0">
+            {fieldLabel("email", dict.emailLabel, true)}
+            <input
+              id={fid("email")}
+              type="email"
+              placeholder={dict.emailPlaceholder}
+              value={email}
+              autoComplete="email"
+              aria-invalid={errors.email ? true : undefined}
+              onChange={(e) => { setEmail(e.target.value); clearErr("email"); }}
+              className={`${INPUT} ${errors.email ? ERR : ""}`}
+              style={{ fontFamily: "var(--font-inter)" }}
+            />
+          </div>
+          <div className="col-span-2 min-w-0">
+            {fieldLabel("phone", dict.whatsappLabel, true)}
+            <PhoneField
+              id={fid("phone")}
+              locale={locale}
+              iso={phoneIso}
+              number={phoneNumber}
+              onIsoChange={(iso) => { setPhoneIso(iso); clearErr("phone"); }}
+              onNumberChange={(v) => { setPhoneNumber(v); clearErr("phone"); }}
+              countryLabel={dict.phoneCountryLabel}
+              labels={{ search: dict.phoneCountrySearch, empty: dict.phoneCountryEmpty }}
+              placeholder={dict.whatsappPlaceholder}
+              invalid={!!errors.phone}
+              inputClassName={`${INPUT} ${errors.phone ? ERR : ""}`}
+            />
           </div>
         </div>
       </div>
 
-      {/* Total */}
-      <div className="flex items-center justify-between pt-0.5">
-        <span className="text-[11.5px] text-white/30" style={{ fontFamily: "var(--font-inter)" }}>
-          {curFacts.unit === "flat"
-            /* Flat rate now bills per period — once it's more than one block
-               the label shows the count ("Total (2 months)") so "flat fee"
-               never contradicts a multiplied number. */
-            ? (flatPeriods > 1 ? `${dict.totalPrefix}${flatPeriodLabel}${dict.totalSuffix}` : dict.totalFlatFee)
-            : hourlyBillsAsDay
-              /* Says "1 day", not "5 hours" — the label has to match the
-                 number beside it, which is now the daily rate. */
-              ? `${dict.totalPrefix}1 ${dict.dayUnit.singular}${dict.totalSuffix}`
-              : `${dict.totalPrefix}${effectiveQuantity} ${plan === "hourly" ? pluralizeWord(effectiveQuantity, dict.hourUnit) : pluralizeWord(effectiveQuantity, dict.dayUnit)}${dict.totalSuffix}`}
-          {pax > 1 ? ` · ${pax} ${dict.bagUnit.plural}` : ""}
-        </span>
-        <span className="text-[21px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>
-          {vnd(total)}
-        </span>
+      {/* Total, with the working under it. Hidden while locked: no price for a
+          plan nobody chose. The receipt reads the same quote as the total, so
+          its lines always add up to it. */}
+      <div className={`flex flex-col gap-2.5 ${locked ? "invisible" : ""}`}>
+        <div className="flex items-center justify-between pt-0.5">
+          <span className="text-[11.5px] text-white/30" style={{ fontFamily: "var(--font-inter)" }}>
+            {totalLabel}
+            {pax > 1 ? ` · ${pax} ${dict.bagUnit.plural}` : ""}
+          </span>
+          <span className="text-[21px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>
+            {quoted ? vnd(total) : "—"}
+          </span>
+        </div>
+        <PriceBreakdown
+          dict={dict}
+          locale={locale}
+          quote={quoted}
+          bags={pax}
+          oversizedBags={oversizedCount}
+          pickUp={pickUp}
+        />
       </div>
 
       {/* Consent — must scroll through both documents in the popup before it can be accepted */}
@@ -1086,9 +977,10 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
       ) : (
         <div>
           <button
+            id={fid("consent")}
             type="button"
             onClick={() => setShowConsentModal(true)}
-            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border text-left transition-colors ${
+            className={`w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-lg border text-left transition-colors scroll-mt-[96px] ${
               errors.consent ? "border-red-400/70 bg-red-400/5" : "border-white/[0.12] bg-white/[0.05] hover:border-white/25"
             }`}
           >
@@ -1109,6 +1001,32 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         </div>
       )}
 
+      {/* Submit */}
+      <button
+        type="submit"
+        disabled={loading}
+        className="w-full flex items-center justify-center gap-2 bg-[#E8742C] hover:bg-[#C85E1E] disabled:opacity-70 text-white font-bold text-[14px] py-3.5 rounded-xl transition-colors focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#E8742C]"
+        style={{ fontFamily: "var(--font-poppins)" }}
+      >
+        {loading ? (
+          <>
+            {/* Explicit px: this project's spacing scale makes w-4/h-4 4px. */}
+            <span className="w-[16px] h-[16px] rounded-full border-2 border-white/30 border-t-white animate-spin" />
+            {dict.submitLoading}
+          </>
+        ) : (
+          <>
+            <Send size={14} />
+            {dict.submitIdle}
+          </>
+        )}
+      </button>
+      </fieldset>
+      {locked && (
+        <div aria-hidden className="absolute inset-0 z-10 cursor-pointer" onClick={() => setPlanOpen(true)} />
+      )}
+      </div>
+
       <ConsentModal
         open={showConsentModal}
         onClose={() => setShowConsentModal(false)}
@@ -1119,26 +1037,6 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
           clearErr("consent");
         }}
       />
-
-      {/* Submit */}
-      <button
-        type="submit"
-        disabled={loading}
-        className="w-full flex items-center justify-center gap-2 bg-[#E8742C] hover:bg-[#C85E1E] disabled:opacity-70 text-white font-bold text-[14px] py-3.5 rounded-xl transition-colors"
-        style={{ fontFamily: "var(--font-poppins)" }}
-      >
-        {loading ? (
-          <>
-            <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-            {dict.submitLoading}
-          </>
-        ) : (
-          <>
-            <Send size={14} />
-            {dict.submitIdle}
-          </>
-        )}
-      </button>
 
     </form>
   );

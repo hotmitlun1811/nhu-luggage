@@ -173,3 +173,19 @@ html {
 :lang(zh) [class*="tracking-"] {
   letter-spacing: 0;
 }
+
+/* Booking form: while no plan is chosen, the plan dropdown is white and its
+   orange halo pulses outward, so the eye lands there first (the rest of the
+   form is locked until a plan is picked). It stops the moment the dropdown is
+   open or a plan is chosen, and never runs for visitors who ask for reduced
+   motion. */
+@keyframes plan-attention {
+  0%   { box-shadow: 0 0 0 0 rgb(232 116 44 / 0.6); }
+  70%  { box-shadow: 0 0 0 10px rgb(232 116 44 / 0); }
+  100% { box-shadow: 0 0 0 0 rgb(232 116 44 / 0); }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .plan-attention:not([data-popup-open]) {
+    animation: plan-attention 1.8s ease-out infinite;
+  }
+}
