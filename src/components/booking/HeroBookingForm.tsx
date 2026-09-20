@@ -20,6 +20,7 @@ import {
 } from "@/lib/pricing";
 import { COUNTRY_BY_ISO, DEFAULT_COUNTRY_ISO } from "@/lib/countries";
 import { formatDateTime, formatWeekdayDate, formatLongDate, pluralizeWord } from "@/lib/format";
+import { generateReference } from "@/lib/reference";
 import { POST_BOOKING_EMAIL_ENABLED } from "@/lib/features";
 import type { Dictionary } from "@/content/types";
 import type { AppLocale } from "@/content/locales";
@@ -53,16 +54,6 @@ const LEGACY_DRAFT_KEYS = ["stow-booking-draft-v1", "stow-booking-draft-v2"];
 // English regardless of site locale (i18n plan, decision #4).
 const PERIOD_UNIT_EN = { mini: "week", strand: "month", longstay: "4 months" } as const;
 const PERIOD_LABEL_EN = { daily: "1 day", mini: "1 week", strand: "1 month", longstay: "4 months" } as const;
-
-// "STW-YYMMDD-1234": the drop-off day plus a random 4-digit suffix. A plain
-// function outside the component — it is only ever called from the submit
-// handler, and keeping the randomness out of the component body keeps the
-// component itself pure.
-function generateRef(dropOffDate: string): string {
-  const d = dropOffDate.replace(/-/g, "").slice(2); // YYMMDD
-  const n = Math.floor(Math.random() * 9000 + 1000);
-  return `STW-${d}-${n}`;
-}
 
 // Best guess at the visitor's country for the phone box: the region in their
 // browser language ("en-US" → US), else the page language, else Vietnam.
@@ -515,6 +506,12 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         pax,
         total,
         priceDetail: priceDetailEn(),
+        // Stored by the "Bookings v2" table; the original table ignores them.
+        pricePerBag: quoted?.perBag,
+        oversizedSurcharge: quoted ? oversizedCount * quoted.surchargePerOversizedBag : undefined,
+        phoneCountry: phoneIso,
+        consentAt: consentAt ? consentAt.toISOString() : undefined,
+        termsVersion: LEGAL_EFFECTIVE,
       }),
     }).catch(() => {});
   }
@@ -563,7 +560,7 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     setErrors({});
     submittingRef.current = true;
     setLoading(true);
-    const ref = generateRef(date || today);
+    const ref = generateReference(date || today);
     setBookingRef(ref);
     sendLarkBooking(ref);
     // Kept in state so the success screen can offer a manual re-open — the

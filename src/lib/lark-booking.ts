@@ -45,6 +45,12 @@ export type BookingBody = {
   total?: number; // VND
   /** The price worked out, one line per step. Written by the customer form. */
   priceDetail?: string;
+  /** Written only by the customer form, for the "Bookings v2" table. */
+  pricePerBag?: number;
+  oversizedSurcharge?: number; // all oversized bags together
+  phoneCountry?: string; // 2-letter code picked next to the WhatsApp number
+  consentAt?: string; // ISO time the Terms and Privacy Policy were accepted
+  termsVersion?: string; // effective date of those Terms
 };
 
 /** Every new booking starts here; staff move it on (Confirm, Paid, Complete, Cancel). */
@@ -128,6 +134,67 @@ export function buildBookingFields(
   }
   const differs = JSON.stringify(older) !== JSON.stringify(primary);
   return { primary, legacy: differs ? older : null };
+}
+
+/** Vietnam has no daylight saving, so a fixed offset is exact. The server runs in UTC, so never use its own zone. */
+const vietnamMoment = (day: string, time: string) => new Date(`${day}T${time}:00+07:00`).getTime();
+
+/**
+ * The real time between drop-off and pick-up, in plain words: "46 days",
+ * "23 hours", "1 day 7 hours", "1 hour 30 minutes". A part that is zero is left
+ * out. It is the time the luggage is actually stored, not the plan it is billed
+ * as. Empty when either moment is missing or the pick-up is not after the drop-off.
+ */
+export function elapsedLabel(dropOffDate?: string, dropOffTime?: string, pickupDate?: string, pickupTime?: string): string {
+  if (!dropOffDate || !dropOffTime || !pickupDate || !pickupTime) return "";
+  const minutes = Math.round((vietnamMoment(pickupDate, pickupTime) - vietnamMoment(dropOffDate, dropOffTime)) / 60000);
+  if (!(minutes > 0)) return "";
+  const part = (n: number, unit: string) => (n > 0 ? `${n} ${unit}${n === 1 ? "" : "s"}` : "");
+  return [part(Math.floor(minutes / 1440), "day"), part(Math.floor((minutes % 1440) / 60), "hour"), part(minutes % 60, "minute")]
+    .filter(Boolean)
+    .join(" ");
+}
+
+/**
+ * The record for the "Bookings v2" table (docs/lark/2026-09-20-bookings-v2.md):
+ * one column for everything the form collects or works out. Drop-off and
+ * pick-up are one date-and-time value each, in Vietnam time. Anything the
+ * caller did not send is left out rather than guessed (the staff form has no
+ * pick-up, price breakdown or consent).
+ */
+export function buildBookingFieldsV2(body: BookingBody, ref: string): Record<string, unknown> {
+  const { source, lane, planName, oversized, oversizedCount, dropOffDate, dropOffTime, pickupDate, pickupTime, name, phone, email, pax, total, priceDetail, pricePerBag, oversizedSurcharge, phoneCountry, consentAt, termsVersion } = body;
+  const f: Record<string, unknown> = {
+    Reference: ref,
+    Status: NEW_BOOKING_STATUS,
+    Source: source || "Booking Form",
+    Lane: laneLabel(lane as LarkLane),
+    Plan: planName,
+    "Drop-off": vietnamMoment(dropOffDate as string, dropOffTime || "12:00"),
+    "Total (VND)": total,
+    Name: name,
+    WhatsApp: normalizePhone(phone as string),
+  };
+  if (pickupDate && pickupTime) f["Pick-up"] = vietnamMoment(pickupDate, pickupTime);
+  // Worked out here from the two moments; the plan label the form sends is not used.
+  const stay = elapsedLabel(dropOffDate, dropOffTime, pickupDate, pickupTime);
+  if (stay) f.Duration = stay;
+  if (pax != null) f.Bags = pax;
+  // Unknown (the staff form only says yes/no) stays blank instead of a wrong number.
+  if (oversizedCount != null) f["Oversized Bags"] = oversizedCount;
+  else if (!oversized) f["Oversized Bags"] = 0;
+  if (pricePerBag != null) f["Price per Bag"] = pricePerBag;
+  if (oversizedSurcharge != null) f["Oversized Surcharge"] = oversizedSurcharge;
+  if (email?.trim()) f.Email = email.trim();
+  if (phoneCountry) f["Phone Country"] = phoneCountry;
+  const agreedAt = consentAt ? Date.parse(consentAt) : NaN;
+  if (!Number.isNaN(agreedAt)) {
+    f["Terms Agreed"] = true;
+    f["Terms Agreed At"] = agreedAt;
+    if (termsVersion) f["Terms Version"] = termsVersion;
+  }
+  if (priceDetail?.trim()) f["Price Detail"] = priceDetail.trim();
+  return f;
 }
 
 /** The group-chat announcement for a new booking. */

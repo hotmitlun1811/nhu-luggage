@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { announcementText, buildBookingFields, laneLabel, normalizeDuration, normalizePhone, type BookingBody } from "./lark-booking";
+import { announcementText, buildBookingFields, buildBookingFieldsV2, elapsedLabel, laneLabel, normalizeDuration, normalizePhone, type BookingBody } from "./lark-booking";
 
 const vnd = (n: number) => `${n.toLocaleString("vi-VN")} ₫`;
 const noon = (day: string) => new Date(`${day}T12:00:00`).getTime();
@@ -160,3 +160,99 @@ describe("announcementText", () => {
     expect(text).not.toContain("How the total was worked out");
   });
 });
+
+describe("buildBookingFieldsV2 (the Bookings v2 table)", () => {
+  const consentAt = "2026-09-20T04:30:00.000Z";
+  const form: BookingBody = {
+    ...customBooking,
+    oversizedCount: 1,
+    total: 1300000,
+    pricePerBag: 600000,
+    oversizedSurcharge: 100000,
+    phoneCountry: "IT",
+    consentAt,
+    termsVersion: "1 June 2026",
+  };
+
+  it("has one column per form field", () => {
+    const f = buildBookingFieldsV2(form, "STW-9");
+    expect(f).toMatchObject({
+      Reference: "STW-9",
+      Status: "Booking",
+      Source: "Booking Form",
+      Lane: "Custom",
+      Plan: "Custom",
+      Duration: "46 days",
+      Bags: 2,
+      "Oversized Bags": 1,
+      "Price per Bag": 600000,
+      "Oversized Surcharge": 100000,
+      "Total (VND)": 1300000,
+      Name: "Test Person",
+      WhatsApp: "+84905955161",
+      Email: "test@example.com",
+      "Phone Country": "IT",
+      "Terms Agreed": true,
+      "Terms Version": "1 June 2026",
+    });
+    expect(f["Price Detail"]).toContain("Per bag: 2× Strand");
+    expect(f["Terms Agreed At"]).toBe(Date.parse(consentAt));
+  });
+
+  it("stores drop-off and pick-up as Vietnam time, whatever zone the server runs in", () => {
+    const f = buildBookingFieldsV2(form, "STW-9");
+    expect(f["Drop-off"]).toBe(Date.UTC(2026, 8, 20, 2, 0)); // 09:00 in Vietnam (UTC+7) is 02:00 UTC
+    expect(f["Pick-up"]).toBe(Date.UTC(2026, 10, 5, 2, 0));
+    const late = buildBookingFieldsV2({ ...form, dropOffTime: "23:30" }, "STW-9");
+    expect(late["Drop-off"]).toBe(Date.UTC(2026, 8, 20, 16, 30)); // still 20 Sept in Vietnam
+  });
+
+  it("leaves out what the staff form does not have, and guesses nothing", () => {
+    const intake: BookingBody = {
+      source: "Intake", lane: "flexible", planName: "By the Day", oversized: true,
+      dropOffDate: "2026-09-20", dropOffTime: "10:00", duration: "Up to 24 hrs",
+      name: "Walk In", phone: "0049 170 1234567", pax: 1, total: 60000,
+    };
+    const f = buildBookingFieldsV2(intake, "STW-8");
+    expect(f).toMatchObject({ Source: "Intake", WhatsApp: "+491701234567", Bags: 1, Status: "Booking" });
+    for (const missing of ["Pick-up", "Duration", "Oversized Bags", "Price per Bag", "Oversized Surcharge", "Email", "Phone Country", "Terms Agreed", "Terms Agreed At", "Price Detail"]) {
+      expect(f).not.toHaveProperty(missing);
+    }
+    expect(Object.values(f).every((v) => v !== undefined)).toBe(true);
+    expect(buildBookingFieldsV2({ ...intake, oversized: false }, "STW-8")["Oversized Bags"]).toBe(0);
+  });
+
+  it("ignores a consent time it cannot read instead of failing the booking", () => {
+    const f = buildBookingFieldsV2({ ...form, consentAt: "not a date" }, "STW-9");
+    expect(f).not.toHaveProperty("Terms Agreed");
+    expect(f).not.toHaveProperty("Terms Agreed At");
+  });
+});
+
+describe("elapsedLabel (the Duration column of Bookings v2)", () => {
+  it("is the real time from drop-off to pick-up, in days, hours and minutes", () => {
+    expect(elapsedLabel("2026-09-21", "09:00", "2026-11-06", "09:00")).toBe("46 days");
+    expect(elapsedLabel("2026-09-21", "10:00", "2026-09-22", "09:00")).toBe("23 hours");
+    expect(elapsedLabel("2026-09-20", "09:00", "2026-09-21", "16:00")).toBe("1 day 7 hours");
+    expect(elapsedLabel("2026-09-20", "09:00", "2026-09-20", "11:00")).toBe("2 hours");
+    expect(elapsedLabel("2026-09-20", "09:30", "2026-09-20", "11:00")).toBe("1 hour 30 minutes");
+    expect(elapsedLabel("2026-09-20", "09:00", "2026-09-20", "09:30")).toBe("30 minutes");
+    expect(elapsedLabel("2026-09-20", "09:00", "2026-09-22", "10:30")).toBe("2 days 1 hour 30 minutes");
+  });
+  it("counts across month and year ends", () => {
+    expect(elapsedLabel("2026-12-31", "22:00", "2027-01-01", "07:00")).toBe("9 hours");
+    expect(elapsedLabel("2026-01-31", "09:00", "2026-03-01", "09:00")).toBe("29 days");
+    expect(elapsedLabel("2026-09-20", "09:00", "2027-01-20", "09:00")).toBe("122 days");
+  });
+  it("is empty when a moment is missing or the pick-up is not after the drop-off", () => {
+    expect(elapsedLabel("2026-09-20", "09:00", undefined, undefined)).toBe("");
+    expect(elapsedLabel("2026-09-20", undefined, "2026-09-21", "09:00")).toBe("");
+    expect(elapsedLabel("2026-09-20", "09:00", "2026-09-20", "09:00")).toBe("");
+    expect(elapsedLabel("2026-09-21", "09:00", "2026-09-20", "09:00")).toBe("");
+  });
+  it("is what the v2 record stores, whatever plan label the form sends", () => {
+    const f = buildBookingFieldsV2({ ...dayBooking, duration: "Custom: 2× Strand (46 days)", dropOffTime: "09:00", pickupDate: "2026-09-20", pickupTime: "16:30" }, "STW-7");
+    expect(f.Duration).toBe("7 hours 30 minutes");
+  });
+});
+

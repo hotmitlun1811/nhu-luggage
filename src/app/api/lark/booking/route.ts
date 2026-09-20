@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { announcementText, buildBookingFields, type BookingBody } from "@/lib/lark-booking";
+import { announcementText, buildBookingFields, buildBookingFieldsV2, type BookingBody } from "@/lib/lark-booking";
+import { generateReference } from "@/lib/reference";
 
 // Server-only: pushes a booking into the Stow Bookings Lark Base table, then
 // announces it in the Stow Bookings group chat. Never exposed to the client —
@@ -11,12 +12,10 @@ const LARK_APP_SECRET = process.env.LARK_APP_SECRET;
 const LARK_BASE_APP_TOKEN = process.env.LARK_BASE_APP_TOKEN;
 const LARK_BASE_TABLE_ID = process.env.LARK_BASE_TABLE_ID;
 const LARK_CHAT_ID = process.env.LARK_CHAT_ID;
-
-function generateRef(dropOffDate?: string) {
-  const d = (dropOffDate || new Date().toISOString().slice(0, 10)).replace(/-/g, "").slice(2);
-  const n = Math.floor(Math.random() * 9000 + 1000);
-  return `STW-${d}-${n}`;
-}
+// "2" = the LARK_BASE_TABLE_ID table is the "Bookings v2" table (one column per
+// form field, see docs/lark/2026-09-20-bookings-v2.md). Anything else = the
+// original Bookings table. Change both variables together.
+const USE_V2 = process.env.LARK_BOOKINGS_SCHEMA === "2";
 
 function vnd(n: number) {
   return n.toLocaleString("vi-VN") + " ₫";
@@ -81,7 +80,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Missing required booking fields" }, { status: 400 });
   }
 
-  const ref = body.reference || generateRef(dropOffDate);
+  const ref = body.reference || generateReference(dropOffDate);
 
   let token: string;
   try {
@@ -91,14 +90,19 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: `Lark auth error: ${message}` }, { status: 502 });
   }
 
-  // The record is written with the current columns. A table that is not up to
-  // date yet (no "Custom" option, no newer columns) refuses that, so retry once
-  // with the older columns rather than lose the booking. See lib/lark-booking.ts.
-  const { primary, legacy } = buildBookingFields(body, ref);
-  let failure = await createRecord(token, primary);
-  if (failure && legacy) {
-    console.warn(`[lark] booking ${ref} was refused (${failure}); retrying with the older columns. Is the table up to date?`);
-    failure = await createRecord(token, legacy);
+  let failure: string | null;
+  if (USE_V2) {
+    failure = await createRecord(token, buildBookingFieldsV2(body, ref));
+  } else {
+    // The record is written with the current columns. A table that is not up to
+    // date yet (no "Custom" option, no newer columns) refuses that, so retry once
+    // with the older columns rather than lose the booking. See lib/lark-booking.ts.
+    const { primary, legacy } = buildBookingFields(body, ref);
+    failure = await createRecord(token, primary);
+    if (failure && legacy) {
+      console.warn(`[lark] booking ${ref} was refused (${failure}); retrying with the older columns. Is the table up to date?`);
+      failure = await createRecord(token, legacy);
+    }
   }
   if (failure) {
     return NextResponse.json({ error: `Lark Base write failed: ${failure}` }, { status: 502 });
