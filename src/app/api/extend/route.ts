@@ -8,25 +8,36 @@ import {
   resolveBooking,
   vietnamToday,
 } from "@/lib/extension";
+import { extensionPrice, type ExtensionPrice } from "@/lib/extension-price";
 import { alreadyRequested, announceInGroup, createExtensionRecord, extensionConfig, findBookingRows } from "@/lib/lark-server";
 
-// The "extend my storage" form posts here: { reference, bags, newPickupDate }.
-// The customer is identified by the Booking ID in their link and nothing else.
-// Everything about the booking (contact details, bags booked, pick-up, plan
-// end) is read from the Bookings table here, never taken from the request, so
-// a request can only ever be filed against a real, open booking.
+// The "extend my storage" form posts here: { reference, bags, newPickupDate,
+// oversizedBags? }. The customer is identified by the Booking ID in their link
+// and nothing else. Everything about the booking (contact details, bags booked,
+// pick-up, plan end) is read from the Bookings table here, never taken from the
+// request, so a request can only ever be filed against a real, open booking.
+// The price is worked out here too, with the same engine as the booking form;
+// the number the browser showed is never trusted or stored.
 //
 // Answers carry a short code the form turns into a plain sentence:
-//   ok            { ok: true }               saved (also when the same request was already there)
+//   ok            { ok: true, price }        saved (also when the same request was already there);
+//                                            price is { kind: "priced" | "included" | "unknown", total? }
 //   invalid       400                        not a Booking ID, a whole number of bags, or a date
 //   bags | date   400                        does not fit this booking
+//   oversized     400                        how many of the bags are oversized is needed, or impossible
 //   not-found     404                        no booking has that ID
 //   closed        409                        the booking is Complete or Cancel
 //   no-contact    409                        Stow has no WhatsApp or email for it
 //   unavailable   503                        not set up on this deployment
 //   try-again     502                        Lark did not answer
+
+/** What the confirmation screen needs to say about the price. */
+function summary(p: ExtensionPrice): { kind: ExtensionPrice["kind"]; total?: number } {
+  return p.kind === "priced" ? { kind: "priced", total: p.total } : p.kind === "included" ? { kind: "included", total: 0 } : { kind: "unknown" };
+}
+
 export async function POST(request: Request) {
-  const body = (await request.json().catch(() => ({}))) as { reference?: unknown; bags?: unknown; newPickupDate?: unknown };
+  const body = (await request.json().catch(() => ({}))) as { reference?: unknown; bags?: unknown; newPickupDate?: unknown; oversizedBags?: unknown };
 
   const reference = normalizeReference(body.reference);
   const bags = typeof body.bags === "number" ? body.bags : Number.NaN;
@@ -34,7 +45,9 @@ export async function POST(request: Request) {
   if (!reference || !Number.isInteger(bags) || !isRealDate(newPickupDate)) {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
-  const req = { bags, newPickupDate };
+  // Only used when the booking has both kinds of bag and only some are extended; otherwise it is worked out.
+  const oversizedBags = typeof body.oversizedBags === "number" ? body.oversizedBags : undefined;
+  const req = { bags, newPickupDate, oversizedBags };
 
   const cfg = extensionConfig();
   if (!cfg) return NextResponse.json({ error: "unavailable" }, { status: 503 });
@@ -48,8 +61,10 @@ export async function POST(request: Request) {
     const check = checkExtension(booking, req, vietnamToday());
     if (!check.ok) return NextResponse.json({ error: check.field }, { status: 400 });
 
+    const price = summary(extensionPrice(booking, req));
+
     // The same request sent twice (a double tap, a phone retrying) is saved once.
-    if (await alreadyRequested(cfg, reference, req)) return NextResponse.json({ ok: true, already: true });
+    if (await alreadyRequested(cfg, reference, req)) return NextResponse.json({ ok: true, already: true, price });
 
     const failure = await createExtensionRecord(cfg, buildExtensionFields(booking, req));
     if (failure) {
@@ -58,7 +73,7 @@ export async function POST(request: Request) {
     }
 
     await announceInGroup(cfg, extensionAnnouncement(booking, req));
-    return NextResponse.json({ ok: true });
+    return NextResponse.json({ ok: true, price });
   } catch (err) {
     console.error(`[extend] ${reference}: ${err instanceof Error ? err.message : err}`);
     return NextResponse.json({ error: "try-again" }, { status: 502 });

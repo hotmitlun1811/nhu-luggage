@@ -15,6 +15,7 @@ import {
   normalizeReference,
   parseBookingRows,
   parseExistingRequests,
+  priceDetailLines,
   resolveBooking,
   stampLabel,
   vietnamMoment,
@@ -22,6 +23,7 @@ import {
   vietnamToday,
   type BookingRow,
 } from "./extension";
+import { extensionPrice } from "./extension-price";
 
 const booking: BookingRow = {
   recordId: "recAAA",
@@ -200,7 +202,8 @@ describe("extensionWindow", () => {
 
 describe("checkExtension", () => {
   const today = "2026-09-22";
-  const ok = { bags: 2, newPickupDate: "2026-10-04" };
+  // the booking has 3 bags, 1 oversized: extending 2 of them needs to say how many of the 2 are oversized
+  const ok = { bags: 2, newPickupDate: "2026-10-04", oversizedBags: 1 };
 
   it("accepts a fair request", () => {
     expect(checkExtension(booking, ok, today)).toEqual({ ok: true });
@@ -228,6 +231,33 @@ describe("checkExtension", () => {
     expect(checkExtension(booking, { ...ok, newPickupDate: "soon" }, today)).toEqual({ ok: false, field: "date" });
     expect(checkExtension(booking, { ...ok, newPickupDate: "2029-09-20" }, today).ok).toBe(true);
     expect(checkExtension(booking, { ...ok, newPickupDate: "2029-09-21" }, today)).toEqual({ ok: false, field: "date" });
+  });
+});
+
+describe("checkExtension: oversized bags", () => {
+  const today = "2026-09-22";
+  // 3 bags, 1 of them oversized
+  const some = { bags: 2, newPickupDate: "2026-10-04" };
+
+  it("wants to know how many of the extended bags are oversized when it could be either", () => {
+    expect(checkExtension(booking, some, today)).toEqual({ ok: false, field: "oversized" });
+    expect(checkExtension(booking, { ...some, bags: 1 }, today)).toEqual({ ok: false, field: "oversized" });
+  });
+  it("takes an answer that is possible", () => {
+    expect(checkExtension(booking, { ...some, oversizedBags: 0 }, today).ok).toBe(true);
+    expect(checkExtension(booking, { ...some, oversizedBags: 1 }, today).ok).toBe(true);
+  });
+  it("refuses an answer that cannot be true", () => {
+    for (const oversizedBags of [2, -1, 0.5, Number.NaN]) {
+      expect(checkExtension(booking, { ...some, oversizedBags }, today)).toEqual({ ok: false, field: "oversized" });
+    }
+  });
+  it("does not ask when every bag is extended, or the booking has no oversized bags", () => {
+    expect(checkExtension(booking, { ...some, bags: 3 }, today).ok).toBe(true);
+    expect(checkExtension({ ...booking, oversizedBags: 0 }, some, today).ok).toBe(true);
+  });
+  it("does not ask when the booking never recorded its oversized bags: the price is quoted by staff", () => {
+    expect(checkExtension({ ...booking, oversizedBags: null }, some, today).ok).toBe(true);
   });
 });
 
@@ -331,7 +361,7 @@ describe("buildExtensionFields", () => {
   const now = Date.parse("2026-09-22T03:00:00Z");
 
   it("is exactly the row staff read", () => {
-    expect(buildExtensionFields(booking, { bags: 2, newPickupDate: "2026-10-05" }, now)).toEqual({
+    expect(buildExtensionFields(booking, { bags: 2, newPickupDate: "2026-10-05", oversizedBags: 1 }, now)).toEqual({
       "Booking ID": "STW-260921-PXSD27",
       Status: "Requested",
       "Submitted at": now,
@@ -345,7 +375,29 @@ describe("buildExtensionFields", () => {
       "Pick-up Now": Date.parse("2026-09-27T09:00:00+07:00"),
       "Plan End": Date.parse("2026-09-28T09:00:00+07:00"),
       "Days Past Plan End": 7,
+      "Oversized to Extend": 1,
+      "Extension Total (VND)": 350000,
+      "Price Detail": [
+        "Extra time: 7 days (Mon, 28 September 2026 at 09:00 to Mon, 5 October 2026 at 09:00)",
+        "Per bag: 1× Mini (150.000 ₫) = 150.000 ₫",
+        "Bags: 2 × 150.000 ₫ = 300.000 ₫",
+        "Oversized: 1 × 50.000 ₫ (1× Mini 50.000 ₫) = 50.000 ₫",
+        "Total: 350.000 ₫",
+      ].join("\n"),
     });
+  });
+  it("records 0 and the reason when the new date is inside the plan already paid for", () => {
+    const f = buildExtensionFields(booking, { bags: 3, newPickupDate: "2026-09-28" }, now);
+    expect(f["Extension Total (VND)"]).toBe(0);
+    expect(f["Oversized to Extend"]).toBe(1); // all 3 bags, so the 1 oversized one is among them
+    expect(f["Price Detail"]).toBe("Inside the plan already paid for (it ends Mon, 28 September 2026 at 09:00)\nTotal: 0 ₫");
+  });
+  it("records no price, never a guess, when it could not be worked out", () => {
+    for (const unworkable of [{ ...booking, planEnd: null }, { ...booking, oversizedBags: null }]) {
+      const f = buildExtensionFields(unworkable, { bags: 3, newPickupDate: "2026-10-05" }, now);
+      expect(f).not.toHaveProperty("Extension Total (VND)");
+      expect(f).not.toHaveProperty("Price Detail");
+    }
   });
   it("copies the contact details exactly as the booking has them", () => {
     const odd = { ...booking, name: "Nguyễn Văn A", whatsapp: "+39 345 912 3456", email: "Mixed.Case@Example.com" };
@@ -354,7 +406,7 @@ describe("buildExtensionFields", () => {
   });
   it("leaves out what the booking does not have, instead of guessing", () => {
     const f = buildExtensionFields({ ...booking, email: "", bags: null, pickUp: null, planEnd: null }, { bags: 1, newPickupDate: "2026-10-05" }, now);
-    for (const missing of ["Email", "Bags Booked", "Pick-up Now", "Plan End", "Days Past Plan End"]) expect(f).not.toHaveProperty(missing);
+    for (const missing of ["Email", "Bags Booked", "Pick-up Now", "Plan End", "Days Past Plan End", "Extension Total (VND)"]) expect(f).not.toHaveProperty(missing);
   });
   it("records a request inside the paid plan as 0 days past it", () => {
     expect(buildExtensionFields(booking, { bags: 1, newPickupDate: "2026-09-28" }, now)["Days Past Plan End"]).toBe(0);
@@ -366,16 +418,55 @@ describe("buildExtensionFields", () => {
   });
 });
 
+describe("priceDetailLines", () => {
+  const facts = { planEnd: { date: "2026-10-16", time: "15:30" }, bags: 2, oversizedBags: 1 };
+
+  it("lists each plan in the price and each oversized surcharge, like the booking form", () => {
+    // 8 days = a Mini and a day (the Strand costs more): 150.000 + 60.000, surcharge 50.000 + 30.000 per oversized bag
+    expect(priceDetailLines(extensionPrice(facts, { bags: 2, newPickupDate: "2026-10-24" }))).toEqual([
+      "Extra time: 8 days (Fri, 16 October 2026 at 15:30 to Sat, 24 October 2026 at 15:30)",
+      "Per bag: 1× Mini (150.000 ₫) + 1× By the Day (60.000 ₫) = 210.000 ₫",
+      "Bags: 2 × 210.000 ₫ = 420.000 ₫",
+      "Oversized: 1 × 80.000 ₫ (1× Mini 50.000 ₫ + 1× By the Day 30.000 ₫) = 80.000 ₫",
+      "Total: 500.000 ₫",
+    ]);
+  });
+  it("says a day is a day, and leaves out the oversized line when there is none", () => {
+    expect(priceDetailLines(extensionPrice({ ...facts, oversizedBags: 0 }, { bags: 1, newPickupDate: "2026-10-17" }))).toEqual([
+      "Extra time: 1 day (Fri, 16 October 2026 at 15:30 to Sat, 17 October 2026 at 15:30)",
+      "Per bag: 1× By the Day (60.000 ₫) = 60.000 ₫",
+      "Bags: 1 × 60.000 ₫ = 60.000 ₫",
+      "Total: 60.000 ₫",
+    ]);
+  });
+  it("does not write a time when the plan end never had one", () => {
+    const lines = priceDetailLines(extensionPrice({ ...facts, oversizedBags: 0, planEnd: { date: "2026-10-16", time: "00:00" } }, { bags: 1, newPickupDate: "2026-10-17" }));
+    expect(lines[0]).toBe("Extra time: 1 day (Fri, 16 October 2026 to Sat, 17 October 2026)");
+  });
+  it("is empty when there is no price", () => {
+    expect(priceDetailLines({ kind: "unknown" })).toEqual([]);
+  });
+});
+
 describe("extensionAnnouncement", () => {
-  it("gives staff the request, the booking and the contact in full, in sections", () => {
-    expect(extensionAnnouncement(booking, { bags: 2, newPickupDate: "2026-10-05" })).toBe(
+  it("gives staff the request, the price, the booking and the contact in full, in sections", () => {
+    expect(extensionAnnouncement(booking, { bags: 2, newPickupDate: "2026-10-05", oversizedBags: 1 })).toBe(
       [
         "🔁 Extension request: STW-260921-PXSD27",
         "",
         "Request:",
-        "• Bags to extend: 2 of 3",
+        "• Bags to extend: 2 of 3 (1 oversized)",
         "• New pick-up date: Mon, 5 October 2026",
         "• The new date is 7 days after the plan end",
+        "• Price shown to the customer: 350.000 ₫",
+        "• The price is for pick-up by 09:00 on the new date",
+        "",
+        "How the price was worked out:",
+        "   Extra time: 7 days (Mon, 28 September 2026 at 09:00 to Mon, 5 October 2026 at 09:00)",
+        "   Per bag: 1× Mini (150.000 ₫) = 150.000 ₫",
+        "   Bags: 2 × 150.000 ₫ = 300.000 ₫",
+        "   Oversized: 1 × 50.000 ₫ (1× Mini 50.000 ₫) = 50.000 ₫",
+        "   Total: 350.000 ₫",
         "",
         "Current booking:",
         "• Plan: Mini",
@@ -391,9 +482,25 @@ describe("extensionAnnouncement", () => {
         "• WhatsApp: +84905955161",
         "• Email: sample@example.com",
         "",
-        "It is in the Extensions table. Please confirm the price and the pick-up time with the customer on WhatsApp.",
+        "It is in the Extensions table. Please confirm the pick-up time and payment with the customer on WhatsApp.",
       ].join("\n")
     );
+  });
+  it("says nothing extra is due when the new date is inside the plan already paid for", () => {
+    const text = extensionAnnouncement(booking, { bags: 3, newPickupDate: "2026-09-28" });
+    expect(text).toContain("• Price shown to the customer: nothing extra to pay");
+    expect(text).toContain("   Inside the plan already paid for (it ends Mon, 28 September 2026 at 09:00)");
+    expect(text).not.toContain("The price is for pick-up by");
+  });
+  it("asks staff to quote it when the price could not be worked out", () => {
+    const text = extensionAnnouncement({ ...booking, planEnd: null }, { bags: 3, newPickupDate: "2026-10-05" });
+    expect(text).toContain("• Price: not worked out (the booking has no plan end or bag counts on file), please quote it");
+    expect(text).not.toContain("How the price was worked out");
+  });
+  it("does not name a pick-up time the booking never recorded", () => {
+    const text = extensionAnnouncement({ ...booking, planEnd: { date: "2026-09-28", time: "00:00" } }, { bags: 3, newPickupDate: "2026-10-05" });
+    expect(text).toContain("• Price shown to the customer: ");
+    expect(text).not.toContain("The price is for pick-up by");
   });
   it("carries the contact details in full, never masked", () => {
     const text = extensionAnnouncement(booking, { bags: 1, newPickupDate: "2026-10-05" });

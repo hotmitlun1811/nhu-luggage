@@ -24,7 +24,8 @@
  * recorded an extension as a second row, and a cancelled duplicate is kept).
  * The row that is still open, with the latest pick-up, is the booking as it stands.
  */
-import { vnd } from "./plans";
+import { extensionPrice, oversizedNeedsAnswer, oversizedRange, resolveOversized, type ExtensionPrice } from "./extension-price";
+import { PLAN_FACTS, vnd } from "./plans";
 import { addDays, diffDays, MAX_CUSTOM_DAYS, type Stamp } from "./pricing";
 
 /** Every request starts here; staff move it on (Confirm, Paid, Complete, Cancel), like a booking. */
@@ -182,7 +183,16 @@ export function resolveBooking(rows: BookingRow[], reference: string): BookingLo
 
 // ── What the customer may ask for ──
 
-export type ExtensionRequest = { bags: number; newPickupDate: string };
+export type ExtensionRequest = {
+  bags: number;
+  newPickupDate: string;
+  /**
+   * Of the bags extended, how many are oversized. Only needed when the booking
+   * has both kinds and only some bags are extended (see oversizedRange);
+   * otherwise it is worked out from the booking.
+   */
+  oversizedBags?: number;
+};
 
 /**
  * The days the new pick-up may fall on. It must come after the current
@@ -198,13 +208,17 @@ export function extensionWindow(b: Pick<BookingRow, "dropOff" | "pickUp">, today
 /** How many bags may be extended: as many as the booking has, or the form's limit when it never recorded them. */
 export const bagLimit = (b: Pick<BookingRow, "bags">): number => b.bags ?? MAX_EXTEND_BAGS;
 
-export type ExtensionCheck = { ok: true } | { ok: false; field: "bags" | "date" };
+export type ExtensionCheck = { ok: true } | { ok: false; field: "bags" | "date" | "oversized" };
 
 export function checkExtension(b: BookingRow, req: ExtensionRequest, today: string): ExtensionCheck {
   if (!Number.isInteger(req.bags) || req.bags < 1 || req.bags > bagLimit(b)) return { ok: false, field: "bags" };
   if (!isRealDate(req.newPickupDate)) return { ok: false, field: "date" };
   const { min, max } = extensionWindow(b, today);
   if (req.newPickupDate < min || req.newPickupDate > max) return { ok: false, field: "date" };
+  // The price depends on it, so an answer that is needed must be there and must be possible.
+  if (oversizedNeedsAnswer(oversizedRange(b, req.bags)) && resolveOversized(b, req.bags, req.oversizedBags) === null) {
+    return { ok: false, field: "oversized" };
+  }
   return { ok: true };
 }
 
@@ -215,6 +229,28 @@ export function checkExtension(b: BookingRow, req: ExtensionRequest, today: stri
  */
 export function daysPastPlanEnd(planEnd: Stamp | null, newPickupDate: string): number | null {
   return planEnd ? Math.max(0, diffDays(planEnd.date, newPickupDate)) : null;
+}
+
+/**
+ * The price worked out, one step per line, for the Lark "Price Detail" column
+ * and the group chat. The same steps as the receipt the customer sees, and the
+ * same shape as the booking form's own price lines. Empty when there is no price.
+ */
+export function priceDetailLines(p: ExtensionPrice): string[] {
+  if (p.kind === "included") return [`Inside the plan already paid for (it ends ${stampLabel(p.planEnd)})`, `Total: ${vnd(0)}`];
+  if (p.kind !== "priced") return [];
+  const q = p.quote;
+  const lines = [
+    `Extra time: ${p.extraDays} day${p.extraDays === 1 ? "" : "s"} (${stampLabel(p.from)} to ${stampLabel(p.to)})`,
+    `Per bag: ${q.pieces.map((x) => `${x.count}× ${PLAN_FACTS[x.plan].canonicalName} (${vnd(x.unitPrice)})`).join(" + ")} = ${vnd(q.perBag)}`,
+    `Bags: ${p.bags} × ${vnd(q.perBag)} = ${vnd(q.perBag * p.bags)}`,
+  ];
+  if (p.oversizedBags > 0) {
+    const terms = q.pieces.map((x) => `${x.plan === "hourly" ? 1 : x.count}× ${PLAN_FACTS[x.plan].canonicalName} ${vnd(PLAN_FACTS[x.plan].oversizeSurcharge)}`).join(" + ");
+    lines.push(`Oversized: ${p.oversizedBags} × ${vnd(q.surchargePerOversizedBag)} (${terms}) = ${vnd(p.oversizedBags * q.surchargePerOversizedBag)}`);
+  }
+  lines.push(`Total: ${vnd(p.total)}`);
+  return lines;
 }
 
 // ── What the customer is shown about the booking ──
@@ -288,7 +324,8 @@ export function isAlreadyRequested(existing: ExistingRequest[], req: ExtensionRe
  * Name, WhatsApp and Email are copied as they stand in that row (never
  * reformatted), and what the booking said at this moment is kept beside the
  * request (bags booked, pick-up now, plan end), so the request still makes
- * sense after staff update the booking. Anything the booking does not have is
+ * sense after staff update the booking. It also holds the price the customer
+ * was shown and how it was worked out. Anything the booking does not have is
  * left out rather than guessed.
  */
 export function buildExtensionFields(b: BookingRow, req: ExtensionRequest, now: number = Date.now()): Record<string, unknown> {
@@ -309,13 +346,22 @@ export function buildExtensionFields(b: BookingRow, req: ExtensionRequest, now: 
   if (b.planEnd) f["Plan End"] = vietnamMoment(b.planEnd.date, b.planEnd.time);
   const past = daysPastPlanEnd(b.planEnd, req.newPickupDate);
   if (past != null) f["Days Past Plan End"] = past;
+  // What the customer was shown: the same price as the booking form would work out, and how.
+  const oversized = resolveOversized(b, req.bags, req.oversizedBags);
+  if (oversized !== null) f["Oversized to Extend"] = oversized;
+  const price = extensionPrice(b, req);
+  if (price.kind === "priced") f["Extension Total (VND)"] = price.total;
+  else if (price.kind === "included") f["Extension Total (VND)"] = 0;
+  const detail = priceDetailLines(price);
+  if (detail.length) f["Price Detail"] = detail.join("\n");
   return f;
 }
 
 /**
  * The message for the Stow Bookings group chat. Everything staff need to answer
  * without opening Lark, contact details in full, laid out in the same sections
- * as the booking message so nothing is missed or mixed up.
+ * as the booking message so nothing is missed or mixed up. It carries the price
+ * the customer was shown and how it was worked out, so staff quote the same number.
  */
 export function extensionAnnouncement(b: BookingRow, req: ExtensionRequest): string {
   const past = daysPastPlanEnd(b.planEnd, req.newPickupDate);
@@ -324,11 +370,25 @@ export function extensionAnnouncement(b: BookingRow, req: ExtensionRequest): str
   const bagsOnBooking =
     b.bags == null ? "" : `${b.bags}${b.oversizedBags ? ` (${b.oversizedBags} oversized)` : ""}`;
 
+  const oversized = resolveOversized(b, req.bags, req.oversizedBags);
+  const price = extensionPrice(b, req);
+  const shown =
+    price.kind === "priced"
+      ? `Price shown to the customer: ${vnd(price.total)}`
+      : price.kind === "included"
+      ? "Price shown to the customer: nothing extra to pay"
+      : "Price: not worked out (the booking has no plan end or bag counts on file), please quote it";
+  // The form only asks for a date, so the price is for pick-up by the plan end's time of day; a time of 00:00 means none was recorded.
+  const byTime = price.kind === "priced" && price.to.time !== "00:00" ? `The price is for pick-up by ${price.to.time} on the new date` : "";
+
   const request = bullets([
-    `Bags to extend: ${b.bags != null ? `${req.bags} of ${b.bags}` : req.bags}`,
+    `Bags to extend: ${b.bags != null ? `${req.bags} of ${b.bags}` : req.bags}${oversized !== null && b.oversizedBags ? ` (${oversized} oversized)` : ""}`,
     `New pick-up date: ${longDate(req.newPickupDate)}`,
     past == null ? "" : past === 0 ? "The new date is inside the plan already paid for" : `The new date is ${day(past)} after the plan end`,
+    shown,
+    byTime,
   ]);
+  const detail = priceDetailLines(price);
   const current = bullets([
     b.plan ? `Plan: ${b.plan}` : "",
     b.dropOff ? `Drop-off: ${stampLabel(b.dropOff)}` : "",
@@ -349,6 +409,7 @@ export function extensionAnnouncement(b: BookingRow, req: ExtensionRequest): str
     "",
     "Request:",
     ...request,
+    ...(detail.length ? ["", "How the price was worked out:", ...detail.map((l) => `   ${l}`)] : []),
     "",
     "Current booking:",
     ...current,
@@ -356,6 +417,6 @@ export function extensionAnnouncement(b: BookingRow, req: ExtensionRequest): str
     "Contact:",
     ...contact,
     "",
-    "It is in the Extensions table. Please confirm the price and the pick-up time with the customer on WhatsApp.",
+    "It is in the Extensions table. Please confirm the pick-up time and payment with the customer on WhatsApp.",
   ].join("\n");
 }
