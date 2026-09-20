@@ -39,6 +39,7 @@ FIELDS = [
      "options": opts(("By the Hour", "Blue"), ("By the Day", "Turquoise"), ("Mini", "Green"), ("Strand", "Orange"), ("Long Stay", "Purple"), ("Custom", "Carmine"))},
     {"type": "datetime", "name": "Drop-off", "style": WHEN, "description": "Date and time together, Vietnam time."},
     {"type": "datetime", "name": "Pick-up", "style": WHEN, "description": "The pick-up the customer chose, always inside what the plan allows."},
+    {"type": "datetime", "name": "Plan End", "style": WHEN, "description": "The last moment the plan the customer paid for covers, so staff can see how far the customer can extend. The customer can move the pick-up anywhere up to this time without paying more (and up to 60 minutes after it as a courtesy). Written by the booking form. When the customer pays for more time, staff update it."},
     {"type": "text", "name": "Duration", "description": "How long the luggage is stored: the time from Drop-off to Pick-up, in days, hours and minutes (e.g. 46 days, 1 day 7 hours). Worked out and written by the booking form."},
     {"type": "number", "name": "Bags", "style": {"type": "plain", "precision": 0}},
     {"type": "number", "name": "Oversized Bags", "style": {"type": "plain", "precision": 0}, "description": "How many of the bags are oversized (28in+, bike, surfboard). 0 = none."},

@@ -2,7 +2,7 @@
 import importlib.util
 import os
 import unittest
-from datetime import datetime
+from datetime import datetime, timedelta
 
 _spec = importlib.util.spec_from_file_location("migrate", os.path.join(os.path.dirname(__file__), "migrate-to-v2.py"))
 m = importlib.util.module_from_spec(_spec)
@@ -81,8 +81,9 @@ class MapRow(unittest.TestCase):
         self.assertEqual((f["Bags"], f["Oversized Bags"], f["Total (VND)"], f["Discount"]), (1, 0, 30000, 0))
         self.assertEqual((f["Name"], f["WhatsApp"], f["Email"]), ("Test One", "+84905955161", "one@example.com"))
         self.assertEqual(f["Old Record ID"], "recAAA")
-        self.assertEqual(notes, [])
-        self.assertNotIn("Migration Note", f)
+        self.assertEqual(f["Plan End"], "2026-08-10 11:30:00")  # 2 hours billed from 09:30
+        self.assertEqual(notes, [m.PLAN_END_NOTE])  # the only thing worth saying about this row
+        self.assertEqual(f["Migration Note"], m.PLAN_END_NOTE)
 
     def test_what_the_old_table_never_had_is_left_empty(self):
         f, _ = m.map_row(HOURLY)
@@ -154,6 +155,71 @@ class MapRow(unittest.TestCase):
     def test_the_time_stored_as_utc_is_moved_to_vietnam_time(self):
         f, _ = m.map_row(row(**{"Submitted at": "2026-08-10T00:00:00.000+00:00"}))
         self.assertEqual(f["Submitted at"], "2026-08-10 07:00:00")
+
+
+class PlanEnd(unittest.TestCase):
+    def end(self, **kw):
+        src = row(**kw)
+        drop, ph = m.moment(src.get("Drop-off Date"), src.get("Drop-off Time"))
+        e = m.plan_end(src, drop, ph)
+        return e.strftime("%Y-%m-%d %H:%M") if e else None
+
+    def test_by_the_day_ends_24_hours_after_drop_off(self):
+        self.assertEqual(self.end(**{"Plan": ["By the Day"], "Drop-off Date": "2026-08-10" + D19, "Drop-off Time": "10:00"}), "2026-08-11 10:00")
+
+    def test_by_the_hour_ends_after_the_hours_that_were_billed(self):
+        d = {"Plan": ["By the Hour"], "Drop-off Date": "2026-08-10" + D19, "Drop-off Time": "09:30"}
+        self.assertEqual(self.end(**d, Duration="3 hours"), "2026-08-10 12:30")
+        self.assertEqual(self.end(**d, Duration="1 hour"), "2026-08-10 10:30")
+        self.assertIsNone(self.end(**d, Duration="Min 1 hr, billed per hr"))  # no hours to go on
+
+    def test_flat_plans_follow_the_old_rules_when_there_is_no_pick_up_time(self):
+        d = {"Drop-off Date": "2026-08-21" + D19, "Drop-off Time": "12:00"}
+        self.assertEqual(self.end(**d, Plan=["Mini"]), "2026-08-28 12:00")
+        self.assertEqual(self.end(**d, Plan=["Strand"]), "2026-09-20 12:00")  # 30 days, as the old Date column did
+        self.assertEqual(self.end(**d, Plan=["Long Stay"], Duration="4 months"), "2026-12-19 12:00")  # 120 days
+        self.assertEqual(self.end(**d, Plan=["Long Stay"], Duration="2 × 4 months"), "2027-04-18 12:00")  # 240 days
+
+    def test_rows_made_by_the_newer_form_use_calendar_months(self):
+        d = {"Drop-off Date": "2026-08-21" + D19, "Drop-off Time": "12:00", "Pickup Time": "10:00"}
+        self.assertEqual(self.end(**d, Plan=["Strand"]), "2026-09-21 12:00")
+        self.assertEqual(self.end(**d, Plan=["Long Stay"]), "2026-12-21 12:00")
+
+    def test_nothing_is_worked_out_without_a_real_drop_off_time_or_a_known_plan(self):
+        self.assertIsNone(self.end(**{"Plan": ["By the Day"], "Drop-off Date": "2026-09-13" + D00}))  # no time: only a placeholder
+        self.assertIsNone(self.end(**{"Plan": ["Custom"], "Drop-off Date": "2026-08-10" + D19, "Drop-off Time": "10:00"}))
+        self.assertIsNone(self.end(**{"Drop-off Date": "2026-08-10" + D19, "Drop-off Time": "10:00"}))  # no plan
+
+    def test_a_plan_that_would_end_before_the_customer_collected_is_left_blank(self):
+        # An extension row: same drop-off as the first row, 4 hours on the table, but only the 1 extra hour on the label.
+        ext = {"Plan": ["By the Hour"], "Drop-off Date": "2026-08-12" + D19, "Drop-off Time": "12:30",
+               "Duration": "1 hour", "Pickup Date": "2026-08-12" + D19, "Pickup Time": "16:30"}
+        self.assertIsNone(self.end(**ext))
+        f, notes = m.map_row(row(**ext))
+        self.assertNotIn("Plan End", f)
+        self.assertNotIn(m.PLAN_END_NOTE, notes)
+        # A pick-up inside the 60 minutes of grace after the end is fine.
+        self.assertEqual(self.end(**dict(ext, Duration="3 hours", **{"Pickup Time": "16:00"})), "2026-08-12 15:30")
+
+    def test_a_paid_extension_is_flagged_because_plan_end_only_knows_the_original_plan(self):
+        f, notes = m.map_row(row(**{"Plan": ["Strand"], "Drop-off Date": "2026-08-21" + D19, "Drop-off Time": "12:00", "Extand": 600000}))
+        self.assertEqual(f["Plan End"], "2026-09-20 12:00:00")
+        self.assertIn(m.EXTENSION_NOTE, notes)
+        _, plain = m.map_row(row(**{"Plan": ["Strand"], "Drop-off Date": "2026-08-21" + D19, "Drop-off Time": "12:00"}))
+        self.assertNotIn(m.EXTENSION_NOTE, plain)
+
+    def test_a_month_end_is_clamped(self):
+        dt = datetime(2026, 1, 31, 9, 0, tzinfo=m.VN)
+        self.assertEqual(m.add_months(dt, 1).strftime("%Y-%m-%d %H:%M"), "2026-02-28 09:00")
+        self.assertEqual(m.add_months(dt, 13).strftime("%Y-%m-%d"), "2027-02-28")
+
+    def test_a_copied_row_gets_it_and_says_where_it_came_from(self):
+        f, notes = m.map_row(dict(HOURLY, Duration="3 hours"))
+        self.assertEqual(f["Plan End"], "2026-08-10 12:30:00")
+        self.assertIn(m.PLAN_END_NOTE, notes)
+        f2, notes2 = m.map_row(row(**{"Reference": "Doanh thu cũ", "Total (VND)": 1820000}))
+        self.assertNotIn("Plan End", f2)
+        self.assertNotIn(m.PLAN_END_NOTE, notes2)
 
 
 class HasData(unittest.TestCase):

@@ -5,6 +5,7 @@
   python3 docs/lark/migrate-to-v2.py --apply --only recA,recB     # copy just those rows first (a pilot)
   python3 docs/lark/migrate-to-v2.py --apply                      # copy every row not copied yet
   python3 docs/lark/migrate-to-v2.py --verify                     # read-only: check every copied row against its source
+  python3 docs/lark/migrate-to-v2.py --add-plan-end [--apply]     # fill the Plan End column on rows already copied
 
 What it guarantees (read docs/lark/2026-09-20-bookings-v2.md, section 8):
   * The old tables are only READ. The only table written is the target, and only with new rows.
@@ -16,13 +17,15 @@ What it guarantees (read docs/lark/2026-09-20-bookings-v2.md, section 8):
   * A row with no data at all (only the automatic timestamp) is skipped and listed.
 Needs lark-cli (Node >= 20.12) on PATH: export PATH="$HOME/.nvm/versions/node/v22.23.1/bin:$PATH"
 """
-import argparse, json, os, re, subprocess, sys, time
+import argparse, calendar, json, os, re, subprocess, sys, time
 from datetime import datetime, timedelta, timezone
 
 BASE = os.environ.get("LARK_BASE_APP_TOKEN", "GrotbcqWoafD0NsZDVglv405gQg")
 SOURCE_NAME = "Bookings (old, archived)"  # renamed on 2026-09-20 when production switched to the new table
 TARGET_NAME = "Bookings"
 VN = timezone(timedelta(hours=7))  # Vietnam has no daylight saving; the Base's zone is UTC+7 too
+PLAN_END_NOTE = "Plan End worked out from the plan's length (the old table did not record it)"
+EXTENSION_NOTE = "Plan End covers the original plan only; the customer also paid an extension (Extension Fee), so the real end may be later"
 PLACEHOLDER_TIME = "00:00"         # the shop opens at 07:00, so 00:00 can only mean "no time was recorded"
 
 # What counts as data in an old row. The automatic timestamp and the two formula columns do not.
@@ -78,6 +81,52 @@ def elapsed_label(a, b):
     return " ".join(p for p in (part(days, "day"), part(hours, "hour"), part(mins, "minute")) if p)
 
 
+def add_months(dt, months):
+    """The same wall-clock time `months` later; a day that is not in that month (31 Jan + 1 month) becomes its last day."""
+    year, month = divmod(dt.year * 12 + (dt.month - 1) + months, 12)
+    month += 1
+    return dt.replace(year=year, month=month, day=min(dt.day, calendar.monthrange(year, month)[1]))
+
+
+def plan_end(src, drop, drop_placeholder):
+    """When the plan an old row paid for ends, from the plan's length. None unless the plan and a real drop-off time are
+    known. Rows with no pick-up time were priced under the old rules (Strand 30 days, Long Stay 120), the same as the
+    old Date column; rows made by the newer form use calendar months."""
+    if not drop or drop_placeholder:
+        return None
+    plan, label = one(src.get("Plan")), str(src.get("Duration") or "").strip()
+    newer_form = bool(src.get("Pickup Time"))
+    end = None
+    if plan == "By the Day":
+        end = drop + timedelta(days=1)
+    elif plan == "By the Hour":
+        hours = re.fullmatch(r"(\d+) hours?", label)
+        end = drop + timedelta(hours=int(hours.group(1))) if hours else None
+    elif plan == "Mini":
+        end = drop + timedelta(days=7)
+    elif plan == "Strand":
+        end = add_months(drop, 1) if newer_form else drop + timedelta(days=30)
+    elif plan == "Long Stay":
+        if label == "2 × 4 months":
+            end = drop + timedelta(days=240)
+        else:
+            end = add_months(drop, 4) if newer_form else drop + timedelta(days=120)
+    # A plan cannot end before the customer collected. If it seems to, the row does not describe one whole plan
+    # (for example a row that only adds the extra hours of an extension), so nothing is filled in.
+    pick, pick_placeholder = moment(src.get("Pickup Date"), src.get("Pickup Time"))
+    if end and pick and not pick_placeholder and end + timedelta(minutes=60) < pick:
+        return None
+    return end
+
+
+def plan_end_notes(src):
+    """What to say next to a Plan End that was worked out from the plan's length."""
+    notes = [PLAN_END_NOTE]
+    if src.get("Extand"):
+        notes.append(EXTENSION_NOTE)
+    return notes
+
+
 def map_row(src):
     """One old row -> (the new row's fields, the notes for Migration Note)."""
     f, notes = {}, []
@@ -100,6 +149,10 @@ def map_row(src):
         f["Drop-off"] = stamp(drop)
     if pick:
         f["Pick-up"] = stamp(pick)
+    end = plan_end(src, drop, drop_ph)
+    if end:
+        f["Plan End"] = stamp(end)
+        notes.extend(plan_end_notes(src))
     if drop_ph:
         notes.append("Drop-off time was not recorded; 00:00 is a placeholder")
     if pick_ph:
@@ -205,7 +258,7 @@ def check_options(target, rows):
 
 # ── verifying ──
 
-def verify(source, target, only=None):
+def verify(source, target, only=None, ignore=()):
     src_rows = [r for r in records(source) if has_data(r) and (not only or r["record_id"] in only)]
     tgt_all = records(target)
     tgt = {}
@@ -227,6 +280,8 @@ def verify(source, target, only=None):
 
         def same(label, want, got):
             nonlocal checked
+            if label in ignore:
+                return
             checked += 1
             if want != got:
                 problems.append(f"{ref} {label}: source {want!r}, copy {got!r}")
@@ -265,11 +320,15 @@ def verify(source, target, only=None):
     print(f"source rows with data: {len(src_rows)} | found in the copy: {len(copied)} | rows in the target with an Old Record ID: {len(tgt)}")
     print(f"values compared: {checked}")
     for col_s, col_t in (("Total (VND)", "Total (VND)"), ("Discount", "Discount"), ("Extand", "Extension Fee")):
+        if col_t in ignore:
+            continue
         a, b = total(src_rows, col_s), total(copied, col_t)
         print(f"   sum of {col_t:14} source {a:>12,.0f}   copy {b:>12,.0f}   {'same' if a == b else 'DIFFERENT'}")
         if a != b:
             problems.append(f"sum of {col_t} differs")
     for col in ("Status", "Plan"):
+        if col in ignore:
+            continue
         cs = {}; ct = {}
         for r in src_rows: cs[str(one(r.get(col)))] = cs.get(str(one(r.get(col))), 0) + 1
         for r in copied: ct[str(one(r.get(col)))] = ct.get(str(one(r.get(col))), 0) + 1
@@ -284,18 +343,82 @@ def verify(source, target, only=None):
     print("\nOK: every copied value matches its source, and nothing is missing.")
 
 
+def add_plan_end(source, target, apply, backup_dir):
+    """Fill Plan End (and say so in Migration Note) on rows already copied. Nothing else on any row changes."""
+    src = {r["record_id"]: r for r in records(source)}
+    before = records(target)
+    updates, shown = {}, []
+    for t in before:
+        s = src.get(t.get("Old Record ID"))
+        if not s or t.get("Plan End"):
+            continue
+        drop, drop_ph = moment(s.get("Drop-off Date"), s.get("Drop-off Time"))
+        end = plan_end(s, drop, drop_ph)
+        if not end:
+            continue
+        note = t.get("Migration Note") or ""
+        add = [n for n in plan_end_notes(s) if n not in note]
+        updates[t["record_id"]] = {"Plan End": stamp(end), "Migration Note": " | ".join(x for x in [note, *add] if x)}
+        shown.append((str(t.get("Reference"))[:18], str(one(t.get("Plan"))), stamp(drop)[:16], stamp(end)[:16], str(one(t.get("Status")))))
+    left = [str(t.get("Reference"))[:18] for t in before if t.get("Old Record ID") and not t.get("Plan End") and t["record_id"] not in updates]
+    print(f"rows to fill: {len(updates)} | copied rows left without a Plan End (not enough to work it out): {len(left)} {left}\n")
+    for ref, plan, d, e, status in shown:
+        print(f"   {ref:18} {plan:11} {status:9} drop-off {d}  ->  plan ends {e}")
+    if not apply or not updates:
+        print("\nDry run finished. Run again with --add-plan-end --apply to fill them." if not apply else "\nNothing to fill.")
+        return
+    os.makedirs(backup_dir, exist_ok=True)
+    snap = os.path.join(backup_dir, f"live-table-before-plan-end-{time.strftime('%Y%m%d-%H%M%S')}.json")
+    json.dump(before, open(snap, "w"), ensure_ascii=False)
+    print(f"\nbackup of the live table before this change: {snap}")
+    ids = list(updates)
+    for i in range(0, len(ids), 200):
+        cli(["+record-batch-update", "--json", json.dumps({"update_records": {k: updates[k] for k in ids[i:i + 200]}}, ensure_ascii=False)], target)
+    after = {r["record_id"]: r for r in records(target)}
+    problems = []
+    for b in before:
+        a = after.get(b["record_id"])
+        if a is None:
+            problems.append(f"row is missing now: {b.get('Reference')}")
+            continue
+        for col, was in b.items():
+            if col in ("record_id", "Plan End", "Migration Note"):
+                continue
+            if a.get(col) != was:
+                problems.append(f"{str(b.get('Reference'))[:18]} {col} changed: {was!r} -> {a.get(col)!r}")
+        want = updates.get(b["record_id"])
+        if want:
+            if a.get("Plan End") is None or when(a["Plan End"]).strftime("%Y-%m-%d %H:%M:%S") != want["Plan End"]:
+                problems.append(f"{str(b.get('Reference'))[:18]} Plan End is {a.get('Plan End')!r}, expected {want['Plan End']}")
+            if a.get("Migration Note") != want["Migration Note"]:
+                problems.append(f"{str(b.get('Reference'))[:18]} Migration Note is not what was written")
+        elif a.get("Plan End") != b.get("Plan End") or a.get("Migration Note") != b.get("Migration Note"):
+            problems.append(f"{str(b.get('Reference'))[:18]} changed although it was not meant to")
+    print(f"checked {len(before)} rows: every column other than Plan End and Migration Note is unchanged on every row")
+    if problems:
+        print(f"\nPROBLEMS ({len(problems)}):")
+        for p in problems:
+            print("   -", p)
+        sys.exit(1)
+    print(f"OK: Plan End filled on {len(updates)} rows; nothing else changed.")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--target", default=TARGET_NAME, help=f'name of the live table (default "{TARGET_NAME}")')
     ap.add_argument("--apply", action="store_true", help="write the rows (default: dry run)")
     ap.add_argument("--only", help="comma-separated old record ids: copy/verify just those rows")
     ap.add_argument("--verify", action="store_true", help="read-only: compare the copy with the source")
+    ap.add_argument("--add-plan-end", action="store_true", help="fill the Plan End column on rows already copied (dry run unless --apply)")
+    ap.add_argument("--ignore", default="", help='with --verify: columns staff have edited since the copy, e.g. "Status,Note,Discount,Extension Fee,Received (Thực nhận)"')
     ap.add_argument("--backup-dir", default=os.path.expanduser("~/stow-lark-backup/migration-2026-09-20"))
     a = ap.parse_args()
     only = set(a.only.split(",")) if a.only else None
     source, target = find_tables(a.target)
+    if a.add_plan_end:
+        return add_plan_end(source, target, a.apply, a.backup_dir)
     if a.verify:
-        return verify(source, target, only)
+        return verify(source, target, only, tuple(c.strip() for c in a.ignore.split(",") if c.strip()))
 
     src_all = records(source)
     os.makedirs(a.backup_dir, exist_ok=True)
@@ -337,8 +460,8 @@ def main():
             log.write(json.dumps({"ts": time.strftime("%Y-%m-%dT%H:%M:%S"), "old_record_id": r["record_id"], "new_record_id": new_id, "reference": f.get("Reference")}, ensure_ascii=False) + "\n")
         print(f"copied {len(chunk)} rows")
     log.close()
-    print("\nChecking what was written:\n")
-    verify(source, target, only)
+    print("\nChecking what was just written:\n")
+    verify(source, target, {r["record_id"] for _, _, r in fresh})
 
 
 if __name__ == "__main__":
