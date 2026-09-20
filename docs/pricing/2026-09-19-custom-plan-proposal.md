@@ -1,6 +1,6 @@
 # Đề xuất: gói "Custom" và cách tính giá theo số ngày
 
-> **Trạng thái: ĐÃ TRIỂN KHAI trong form đặt chỗ (2026-09-20). Chưa commit.** Mục 1-11 bên dưới là bản đề xuất gốc, giữ lại để biết vì sao chọn cách này.
+> **Trạng thái: ĐÃ TRIỂN KHAI trong form đặt chỗ và đã push lên `main` (2026-09-20, commit `d9076f4`).** Mục 1-11 bên dưới là bản đề xuất gốc, giữ lại để biết vì sao chọn cách này.
 >
 > **Đã làm (theo hướng của chủ cửa hàng: nhập giờ gửi trước, giờ lấy bị giới hạn theo gói, có gói Custom):**
 > - Bộ máy tính giá: `src/lib/pricing.ts` (hàm thuần, một nơi duy nhất quyết định giá). 47 test có số liệu cụ thể ở `src/lib/pricing.test.ts`, chạy bằng `npm test`.

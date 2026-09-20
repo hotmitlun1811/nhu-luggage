@@ -1,7 +1,7 @@
 # Chuẩn dữ liệu bảng Bookings trên Lark (khớp với form đặt chỗ mới)
 
-> **Trạng thái (2026-09-20): ĐÃ ÁP DỤNG trên bảng `Test`. CHƯA áp dụng cho bảng tổng `Bookings`. Code form/route sửa xong nhưng chưa commit.**
-> Khi áp dụng cho bảng tổng, sửa dòng này. Bảng tổng lúc kiểm tra: 43 dòng, revision 380, chưa bị chạm.
+> **Trạng thái (2026-09-20): ĐÃ ÁP DỤNG trên bảng `Test`. CHƯA áp dụng cho bảng tổng `Bookings`. Code form và route đã commit và push lên `main` (`20be2fb`, `d9076f4`).**
+> Cho đến khi bảng tổng được đồng bộ, route dùng đường thử lại bằng cột cũ (mục 3). Khi áp dụng cho bảng tổng, sửa dòng này. Bảng tổng lúc kiểm tra: 43 dòng, revision 380, chưa bị chạm.
 >
 > Người đọc: chủ cửa hàng. Script lặp lại các bước: [`standardize-bookings.py`](standardize-bookings.py).
 
@@ -56,7 +56,7 @@ Thử khô trên bảng tổng ngày 2026-09-20 cho kế hoạch **y hệt Test*
 - 2 dòng trống và dòng "Doanh thu cũ": không đụng.
 - Các cột của riêng bạn (`Extand`, `Extand1`, `Extand 2`, `Discount`, `Note`, `Thực nhận`): không đụng.
 
-## 6. Code đã đổi (chưa commit)
+## 6. Code đã đổi (đã push lên `main`)
 
 - [`src/lib/lark-booking.ts`](../../src/lib/lark-booking.ts): quy tắc chuẩn hóa (điện thoại, Duration, Status, bản ghi đầy đủ và bản cột cũ, tin nhắn nhóm chat), 13 test.
 - [`src/app/api/lark/booking/route.ts`](../../src/app/api/lark/booking/route.ts): dùng module trên, tự thử lại bằng cột cũ.
