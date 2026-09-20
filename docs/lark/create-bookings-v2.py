@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
-"""Create the "Bookings v2" table: one column for everything the booking form collects or works out.
+"""Create the "Bookings" table (the v2 layout): one column for everything the booking form collects or works out.
 
   python3 docs/lark/create-bookings-v2.py                     # dry run (default): only reads, prints the plan
   python3 docs/lark/create-bookings-v2.py --apply             # create the table (or add what is missing)
 
 Safe by design:
   * A dry run only reads. --apply only ever writes to the table it creates (found by name).
-  * It never touches "Bookings" or "Test", or any row of any table.
+  * It never touches "Bookings (old, archived)" or "Test", or any row of any table.
   * Repeatable: if the table already exists it only adds the columns that are missing.
 Read docs/lark/2026-09-20-bookings-v2.md for why each column exists.
 Needs lark-cli (Node >= 20.12) on PATH: export PATH="$HOME/.nvm/versions/node/v22.23.1/bin:$PATH"
@@ -14,8 +14,8 @@ Needs lark-cli (Node >= 20.12) on PATH: export PATH="$HOME/.nvm/versions/node/v2
 import argparse, json, os, subprocess, sys
 
 BASE = os.environ.get("LARK_BASE_APP_TOKEN", "GrotbcqWoafD0NsZDVglv405gQg")
-PROTECTED = {"Bookings", "Test"}  # the existing tables: this script must never write to them
-DEFAULT_NAME = "Bookings v2 (test)"
+PROTECTED = {"Bookings (old, archived)", "Test"}  # the old tables: this script must never write to them
+DEFAULT_NAME = "Bookings"  # the live table (it was called "Bookings v2 (test)" until 2026-09-20)
 
 # Same colours as the existing Status / Lane / Plan columns, so staff see what they are used to.
 def opts(*pairs):
@@ -31,7 +31,8 @@ FIELDS = [
      "options": opts(("Booking", "Blue"), ("Confirm", "Orange"), ("Paid", "Wathet"), ("Complete", "Yellow"), ("Cancel", "Turquoise")),
      "description": "A new booking starts as Booking. Staff move it on."},
     {"type": "select", "name": "Source", "multiple": False, "options": opts(("Booking Form", "Blue"), ("Intake", "Purple"))},
-    {"type": "created_at", "name": "Submitted at", "style": WHEN},
+    {"type": "datetime", "name": "Submitted at", "style": WHEN, "default_value": {"$slot": "record_created_time"},
+     "description": "When the booking was made. A new row fills itself with the time it is created. Rows moved from the old table keep the time the customer really booked."},
     # ── the plan ──
     {"type": "select", "name": "Lane", "multiple": False, "options": opts(("Flexible", "Wathet"), ("Flat Rate", "Purple"), ("Custom", "Carmine"))},
     {"type": "select", "name": "Plan", "multiple": False,
@@ -61,6 +62,8 @@ FIELDS = [
     {"type": "text", "name": "Note", "description": "Filled by staff."},
     {"type": "auto_number", "name": "Row No.", "style": {"rules": [{"type": "incremental_number", "length": 5}]},
      "description": "A number Lark gives every row and never repeats, even when two rows share a Reference (for example an extension). Use it when a row must be told apart for certain."},
+    {"type": "text", "name": "Old Record ID", "description": "Only for rows moved from the old Bookings table: the id of the row they were copied from. Lets the move be repeated without making duplicates, and every row be checked against its source."},
+    {"type": "text", "name": "Migration Note", "description": "Only for rows moved from the old Bookings table: what to know about that row (for example a time the old table never recorded). Empty when there is nothing to say."},
 ]
 # Made last: a formula can only refer to columns that already exist.
 FORMULA = {"type": "formula", "name": "Thực nhận", "expression": "[Total (VND)]-[Discount]+[Extension Fee]",

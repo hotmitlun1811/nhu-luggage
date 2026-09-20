@@ -162,12 +162,14 @@ export function elapsedLabel(dropOffDate?: string, dropOffTime?: string, pickupD
  * caller did not send is left out rather than guessed (the staff form has no
  * pick-up, price breakdown or consent).
  */
-export function buildBookingFieldsV2(body: BookingBody, ref: string): Record<string, unknown> {
+export function buildBookingFieldsV2(body: BookingBody, ref: string, now: number = Date.now()): Record<string, unknown> {
   const { source, lane, planName, oversized, oversizedCount, dropOffDate, dropOffTime, pickupDate, pickupTime, name, phone, email, pax, total, priceDetail, pricePerBag, oversizedSurcharge, phoneCountry, consentAt, termsVersion } = body;
   const f: Record<string, unknown> = {
     Reference: ref,
     Status: NEW_BOOKING_STATUS,
     Source: source || "Booking Form",
+    // A plain date-time column (rows moved from the old table keep their real booking time), so it is written here.
+    "Submitted at": now,
     Lane: laneLabel(lane as LarkLane),
     Plan: planName,
     "Drop-off": vietnamMoment(dropOffDate as string, dropOffTime || "12:00"),

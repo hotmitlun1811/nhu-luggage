@@ -199,6 +199,14 @@ describe("buildBookingFieldsV2 (the Bookings v2 table)", () => {
     expect(f["Terms Agreed At"]).toBe(Date.parse(consentAt));
   });
 
+  it("writes when the booking was made, since Submitted at is a plain column", () => {
+    expect(buildBookingFieldsV2(form, "STW-9", 1_790_000_000_000)["Submitted at"]).toBe(1_790_000_000_000);
+    const before = Date.now();
+    const f = buildBookingFieldsV2(form, "STW-9");
+    expect(f["Submitted at"] as number).toBeGreaterThanOrEqual(before);
+    expect(f["Submitted at"] as number).toBeLessThanOrEqual(Date.now());
+  });
+
   it("stores drop-off and pick-up as Vietnam time, whatever zone the server runs in", () => {
     const f = buildBookingFieldsV2(form, "STW-9");
     expect(f["Drop-off"]).toBe(Date.UTC(2026, 8, 20, 2, 0)); // 09:00 in Vietnam (UTC+7) is 02:00 UTC
