@@ -1,16 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { CheckCircle2, MessageCircle, Send } from "lucide-react";
 import CountField from "@/components/booking/CountField";
 import DateTimeField from "@/components/booking/DateTimeField";
-import { longDate } from "@/lib/extension";
+import PriceBreakdown from "@/components/booking/PriceBreakdown";
+import type { Dictionary } from "@/content/types";
+import { longDate, stampLabel } from "@/lib/extension";
+import { extensionPrice, oversizedNeedsAnswer, oversizedRange } from "@/lib/extension-price";
+import { vnd } from "@/lib/plans";
+import type { Stamp } from "@/lib/pricing";
 import { extendHelpUrl } from "./whatsapp";
 
 /*
- * The "extend my storage" form: two questions, nothing else. Who the customer
+ * The "extend my storage" form: two questions, and the price. Who the customer
  * is comes from the Booking ID in their link, checked on the server, so no
  * name, phone or email is asked for (see src/lib/extension.ts).
+ *
+ * The price is worked out here with the booking form's own engine and shown
+ * with the booking form's own receipt (src/lib/extension-price.ts), and again
+ * on the server, which is the number that is saved and sent to staff. One extra
+ * question appears only when the price cannot be worked out without it: some of
+ * the bags are extended, and the booking has both oversized and normal bags.
  *
  * English only, like the staff Intake form: the link is sent by Stow on
  * WhatsApp and the words are kept short and plain.
@@ -26,6 +37,7 @@ const ASK_STOW = "We cannot take this request online. Please message us on Whats
 const ERROR_TEXT: Record<string, string> = {
   bags: "That is more bags than this booking has. Please check the number.",
   date: "That date does not work for this booking. Please choose another day.",
+  oversized: "Please check how many of these bags are oversized.",
   "not-found": ASK_STOW,
   closed: ASK_STOW,
   "no-contact": ASK_STOW,
@@ -34,21 +46,30 @@ const ERROR_TEXT: Record<string, string> = {
 };
 const FALLBACK_ERROR = "We could not send your request. Please check your connection and try again, or message us on WhatsApp.";
 
+type SentPrice = { kind: "priced" | "included" | "unknown"; total?: number };
+
 export default function ExtendForm({
   reference,
   contact,
   bags,
+  oversizedBags,
+  planEnd,
   maxBags,
   pickUpLabel,
   minDate,
   maxDate,
   today,
+  dict,
 }: {
   reference: string;
   /** Who the booking is for, as the server decided the customer may see it (see contactForCustomer). Empty for what the booking does not have. */
   contact: { name: string; whatsapp: string; email: string };
   /** Bags on the booking; null when it never recorded them. */
   bags: number | null;
+  /** How many of them are oversized; null when it never recorded that. */
+  oversizedBags: number | null;
+  /** When the plan already paid for ends; null when the booking never recorded it (then there is no price to show). */
+  planEnd: Stamp | null;
   /** The most that can be asked for. */
   maxBags: number;
   /** "Sun, 27 September 2026 at 09:00", or null when the booking has no pick-up. */
@@ -56,13 +77,29 @@ export default function ExtendForm({
   minDate: string;
   maxDate: string;
   today: string;
+  /** The English booking-form dictionary: the price receipt is the booking form's own. */
+  dict: Dictionary["booking"];
 }) {
   // Most people extend everything, so that is where the count starts.
   const [count, setCount] = useState(bags ?? 1);
   const [date, setDate] = useState("");
+  const [oversizedPick, setOversizedPick] = useState<number | null>(null);
   const [status, setStatus] = useState<"idle" | "sending" | "sent">("idle");
   const [dateError, setDateError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [sentPrice, setSentPrice] = useState<SentPrice | null>(null);
+
+  // How many of the extended bags are oversized: known from the booking, or asked when it could be either.
+  // Until they answer it is the highest possible, so the price is never lower than it will turn out.
+  const range = oversizedRange({ bags, oversizedBags }, count);
+  const askOversized = oversizedNeedsAnswer(range);
+  const oversized = range ? (askOversized ? Math.min(range.max, Math.max(range.min, oversizedPick ?? range.max)) : range.min) : null;
+
+  const price = useMemo(
+    () => (date ? extensionPrice({ planEnd, bags, oversizedBags }, { bags: count, newPickupDate: date, oversizedBags: oversized ?? undefined }) : null),
+    [planEnd, bags, oversizedBags, count, date, oversized]
+  );
+  const priced = price?.kind === "priced" ? price : null;
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -78,10 +115,12 @@ export default function ExtendForm({
       const res = await fetch("/api/extend", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ reference, bags: count, newPickupDate: date }),
+        body: JSON.stringify({ reference, bags: count, newPickupDate: date, oversizedBags: askOversized ? oversized : undefined }),
       });
-      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string };
+      const data = (await res.json().catch(() => ({}))) as { ok?: boolean; error?: string; price?: SentPrice };
       if (res.ok && data.ok) {
+        // The server worked the price out again; that is the number staff have, so it is the one shown.
+        setSentPrice(data.price ?? null);
         setStatus("sent");
         return;
       }
@@ -102,12 +141,14 @@ export default function ExtendForm({
           Request sent
         </h1>
         <p className="mx-auto mt-[8px] max-w-[340px] text-[14px] leading-relaxed text-white/70" style={{ fontFamily: "var(--font-inter)" }}>
-          Stow will message you on WhatsApp to confirm the price and the pick-up time.
+          Stow will message you on WhatsApp to confirm and to agree the pick-up time.
         </p>
         <dl className="mx-auto mt-[24px] max-w-[340px] divide-y divide-white/10 rounded-xl border border-white/[0.12] bg-white/[0.05] text-left text-[13px]" style={{ fontFamily: "var(--font-inter)" }}>
           <Row term="Booking ID" value={reference} mono />
           <Row term="Bags to extend" value={String(count)} />
           <Row term="New pick-up date" value={longDate(date)} />
+          {sentPrice?.kind === "priced" && <Row term="Total" value={vnd(sentPrice.total ?? 0)} />}
+          {sentPrice?.kind === "included" && <Row term="Extra to pay" value="Nothing" />}
         </dl>
       </div>
     );
@@ -115,22 +156,25 @@ export default function ExtendForm({
 
   const sending = status === "sending";
 
+  // The label beside the total says what the number is for, like the booking form's "Total (46 days)".
+  const totalLabel = priced
+    ? `Total (${priced.extraDays} extra ${priced.extraDays === 1 ? "day" : "days"})${count > 1 ? ` · ${count} bags` : ""}`
+    : "Total";
+
   return (
     <form onSubmit={submit} noValidate>
       <h1 className="text-[24px] font-bold leading-tight text-white" style={{ fontFamily: "var(--font-poppins)" }}>
         Extend your storage
       </h1>
-      <p className="mt-[8px] text-[14px] leading-relaxed text-white/60" style={{ fontFamily: "var(--font-inter)" }}>
-        Two questions. We already have your contact details, so you do not need to type them again.
-      </p>
 
       <dl className="mt-[20px] divide-y divide-white/10 rounded-xl border border-white/[0.12] bg-white/[0.05] text-[13px]" style={{ fontFamily: "var(--font-inter)" }}>
         <Row term="Booking ID" value={reference} mono />
         {contact.name && <Row term="Name" value={contact.name} />}
         {contact.whatsapp && <Row term="WhatsApp" value={contact.whatsapp} mono />}
         {contact.email && <Row term="Email" value={contact.email} />}
-        {bags != null && <Row term="Bags" value={String(bags)} />}
+        {bags != null && <Row term="Bags" value={oversizedBags ? `${bags} (${oversizedBags} oversized)` : String(bags)} />}
         {pickUpLabel && <Row term="Pick-up now" value={pickUpLabel} />}
+        {planEnd && <Row term="Paid until" value={stampLabel(planEnd)} />}
       </dl>
       <p className="mt-[10px] text-[12px] leading-relaxed text-white/45" style={{ fontFamily: "var(--font-inter)" }}>
         Is this your booking? If not,{" "}
@@ -147,6 +191,19 @@ export default function ExtendForm({
               How many bags do you want to extend?
             </label>
             <CountField id="extend-bags" value={count} min={1} max={maxBags} onChange={setCount} decLabel="One bag fewer" incLabel="One bag more" />
+          </div>
+        )}
+
+        {/* Only when the price depends on it: some of the bags, and the booking has both kinds. */}
+        {askOversized && range && oversized !== null && (
+          <div>
+            <label htmlFor="extend-oversized" className={LABEL}>
+              How many of these {count} bags are oversized?
+            </label>
+            <CountField id="extend-oversized" value={oversized} min={range.min} max={range.max} onChange={setOversizedPick} decLabel="One fewer" incLabel="One more" />
+            <p className="mt-1.5 text-[11px] leading-snug text-white/35" style={{ fontFamily: "var(--font-inter)" }}>
+              {dict.oversizedTipBody}
+            </p>
           </div>
         )}
 
@@ -180,6 +237,36 @@ export default function ExtendForm({
         </div>
       </fieldset>
 
+      {/* The price, with the working under it: the booking form's own receipt. */}
+      <div className="mt-[24px] flex flex-col gap-2.5">
+        <div className="flex items-center justify-between pt-0.5">
+          <span className="text-[11.5px] text-white/30" style={{ fontFamily: "var(--font-inter)" }}>
+            {totalLabel}
+          </span>
+          <span className="text-[21px] font-bold text-[#E8742C]" style={{ fontFamily: "var(--font-poppins)" }}>
+            {priced ? vnd(priced.total) : price?.kind === "included" ? vnd(0) : "—"}
+          </span>
+        </div>
+        {priced && priced.to.time !== "00:00" && (
+          <p className="text-[11.5px] leading-snug text-white/45" style={{ fontFamily: "var(--font-inter)" }}>
+            The price is for pick-up by {priced.to.time} on {longDate(priced.to.date)}.
+          </p>
+        )}
+        {price?.kind === "included" && (
+          <p className="text-[11.5px] leading-snug text-white/45" style={{ fontFamily: "var(--font-inter)" }}>
+            {longDate(date)} is inside the plan you already paid for, which runs until {stampLabel(price.planEnd)}. Nothing extra to pay.
+          </p>
+        )}
+        {price?.kind === "unknown" && (
+          <p className="text-[11.5px] leading-snug text-white/45" style={{ fontFamily: "var(--font-inter)" }}>
+            Stow will work out the price and confirm it on WhatsApp.
+          </p>
+        )}
+        {price?.kind !== "included" && price?.kind !== "unknown" && (
+          <PriceBreakdown dict={dict} locale="en" quote={priced ? priced.quote : null} bags={priced ? priced.bags : count} oversizedBags={priced ? priced.oversizedBags : 0} pickUp={priced ? priced.to : null} />
+        )}
+      </div>
+
       {error && (
         <div role="alert" className="mt-[20px] rounded-lg border border-red-400/40 bg-red-400/10 px-3 py-2.5 text-[13px] leading-snug text-red-100" style={{ fontFamily: "var(--font-inter)" }}>
           <p>{error}</p>
@@ -210,7 +297,7 @@ export default function ExtendForm({
       </button>
 
       <p className="mt-[12px] text-center text-[12px] leading-relaxed text-white/45" style={{ fontFamily: "var(--font-inter)" }}>
-        Stow will confirm the price and the pick-up time with you on WhatsApp.
+        Stow will confirm this with you on WhatsApp, including the pick-up time.
       </p>
     </form>
   );

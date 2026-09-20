@@ -3,8 +3,10 @@ import Link from "next/link";
 import { MessageCircle } from "lucide-react";
 import ExtendForm from "@/components/extend/ExtendForm";
 import { extendHelpUrl } from "@/components/extend/whatsapp";
+import { getDictionary } from "@/content/dictionary";
 import { bagLimit, extensionWindow, contactForCustomer, normalizeReference, resolveBooking, stampLabel, vietnamToday } from "@/lib/extension";
 import { extensionConfig, findBookingRows } from "@/lib/lark-server";
+import type { Stamp } from "@/lib/pricing";
 
 // A private link Stow sends one customer. The Booking ID in the address is
 // what identifies the booking, so keep it out of search engines and out of the
@@ -29,7 +31,7 @@ const MESSAGES = {
 } satisfies Record<string, Message>;
 
 type PageState =
-  | { kind: "form"; reference: string; contact: { name: string; whatsapp: string; email: string }; bags: number | null; maxBags: number; pickUpLabel: string | null; minDate: string; maxDate: string; today: string }
+  | { kind: "form"; reference: string; contact: { name: string; whatsapp: string; email: string }; bags: number | null; oversizedBags: number | null; planEnd: Stamp | null; maxBags: number; pickUpLabel: string | null; minDate: string; maxDate: string; today: string }
   | { kind: keyof typeof MESSAGES; reference: string | null };
 
 function decode(raw: string): string {
@@ -63,6 +65,8 @@ async function loadState(reference: string | null): Promise<PageState> {
     // Worked out here, on the server: the full phone and email never reach the customer's browser.
     contact: contactForCustomer(booking),
     bags: booking.bags,
+    oversizedBags: booking.oversizedBags,
+    planEnd: booking.planEnd,
     maxBags: bagLimit(booking),
     pickUpLabel: booking.pickUp ? stampLabel(booking.pickUp) : null,
     minDate: min,
@@ -74,6 +78,8 @@ async function loadState(reference: string | null): Promise<PageState> {
 export default async function ExtendPage({ params }: { params: Promise<{ reference: string }> }) {
   const { reference: raw } = await params;
   const state = await loadState(normalizeReference(decode(raw)));
+  // The price receipt under the total is the booking form's own, and it reads the English booking dictionary.
+  const dict = (await getDictionary("en")).booking;
 
   return (
     <main className="min-h-screen bg-[#16243F]">
@@ -96,11 +102,14 @@ export default async function ExtendPage({ params }: { params: Promise<{ referen
             reference={state.reference}
             contact={state.contact}
             bags={state.bags}
+            oversizedBags={state.oversizedBags}
+            planEnd={state.planEnd}
             maxBags={state.maxBags}
             pickUpLabel={state.pickUpLabel}
             minDate={state.minDate}
             maxDate={state.maxDate}
             today={state.today}
+            dict={dict}
           />
         ) : (
           <div>
