@@ -174,6 +174,14 @@ export type Quote =
        * no dates yet, and for an hourly stay (its line is "2 hours × 15.000 ₫").
        */
       segments: QuoteSegment[];
+      /**
+       * The last moment the plan the customer paid for covers: the end of the
+       * last billed period at the drop-off clock time, or, for By the Hour, the
+       * hours paid for (a stay billed as a day covers 24 hours). The customer may
+       * move the pick-up anywhere up to this time without paying more, and up to
+       * GRACE_MINUTES past it. null until the dates are known.
+       */
+      planEnd: Stamp | null;
       /** Whole days the stay is charged for (0 for an hourly stay under 4 hours). */
       stayDays: number;
       /** Hours stayed, for an hourly stay (rounded up); null otherwise. */
@@ -264,7 +272,7 @@ function finish(
   pieces: QuotePiece[],
   bags: number,
   oversizedBags: number,
-  extra: { stayDays: number; stayHours: number | null; hourlyBilledAsDay: boolean; segments: QuoteSegment[] }
+  extra: { stayDays: number; stayHours: number | null; hourlyBilledAsDay: boolean; segments: QuoteSegment[]; planEnd: Stamp | null }
 ): Quote {
   const perBag = pieces.reduce((sum, p) => sum + p.count * p.unitPrice, 0);
   const surchargePerOversizedBag = pieces.reduce((sum, p) => sum + p.surcharge, 0);
@@ -306,6 +314,7 @@ export function quote(input: {
       stayHours: null,
       hourlyBilledAsDay: false,
       segments: [],
+      planEnd: null,
     });
   }
 
@@ -324,6 +333,7 @@ export function quote(input: {
       stayHours: h.hours,
       hourlyBilledAsDay: h.billedAsDay,
       segments: [],
+      planEnd: addMinutes(dropOff, h.billedAsDay ? 24 * 60 : h.hours * 60),
     });
   }
 
@@ -339,6 +349,7 @@ export function quote(input: {
         from: { date: st.from, time: dropOff.time },
         to: { date: st.to, time: dropOff.time },
       })),
+      planEnd: { date: steps[steps.length - 1].to, time: dropOff.time },
     });
   }
 
@@ -347,6 +358,7 @@ export function quote(input: {
     stayHours: null,
     hourlyBilledAsDay: false,
     segments: [{ plan, from: dropOff, to: periodEnd(plan, dropOff) }],
+    planEnd: periodEnd(plan, dropOff),
   });
 }
 

@@ -16,6 +16,10 @@ import {
 } from "./pricing";
 
 const at = (date: string, time: string): Stamp => ({ date, time });
+const addMinutesForTest = (s: Stamp, minutes: number): Stamp => {
+  const total = Number(s.time.slice(0, 2)) * 60 + Number(s.time.slice(3)) + minutes;
+  return { date: addDays(s.date, Math.floor(total / 1440)), time: `${String(Math.floor((total % 1440) / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}` };
+};
 const SLOTS = generateTimeSlots(); // 07:00 .. 22:00, every 30 minutes (31 slots)
 
 function priced(plan: PlanChoice, dropOff: Stamp, pickUp: Stamp, bags = 1, oversizedBags = 0) {
@@ -340,6 +344,53 @@ describe("billed periods laid out by date (for the receipt)", () => {
       expect(q.segments.length).toBe(q.pieces.reduce((n, pc) => n + pc.count, 0));
       // Laid end to end: each period starts where the last one stopped.
       q.segments.slice(1).forEach((seg, i) => expect(seg.from).toEqual(q.segments[i].to));
+    }
+  });
+});
+
+describe("when the plan ends (how far the customer can extend without paying more)", () => {
+  const drop = at("2026-09-21", "09:00");
+  const end = (plan: PlanChoice, pick: Stamp) => priced(plan, drop, pick).planEnd;
+
+  it("By the Day ends 24 hours after drop-off", () => {
+    expect(end("daily", at("2026-09-21", "18:00"))).toEqual(at("2026-09-22", "09:00"));
+  });
+  it("Mini ends 7 days after drop-off, whatever pick-up the customer chose", () => {
+    expect(end("mini", at("2026-09-24", "12:00"))).toEqual(at("2026-09-28", "09:00"));
+    expect(end("mini", at("2026-09-28", "09:30"))).toEqual(at("2026-09-28", "09:00"));
+  });
+  it("Strand ends the same time next calendar month, Long Stay 4 months later", () => {
+    expect(end("strand", at("2026-10-05", "12:00"))).toEqual(at("2026-10-21", "09:00"));
+    expect(end("longstay", at("2026-12-01", "12:00"))).toEqual(at("2027-01-21", "09:00"));
+    expect(priced("strand", at("2026-01-31", "09:00"), at("2026-02-10", "09:00")).planEnd).toEqual(at("2026-02-28", "09:00"));
+  });
+  it("By the Hour ends after the hours paid for, not at the pick-up", () => {
+    expect(priced("hourly", drop, at("2026-09-21", "11:30")).planEnd).toEqual(at("2026-09-21", "12:00")); // 2.5 h is billed as 3
+    expect(priced("hourly", drop, at("2026-09-21", "11:00")).planEnd).toEqual(at("2026-09-21", "11:00"));
+  });
+  it("a By the Hour stay billed as a day covers 24 hours", () => {
+    expect(priced("hourly", drop, at("2026-09-21", "15:00")).planEnd).toEqual(at("2026-09-22", "09:00"));
+  });
+  it("Custom ends where its last billed period ends, which can be well after the pick-up", () => {
+    // 46 days = 2 Strand: 21 Sept to 21 Oct to 21 Nov. Pick-up is 6 Nov.
+    expect(end("custom", at("2026-11-06", "09:00"))).toEqual(at("2026-11-21", "09:00"));
+    // 8 days = Mini + a day: ends 29 Sept.
+    expect(end("custom", at("2026-09-29", "09:00"))).toEqual(at("2026-09-29", "09:00"));
+    // A same-day Custom stay is priced like By the Hour.
+    expect(end("custom", at("2026-09-21", "11:30"))).toEqual(at("2026-09-21", "12:00"));
+  });
+  it("is unknown until the dates are", () => {
+    const q = quote({ plan: "strand", dropOff: null, pickUp: null, bags: 1, oversizedBags: 0 });
+    expect(q.ok && q.planEnd).toBeNull();
+  });
+  it("never ends before the pick-up (allowing the grace), for every plan and stay", () => {
+    for (const plan of ["daily", "mini", "strand", "longstay", "custom"] as PlanChoice[]) {
+      for (const days of [1, 2, 6, 7, 8, 20, 30, 31, 45, 60, 90, 120, 121, 200]) {
+        const pick = at(addDays("2026-09-21", days), "09:00");
+        const q = quote({ plan, dropOff: drop, pickUp: pick, bags: 1, oversizedBags: 0 });
+        if (!q.ok || !q.planEnd) continue; // outside the plan's window
+        expect(compareStamps(addMinutesForTest(q.planEnd, 60), pick)).toBeGreaterThanOrEqual(0);
+      }
     }
   });
 });
