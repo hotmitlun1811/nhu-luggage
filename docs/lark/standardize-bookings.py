@@ -6,6 +6,7 @@ can be repeated on the main "Bookings" table. Read docs/lark/2026-09-20-bookings
 
   python3 docs/lark/standardize-bookings.py --table tbl2l32dChIyb8Kd          # dry run (default): only reads
   python3 docs/lark/standardize-bookings.py --table <id> --apply --backup-dir <dir>
+  python3 docs/lark/standardize-bookings.py --table <id> --verify <dir>   # read-only: compare the table with the backup
 
 Safe by design:
   * DRY RUN unless --apply is given. A dry run only reads.
@@ -53,7 +54,12 @@ LEAVE_ALONE_DURATION = {"2 × 4 months", "Min 1 hr, billed per hr"}
 
 def cli(args, table=None):
     cmd = ["lark-cli", "base", *args, "--base-token", BASE, "--as", "bot"] + (["--table-id", table] if table else [])
-    out = subprocess.run(cmd, capture_output=True, text=True)
+    try:
+        out = subprocess.run(cmd, capture_output=True, text=True)
+    except FileNotFoundError:
+        sys.exit("lark-cli was not found. It is installed under Node 22, so run this first:\n"
+                 '  export PATH="$HOME/.nvm/versions/node/v22.23.1/bin:$PATH"\n'
+                 "then run the same command again. Nothing was written.")
     try:
         data = json.loads(out.stdout)
     except ValueError:
@@ -73,13 +79,69 @@ def records(table):
         offset += 200
 
 
+def verify(table, backup_dir):
+    """Read-only. Every cell must equal the backup, except the cells --apply logged as changed (which must
+    equal the logged new value) and the Date formula, whose changes are listed."""
+    before = json.load(open(os.path.join(backup_dir, f"records-{table}-before.json")))
+    expected = {}
+    for line in open(os.path.join(backup_dir, "undo-log.jsonl")):
+        e = json.loads(line)
+        if e.get("kind") == "cell":
+            expected[(e["record_id"], e["field"])] = e["after"]
+    fields = {f["name"]: f for f in cli(["+field-list", "--limit", "100"], table)["data"]["fields"]}
+    now = {r["record_id"]: r for r in records(table)}
+    problems, date_changed, cells_ok = [], [], 0
+    for b in before:
+        rid, ref = b["record_id"], str(b.get("Reference") or "")[:22]
+        if rid not in now:
+            problems.append(f"row is missing now: {ref}")
+            continue
+        for col, old in b.items():
+            if col == "record_id":
+                continue
+            cur = now[rid].get(col)
+            if col == "Date":
+                if cur != old:
+                    date_changed.append((ref, old, cur))
+                continue
+            want = expected.get((rid, col), old)
+            if cur == want:
+                cells_ok += 1
+            else:
+                problems.append(f"{ref} {col}: expected {want!r}, found {cur!r}")
+    for name in ("Oversized Count", "Price Detail"):
+        if name not in fields:
+            problems.append(f"column {name} is missing")
+    for name in ("Plan", "Lane"):
+        opts = [o["name"] for o in cli(["+field-get", "--field-id", name], table)["data"]["field"]["options"]]
+        if "Custom" not in opts:
+            problems.append(f"{name} has no Custom option")
+    if cli(["+field-get", "--field-id", "Date"], table)["data"]["field"].get("expression") != DATE_FORMULA:
+        problems.append("Date formula is not the new one")
+    new_rows = [r for rid, r in now.items() if rid not in {b["record_id"] for b in before}]
+    print(f"rows in backup: {len(before)} | rows now: {len(now)} | rows added since the backup: {len(new_rows)}")
+    print(f"cells checked and correct: {cells_ok} | of those, cells that --apply changed on purpose: {len(expected)}")
+    print(f"Date formula values that changed: {len(date_changed)}")
+    for ref, old, cur in date_changed:
+        print(f"   {ref}: {old!r} -> {cur!r}")
+    if problems:
+        print(f"\nPROBLEMS ({len(problems)}):")
+        for x in problems:
+            print("   -", x)
+        sys.exit(1)
+    print("\nOK: nothing was lost or changed beyond the plan.")
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--table", required=True, help="table id, e.g. tbl2l32dChIyb8Kd (Test)")
     ap.add_argument("--apply", action="store_true", help="write the changes (default: dry run)")
     ap.add_argument("--backup-dir", help="required with --apply: where the backup and undo log are saved")
     ap.add_argument("--i-know-this-is-the-main-table", action="store_true")
+    ap.add_argument("--verify", metavar="BACKUP_DIR", help="read-only: compare the table with the backup made by --apply")
     a = ap.parse_args()
+    if a.verify:
+        return verify(a.table, a.verify)
     if a.apply and not a.backup_dir:
         sys.exit("--apply needs --backup-dir")
     if a.apply and a.table == MAIN_TABLE and not a.i_know_this_is_the_main_table:

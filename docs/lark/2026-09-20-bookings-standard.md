@@ -1,7 +1,7 @@
 # Chuẩn dữ liệu bảng Bookings trên Lark (khớp với form đặt chỗ mới)
 
-> **Trạng thái (2026-09-20): ĐÃ ÁP DỤNG trên bảng `Test`. CHƯA áp dụng cho bảng tổng `Bookings`. Code form và route đã commit và push lên `main` (`20be2fb`, `d9076f4`).**
-> Cho đến khi bảng tổng được đồng bộ, route dùng đường thử lại bằng cột cũ (mục 3). Khi áp dụng cho bảng tổng, sửa dòng này. Bảng tổng lúc kiểm tra: 43 dòng, revision 380, chưa bị chạm.
+> **Trạng thái (2026-09-20): ĐÃ ÁP DỤNG cho cả bảng `Test` và bảng tổng `Bookings`. Code form và route đã commit và push lên `main` (`20be2fb`, `d9076f4`).**
+> Bảng tổng do chủ cửa hàng tự chạy script lúc 11:01 ngày 2026-09-20, sao lưu ở `~/stow-lark-backup/bookings-main-20260920`. Kiểm tra ngay sau đó (`--verify`): 43/43 dòng còn nguyên, 989 ô đúng, 47 ô đổi đúng kế hoạch, revision 380 → 386. Đường thử lại bằng cột cũ (mục 3) chỉ còn là lưới an toàn.
 >
 > Người đọc: chủ cửa hàng. Script lặp lại các bước: [`standardize-bookings.py`](standardize-bookings.py).
 
@@ -35,18 +35,21 @@
 - **Cột không tồn tại làm hỏng cả dòng** (`FieldNameNotFound`, đã thử trên Test). Nếu deploy form mới khi bảng tổng chưa có 2 cột mới, lần ghi đầu bị từ chối.
 - Vì vậy route có **đường thử lại**: nếu lần ghi đầu bị từ chối, nó ghi lại bằng các cột cũ (Custom được ghi thành gói chiếm nhiều tiền nhất, chi tiết vẫn nằm ở Duration) và ghi cảnh báo vào log. Đơn không bị mất, nhưng Date của dòng kiểu này theo gói được ghi, không theo Custom.
 
-## 4. Áp dụng cho bảng tổng (khi bạn quyết định)
+## 4. Áp dụng cho một bảng (đã làm cho bảng tổng)
 
 Thứ tự quan trọng: **đồng bộ bảng trước, deploy form sau.**
 
 ```bash
-# cần Node >= 20.12 (nvm use v22.23.1) và lark-cli
+# cần lark-cli (Node >= 20.12); nếu terminal báo không thấy lark-cli:
+export PATH="$HOME/.nvm/versions/node/v22.23.1/bin:$PATH"
 python3 docs/lark/standardize-bookings.py --table tblTGHAMqIRiCOgd          # thử khô, chỉ đọc
 python3 docs/lark/standardize-bookings.py --table tblTGHAMqIRiCOgd --apply \
-  --backup-dir ~/stow-lark-backup --i-know-this-is-the-main-table
+  --backup-dir ~/stow-lark-backup/bookings-main-20260920 --i-know-this-is-the-main-table
+python3 docs/lark/standardize-bookings.py --table tblTGHAMqIRiCOgd \
+  --verify ~/stow-lark-backup/bookings-main-20260920                        # đối chiếu với bản sao lưu, chỉ đọc
 ```
 
-Thử khô trên bảng tổng ngày 2026-09-20 cho kế hoạch **y hệt Test**: đổi công thức Date, thêm Custom vào Plan và Lane, tạo 2 cột, chuẩn hóa 47 ô (38 + 3 + 6). Script sao lưu toàn bộ vào `--backup-dir` trước khi ghi và lưu giá trị cũ của từng thay đổi trong `undo-log.jsonl`.
+Thử khô trên bảng tổng ngày 2026-09-20 cho kế hoạch **y hệt Test** (và đã được áp dụng): đổi công thức Date, thêm Custom vào Plan và Lane, tạo 2 cột, chuẩn hóa 47 ô (38 + 3 + 6). Script sao lưu toàn bộ vào `--backup-dir` trước khi ghi và lưu giá trị cũ của từng thay đổi trong `undo-log.jsonl`.
 
 ## 5. Để nguyên, cần bạn quyết
 
