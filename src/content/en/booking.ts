@@ -164,7 +164,7 @@ export const booking = {
   successTitle: "Request sent!",
   successSubtitle: "Your details are now in WhatsApp.",
   successReplyTime: "We reply within 15 minutes.",
-  successRefPrefix: "Ref: ",
+  successRefPrefix: "Booking ID: ",
   policyEmailLabel: "Policy & agreement email",
   emailSendingPrefix: "Sending to ",
   emailSentPrefix: "Sent to ",

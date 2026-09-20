@@ -51,6 +51,9 @@ export type BookingBody = {
   phoneCountry?: string; // 2-letter code picked next to the WhatsApp number
   consentAt?: string; // ISO time the Terms and Privacy Policy were accepted
   termsVersion?: string; // effective date of those Terms
+  /** When the plan the customer paid for ends (see Quote.planEnd), for the "Plan End" column. */
+  planEndDate?: string; // "YYYY-MM-DD"
+  planEndTime?: string; // "HH:mm"
 };
 
 /** Every new booking starts here; staff move it on (Confirm, Paid, Complete, Cancel). */
@@ -163,7 +166,7 @@ export function elapsedLabel(dropOffDate?: string, dropOffTime?: string, pickupD
  * pick-up, price breakdown or consent).
  */
 export function buildBookingFieldsV2(body: BookingBody, ref: string, now: number = Date.now()): Record<string, unknown> {
-  const { source, lane, planName, oversized, oversizedCount, dropOffDate, dropOffTime, pickupDate, pickupTime, name, phone, email, pax, total, priceDetail, pricePerBag, oversizedSurcharge, phoneCountry, consentAt, termsVersion } = body;
+  const { source, lane, planName, oversized, oversizedCount, dropOffDate, dropOffTime, pickupDate, pickupTime, name, phone, email, pax, total, priceDetail, pricePerBag, oversizedSurcharge, phoneCountry, consentAt, termsVersion, planEndDate, planEndTime } = body;
   const f: Record<string, unknown> = {
     Reference: ref,
     Status: NEW_BOOKING_STATUS,
@@ -178,6 +181,8 @@ export function buildBookingFieldsV2(body: BookingBody, ref: string, now: number
     WhatsApp: normalizePhone(phone as string),
   };
   if (pickupDate && pickupTime) f["Pick-up"] = vietnamMoment(pickupDate, pickupTime);
+  // How far the customer can move the pick-up without paying more; the staff form has no such thing, so it is left blank.
+  if (planEndDate && planEndTime) f["Plan End"] = vietnamMoment(planEndDate, planEndTime);
   // Worked out here from the two moments; the plan label the form sends is not used.
   const stay = elapsedLabel(dropOffDate, dropOffTime, pickupDate, pickupTime);
   if (stay) f.Duration = stay;

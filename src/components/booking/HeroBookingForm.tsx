@@ -21,6 +21,7 @@ import {
 import { COUNTRY_BY_ISO, DEFAULT_COUNTRY_ISO } from "@/lib/countries";
 import { formatDateTime, formatWeekdayDate, formatLongDate, pluralizeWord } from "@/lib/format";
 import { generateReference } from "@/lib/reference";
+import { buildBookingMessage, planLabel } from "@/lib/whatsapp-message";
 import { POST_BOOKING_EMAIL_ENABLED } from "@/lib/features";
 import type { Dictionary } from "@/content/types";
 import type { AppLocale } from "@/content/locales";
@@ -52,7 +53,6 @@ const LEGACY_DRAFT_KEYS = ["stow-booking-draft-v1", "stow-booking-draft-v2"];
 
 // English labels for the two network boundaries (WhatsApp + Lark), which stay
 // English regardless of site locale (i18n plan, decision #4).
-const PERIOD_UNIT_EN = { mini: "week", strand: "month", longstay: "4 months" } as const;
 const PERIOD_LABEL_EN = { daily: "1 day", mini: "1 week", strand: "1 month", longstay: "4 months" } as const;
 
 // Best guess at the visitor's country for the phone box: the region in their
@@ -433,49 +433,25 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     return lines.join("\n");
   }
 
-  // Business-facing WhatsApp message — deliberately hardcoded English
-  // regardless of site locale (i18n plan decision #4). Staff read this on
-  // the business's own WhatsApp number; a translated message they can't
-  // action defeats the point. Uses canonical plan names, never the dictionary.
+  // The message the customer sends to Stow on WhatsApp. Always English (staff
+  // read it on the shop's own number); the wording and layout live in
+  // lib/whatsapp-message.ts, where they are tested.
   function buildMessage(ref: string) {
     if (!quoted) return "";
-    const f = plan === "custom" ? null : PLAN_FACTS[plan];
-    const unit = plan === "mini" || plan === "strand" || plan === "longstay" ? PERIOD_UNIT_EN[plan] : null;
-    const planLine = f
-      ? `${f.canonicalName} — ${vnd(f.price)} ${f.unit === "flat" ? `/ ${unit}` : f.unit} / bag`
-      : "Custom — cheapest mix of our plans for these dates";
-    const priceLine = `🧾 Price per bag: ${quoted.pieces.map((p) => `${p.count}× ${PLAN_FACTS[p.plan].canonicalName} (${vnd(p.unitPrice)})`).join(" + ")} = ${vnd(quoted.perBag)}`;
-    // The oversized surcharge depends on the lane of each plan in the price
-    // (Flexible 30,000, Flat Rate 50,000, repeated per period), so spell out
-    // the sum for staff.
-    const surchargeDetail = surchargeTermsEn(quoted);
-    const oversizedLine = oversizedCount > 0
-      ? `📏 Item: Oversized ×${oversizedCount} (+${vnd(oversizedCount * quoted.surchargePerOversizedBag)} = ${oversizedCount} × ${vnd(quoted.surchargePerOversizedBag)}: ${surchargeDetail})`
-      : `📏 Item: Standard size`;
-    const stayLine = quoted.stayHours !== null
-      ? `⏱ Duration: ${quoted.stayHours} hour${quoted.stayHours > 1 ? "s" : ""}${quoted.hourlyBilledAsDay ? " — billed as 1 day" : ""}`
-      : `📅 Stay: ${quoted.stayDays} day${quoted.stayDays > 1 ? "s" : ""}`;
-
-    return [
-      `Hello Stow! 👋 I'd like to book luggage storage.`,
-      ``,
-      `📋 Ref: ${ref}`,
-      `📦 Plan: ${planLine}`,
-      `🧳 Bags: ${pax}`,
-      priceLine,
-      oversizedLine,
-      `📅 Drop-off: ${formatLongDate(date, "en")} at ${time}`,
-      `📅 Pick-up: ${formatLongDate(pickupDay, "en")} at ${pickupTime}`,
-      stayLine,
-      `💰 Total: ${vnd(total)}`,
-      ``,
-      `👤 Name: ${name}`,
-      `📱 WhatsApp: ${phone}`,
-      `✉️ Email: ${email}`,
-      ``,
-      consentAt ? `✅ Agreed to Terms of Service & Privacy Policy (Effective ${LEGAL_EFFECTIVE}) — read in full at ${formatDateTime(consentAt, "en")}` : "",
-      `Please confirm my booking. Thank you! 🙏`,
-    ].filter(Boolean).join("\n");
+    return buildBookingMessage({
+      bookingId: ref,
+      plan: planLabel(plan),
+      dropOff: `${formatLongDate(date, "en")} at ${time}`,
+      pickUp: `${formatLongDate(pickupDay, "en")} at ${pickupTime}`,
+      planEnd: quoted.planEnd ? `${formatLongDate(quoted.planEnd.date, "en")} at ${quoted.planEnd.time}` : undefined,
+      bags: pax,
+      oversizedBags: oversizedCount,
+      total: vnd(total),
+      name,
+      whatsapp: phone,
+      email,
+      consent: consentAt ? { version: LEGAL_EFFECTIVE, at: formatDateTime(consentAt, "en") } : undefined,
+    });
   }
 
   function sendLarkBooking(ref: string) {
@@ -512,6 +488,8 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
         phoneCountry: phoneIso,
         consentAt: consentAt ? consentAt.toISOString() : undefined,
         termsVersion: LEGAL_EFFECTIVE,
+        planEndDate: quoted?.planEnd?.date,
+        planEndTime: quoted?.planEnd?.time,
       }),
     }).catch(() => {});
   }

@@ -207,6 +207,13 @@ describe("buildBookingFieldsV2 (the Bookings v2 table)", () => {
     expect(f["Submitted at"] as number).toBeLessThanOrEqual(Date.now());
   });
 
+  it("writes when the plan ends as Vietnam time, and leaves it blank when the form did not send it", () => {
+    const f = buildBookingFieldsV2({ ...form, planEndDate: "2026-11-21", planEndTime: "09:00" }, "STW-9");
+    expect(f["Plan End"]).toBe(Date.UTC(2026, 10, 21, 2, 0)); // 09:00 in Vietnam is 02:00 UTC
+    expect(buildBookingFieldsV2(form, "STW-9")).not.toHaveProperty("Plan End");
+    expect(buildBookingFieldsV2({ ...form, planEndDate: "2026-11-21" }, "STW-9")).not.toHaveProperty("Plan End");
+  });
+
   it("stores drop-off and pick-up as Vietnam time, whatever zone the server runs in", () => {
     const f = buildBookingFieldsV2(form, "STW-9");
     expect(f["Drop-off"]).toBe(Date.UTC(2026, 8, 20, 2, 0)); // 09:00 in Vietnam (UTC+7) is 02:00 UTC
