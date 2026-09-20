@@ -18,7 +18,7 @@ type Body = {
   ref?: string;
   planName?: string;
   planDuration?: string;
-  lane?: "flexible" | "flatrate";
+  lane?: "flexible" | "flatrate" | "custom";
   consentAt?: string | null;
   legalVersion?: string;
 };
@@ -53,7 +53,7 @@ export async function POST(request: Request) {
     );
   }
 
-  const laneLabel = lane === "flexible" ? "Lane 1 — Flexible" : "Lane 2 — Flat Rate";
+  const laneLabel = lane === "flexible" ? "Lane 1 — Flexible" : lane === "custom" ? "Custom — a mix of our plans" : "Lane 2 — Flat Rate";
 
   // Evidence trail for the scrollwrap consent step (booking form requires
   // scrolling both documents in full before this timestamp gets set) —
