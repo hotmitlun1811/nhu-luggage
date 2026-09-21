@@ -10,7 +10,7 @@ import { longDate, stampLabel } from "@/lib/extension";
 import { extensionPrice, oversizedNeedsAnswer, oversizedRange } from "@/lib/extension-price";
 import { vnd } from "@/lib/plans";
 import type { Stamp } from "@/lib/pricing";
-import { extendHelpUrl } from "./whatsapp";
+import { extendHelpUrl, extendRequestUrl } from "./whatsapp";
 
 /*
  * The "extend my storage" form: two questions, and the price. Who the customer
@@ -22,6 +22,11 @@ import { extendHelpUrl } from "./whatsapp";
  * on the server, which is the number that is saved and sent to staff. One extra
  * question appears only when the price cannot be worked out without it: some of
  * the bags are extended, and the booking has both oversized and normal bags.
+ *
+ * On success it opens WhatsApp with the request already written, the same
+ * hand-off the booking form does: the saved row and the group-chat message are
+ * the record, but WhatsApp is the channel Stow actually replies on, and it
+ * reaches staff even if a Lark notification is ever missed or muted.
  *
  * English only, like the staff Intake form: the link is sent by Stow on
  * WhatsApp and the words are kept short and plain.
@@ -88,6 +93,10 @@ export default function ExtendForm({
   const [dateError, setDateError] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [sentPrice, setSentPrice] = useState<SentPrice | null>(null);
+  // Kept so the success screen can offer a manual "Open WhatsApp" link when
+  // window.open was blocked or the device has no WhatsApp session — same
+  // reasoning as the booking form's own waUrl.
+  const [waUrl, setWaUrl] = useState("");
 
   // How many of the extended bags are oversized: known from the booking, or asked when it could be either.
   // Until they answer it is the highest possible, so the price is never lower than it will turn out.
@@ -121,6 +130,18 @@ export default function ExtendForm({
       if (res.ok && data.ok) {
         // The server worked the price out again; that is the number staff have, so it is the one shown.
         setSentPrice(data.price ?? null);
+        // Same hand-off as the booking form: open WhatsApp with the request
+        // already written, so it reaches Stow even if a Lark notification is
+        // ever missed. The success screen shows regardless of whether this opened.
+        const priceLine =
+          data.price?.kind === "priced"
+            ? `Total: ${vnd(data.price.total ?? 0)}`
+            : data.price?.kind === "included"
+            ? "Nothing extra to pay (inside the plan I already paid for)"
+            : "Please let me know the price";
+        const url = extendRequestUrl(reference, count, longDate(date), priceLine);
+        setWaUrl(url);
+        window.open(url, "_blank", "noopener,noreferrer");
         setStatus("sent");
         return;
       }
@@ -150,6 +171,27 @@ export default function ExtendForm({
           {sentPrice?.kind === "priced" && <Row term="Total" value={vnd(sentPrice.total ?? 0)} />}
           {sentPrice?.kind === "included" && <Row term="Extra to pay" value="Nothing" />}
         </dl>
+
+        {/* WhatsApp may not have auto-opened (popup blocked, desktop with no
+            WhatsApp session, app not installed) — always give a manual path
+            rather than leaving the customer believing nothing more is needed. */}
+        {waUrl && (
+          <>
+            <p className="mx-auto mt-[16px] max-w-xs text-[11px] text-white/30" style={{ fontFamily: "var(--font-inter)" }}>
+              Didn&apos;t WhatsApp open? Tap to send your request.
+            </p>
+            <a
+              href={waUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="mx-auto mt-[8px] flex w-full max-w-xs items-center justify-center gap-2 rounded-lg bg-[#25D366] py-2.5 text-[13px] font-bold text-white transition-colors hover:bg-[#1EA955]"
+              style={{ fontFamily: "var(--font-poppins)" }}
+            >
+              <MessageCircle size={15} />
+              Open WhatsApp
+            </a>
+          </>
+        )}
       </div>
     );
   }
