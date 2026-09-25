@@ -59,7 +59,7 @@ export const faq = {
         },
         {
           q: 'Is there a size limit on luggage storage in Da Nang?',
-          a: 'No hard limit — an oversized surcharge applies instead. Add 30,000₫ on hourly/daily plans, or 50,000₫ on flat-rate plans, for anything 28"+: a large suitcase, a bicycle, a surfboard, a big box.',
+          a: 'No hard limit — an oversized surcharge applies instead: 30,000₫ per day on hourly/daily plans, 50,000₫ per month on flat-rate plans. Long Stay covers 4 months, so its surcharge is 200,000₫ total, not 50,000₫. Applies to anything 28"+: a large suitcase, a bicycle, a surfboard, a big box.',
         },
         {
           q: "Can I store multiple bags or luggage for my whole family at Stow?",

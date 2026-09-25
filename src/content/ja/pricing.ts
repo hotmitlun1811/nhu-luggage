@@ -14,7 +14,7 @@ export const pricing = {
   lane2: {
     label: "プラン2 — 定額",
     sublabel: "駐在員・デジタルノマドの方に",
-    surchargeNote: "サイズ超過の荷物は +50,000 ₫ · 早めにお受け取りでも料金は変わりません",
+    surchargeNote: "サイズ超過の荷物は1か月+50,000 ₫（ロングステイの4か月分では合計200,000 ₫）· 早めにお受け取りでも料金は変わりません",
   },
   plans: {
     hourly: { name: "時間単位", unit: "/ 時間 / 個", duration: "最低1時間、1時間単位で計算", tag: null as string | null },

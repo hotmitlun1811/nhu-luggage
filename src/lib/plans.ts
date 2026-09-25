@@ -29,6 +29,16 @@ export type PlanFacts = {
   unit: "/ hr" | "/ day" | "flat";
   lane: Lane;
   oversizeSurcharge: number;
+  /**
+   * How many times the surcharge rate is charged for one booking of this
+   * plan (owner rule: one oversized bag costs one surcharge per month it is
+   * stored). 1 for every plan whose own period is a single month or shorter
+   * (Strand's month, Mini's week, a day, an hour). Long Stay bundles 4
+   * months into one flat, discounted price, but the surcharge is not
+   * discounted with it: it is still charged as 4 separate months. Omitted
+   * (meaning 1) for plans where the period and the surcharge always match.
+   */
+  surchargePeriods?: number;
   maxDays?: number;
   popular?: boolean;
 };
@@ -38,8 +48,19 @@ export const PLAN_FACTS: Record<PlanKey, PlanFacts> = {
   daily:    { canonicalName: "By the Day",  canonicalDuration: "Up to 24 hrs",   price: 60000,   unit: "/ day", lane: "flexible", oversizeSurcharge: 30000, popular: true },
   mini:     { canonicalName: "Mini",        canonicalDuration: "Up to 1 week",   price: 150000,  unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 7 },
   strand:   { canonicalName: "Strand",      canonicalDuration: "Up to 1 month",  price: 300000,  unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 30, popular: true },
-  longstay: { canonicalName: "Long Stay",   canonicalDuration: "Up to 4 months", price: 1000000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 120 },
+  longstay: { canonicalName: "Long Stay",   canonicalDuration: "Up to 4 months", price: 1000000, unit: "flat",  lane: "flatrate", oversizeSurcharge: 50000, maxDays: 120, surchargePeriods: 4 },
 };
+
+/**
+ * How many times `plan`'s surcharge rate is charged for `count` pieces of it:
+ * By the Hour is charged once however many hours (owner rule, 2026-09-19);
+ * every other plan is charged once per month it covers, so N pieces of Long
+ * Stay (4 months each) count as 4N, not N. The one place this is computed, so
+ * the price, the receipt and the Lark/WhatsApp price breakdown never disagree.
+ */
+export function surchargeUnits(plan: PlanKey, count: number): number {
+  return plan === "hourly" ? 1 : count * (PLAN_FACTS[plan].surchargePeriods ?? 1);
+}
 
 export const FLEX_PLANS: PlanKey[] = ["hourly", "daily"];
 export const FLAT_PLANS: PlanKey[] = ["mini", "strand", "longstay"];

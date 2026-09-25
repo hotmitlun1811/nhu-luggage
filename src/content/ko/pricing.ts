@@ -12,7 +12,7 @@ export const pricing = {
   lane2: {
     label: "2번 — 고정 요금제",
     sublabel: "주재원 및 디지털 노마드용",
-    surchargeNote: "초과 크기 물품은 +50,000₫ 추가 · 조기 픽업 시에도 요금은 동일합니다",
+    surchargeNote: "초과 크기 물품은 1개월당 +50,000₫ 추가(Long Stay 4개월 기준 총 200,000₫) · 조기 픽업 시에도 요금은 동일합니다",
   },
   plans: {
     hourly: { name: "시간제", unit: "/ 시간 / 가방", duration: "최소 1시간, 시간 단위 청구", tag: null as string | null },

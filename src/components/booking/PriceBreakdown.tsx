@@ -1,4 +1,4 @@
-import { HOURLY_BILLS_AS_DAY_AFTER_HOURS, PLAN_FACTS, vnd, type PlanKey } from "@/lib/plans";
+import { HOURLY_BILLS_AS_DAY_AFTER_HOURS, PLAN_FACTS, surchargeUnits, vnd, type PlanKey } from "@/lib/plans";
 import { GRACE_MINUTES, compareStamps, type Quote, type Stamp } from "@/lib/pricing";
 import {
   fillTemplate,
@@ -89,11 +89,14 @@ export default function PriceBreakdown({
       }));
 
   // ── Oversized: one line per plan in the price, at that plan's own lane rate ──
+  // The label's multiplier is surchargeUnits, not the piece count: a single
+  // Long Stay piece is charged as 4 (one per month it bundles), so the label
+  // must say "4 ×", not "1 ×", or it would not add up to `value`.
   const surcharge: Item[] = quote.pieces.map((p) => {
     const rate = PLAN_FACTS[p.plan].oversizeSurcharge;
     return p.plan === "hourly"
       ? { label: `${name(p.plan)}: ${vnd(rate)}`, sub: dict.receiptOnce, value: p.surcharge }
-      : { label: `${name(p.plan)}: ${p.count} × ${vnd(rate)}`, value: p.surcharge };
+      : { label: `${name(p.plan)}: ${surchargeUnits(p.plan, p.count)} × ${vnd(rate)}`, value: p.surcharge };
   });
 
   const hasOversized = oversizedBags > 0;

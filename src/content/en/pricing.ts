@@ -12,7 +12,7 @@ export const pricing = {
   lane2: {
     label: "Lane 2 — Flat Rate",
     sublabel: "For expats & digital nomads",
-    surchargeNote: "+50,000 ₫ surcharge for oversized items · Price fixed regardless of early pickup",
+    surchargeNote: "+50,000 ₫ per month for oversized items (200,000 ₫ across Long Stay's 4 months) · Price fixed regardless of early pickup",
   },
   /* name/unit/duration/tag per PlanKey (src/lib/plans.ts) — price/currency
      come from PLAN_FACTS + vnd() at render time, locale-invariant; `unit`

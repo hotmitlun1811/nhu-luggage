@@ -25,7 +25,7 @@
  * The row that is still open, with the latest pick-up, is the booking as it stands.
  */
 import { extensionPrice, oversizedNeedsAnswer, oversizedRange, resolveOversized, type ExtensionPrice } from "./extension-price";
-import { PLAN_FACTS, vnd } from "./plans";
+import { PLAN_FACTS, surchargeUnits, vnd } from "./plans";
 import { addDays, diffDays, MAX_CUSTOM_DAYS, type Stamp } from "./pricing";
 
 /** Every request starts here; staff move it on (Confirm, Paid, Complete, Cancel), like a booking. */
@@ -246,7 +246,8 @@ export function priceDetailLines(p: ExtensionPrice): string[] {
     `Bags: ${p.bags} × ${vnd(q.perBag)} = ${vnd(q.perBag * p.bags)}`,
   ];
   if (p.oversizedBags > 0) {
-    const terms = q.pieces.map((x) => `${x.plan === "hourly" ? 1 : x.count}× ${PLAN_FACTS[x.plan].canonicalName} ${vnd(PLAN_FACTS[x.plan].oversizeSurcharge)}`).join(" + ");
+    // The multiplier is surchargeUnits, not the piece count: one Long Stay piece is charged as 4 (one per month it bundles).
+    const terms = q.pieces.map((x) => `${surchargeUnits(x.plan, x.count)}× ${PLAN_FACTS[x.plan].canonicalName} ${vnd(PLAN_FACTS[x.plan].oversizeSurcharge)}`).join(" + ");
     lines.push(`Oversized: ${p.oversizedBags} × ${vnd(q.surchargePerOversizedBag)} (${terms}) = ${vnd(p.oversizedBags * q.surchargePerOversizedBag)}`);
   }
   lines.push(`Total: ${vnd(p.total)}`);

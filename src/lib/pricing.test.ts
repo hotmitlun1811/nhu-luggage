@@ -177,6 +177,20 @@ describe("oversized surcharge differs by lane", () => {
     expect(priced("mini", drop, at("2026-09-22", "09:00"), 2, 2).total).toBe(150_000 * 2 + 50_000 * 2);
     expect(priced("strand", drop, at("2026-10-01", "09:00"), 2, 2).total).toBe(700_000);
   });
+  it("Long Stay charges the surcharge per month it bundles (4), not once for the whole flat price", () => {
+    // Owner rule: one oversized bag costs one surcharge per month, however the plan bills for it.
+    // Long Stay is 4 months at one flat price, so its surcharge is 4 x 50,000, not 1 x 50,000.
+    const q = priced("longstay", drop, at("2027-01-20", "09:00"), 1, 1);
+    expect(q.surchargePerOversizedBag).toBe(50_000 * 4);
+    expect(q.total).toBe(1_000_000 + 50_000 * 4);
+  });
+  it("Long Stay's surcharge scales with bags and with combined periods (Custom stacking two Long Stays = 8 months)", () => {
+    expect(priced("longstay", drop, at("2027-01-20", "09:00"), 2, 2).total).toBe(1_000_000 * 2 + 50_000 * 4 * 2);
+    // 8 months: the cheapest cover is 2x Long Stay, so the surcharge is charged for all 8 months, not just 2.
+    const q = priced("custom", drop, at(addMonths(drop.date, 8), drop.time), 1, 1);
+    expect(describePiecesEn(q.pieces)).toBe("2× Long Stay");
+    expect(q.surchargePerOversizedBag).toBe(50_000 * 8);
+  });
   it("By the Hour adds 30,000 once, however many hours", () => {
     expect(priced("hourly", drop, at("2026-09-20", "12:00"), 1, 1).total).toBe(45_000 + 30_000);
   });

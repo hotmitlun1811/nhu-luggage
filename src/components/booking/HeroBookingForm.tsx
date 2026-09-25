@@ -5,7 +5,7 @@ import { Send, CheckCircle2, ChevronRight, LogIn, LogOut, MessageCircle } from "
 import Link from "next/link";
 import dynamic from "next/dynamic";
 import { EFFECTIVE as LEGAL_EFFECTIVE } from "@/components/legal/LegalShared";
-import { PLAN_FACTS, generateTimeSlots, vnd, type PlanKey } from "@/lib/plans";
+import { PLAN_FACTS, generateTimeSlots, surchargeUnits, vnd, type PlanKey } from "@/lib/plans";
 import {
   MAX_CUSTOM_DAYS,
   addDays,
@@ -407,10 +407,12 @@ export default function HeroBookingForm({ dict, locale }: { dict: Dictionary["bo
     return PERIOD_LABEL_EN[plan as Exclude<PlanKey, "hourly">];
   }
 
-  // "2× Strand 50.000 ₫": the oversized surcharge, one term per plan in the price.
+  // "2× Strand 50.000 ₫": the oversized surcharge, one term per plan in the
+  // price. The multiplier is surchargeUnits, not the piece count: one Long
+  // Stay piece is charged as 4 (one per month it bundles).
   function surchargeTermsEn(q: NonNullable<typeof quoted>) {
     return q.pieces
-      .map((p) => `${p.plan === "hourly" ? 1 : p.count}× ${PLAN_FACTS[p.plan].canonicalName} ${vnd(PLAN_FACTS[p.plan].oversizeSurcharge)}`)
+      .map((p) => `${surchargeUnits(p.plan, p.count)}× ${PLAN_FACTS[p.plan].canonicalName} ${vnd(PLAN_FACTS[p.plan].oversizeSurcharge)}`)
       .join(" + ");
   }
 

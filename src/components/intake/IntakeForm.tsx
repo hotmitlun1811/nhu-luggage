@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { CheckCircle2, Send, RotateCcw, ChevronDown } from "lucide-react";
-import { PLAN_FACTS, FLEX_PLANS, FLAT_PLANS, vnd, generateTimeSlots, type PlanKey, type Lane } from "@/lib/plans";
+import { PLAN_FACTS, FLEX_PLANS, FLAT_PLANS, surchargeUnits, vnd, generateTimeSlots, type PlanKey, type Lane } from "@/lib/plans";
 import { POST_BOOKING_EMAIL_ENABLED } from "@/lib/features";
 import { generateReference } from "@/lib/reference";
 
@@ -79,8 +79,9 @@ export default function IntakeForm() {
   const cur = PLANS[plan];
 
   const total = useMemo(() => {
-    return cur.price * pax + (oversized ? cur.oversizeSurcharge : 0);
-  }, [cur, oversized, pax]);
+    // Long Stay bundles 4 months into one flat price, but the surcharge is charged per month, not once (surchargeUnits).
+    return cur.price * pax + (oversized ? cur.oversizeSurcharge * surchargeUnits(plan, 1) : 0);
+  }, [cur, oversized, pax, plan]);
 
   function clearError(key: string) {
     setErrors(prev => { const n = { ...prev }; delete n[key]; return n; });

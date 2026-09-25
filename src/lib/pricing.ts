@@ -22,11 +22,12 @@
  *    covers it (like a fare cap: you never pay more than the best mix).
  *  - The oversized surcharge follows the plan a piece of the price came from:
  *    Flexible plans 30,000, Flat Rate plans 50,000. It is charged per oversized
- *    bag and per plan period (so 2 months = 2 periods), but only once for
- *    hourly, however many hours.
+ *    bag and per month (so 2 months = 2 charges; Long Stay bundles 4 months
+ *    into one flat price but is still charged as 4), but only once for hourly,
+ *    however many hours (plans.ts: surchargeUnits).
  */
 
-import { HOURLY_BILLS_AS_DAY_AFTER_HOURS, PLAN_FACTS, type PlanKey } from "./plans";
+import { HOURLY_BILLS_AS_DAY_AFTER_HOURS, PLAN_FACTS, surchargeUnits, type PlanKey } from "./plans";
 
 /** A wall-clock moment in the shop's time zone (Vietnam has no daylight saving). */
 export type Stamp = { date: string; time: string }; // "YYYY-MM-DD", "HH:MM"
@@ -201,9 +202,7 @@ function piece(plan: PlanKey, count: number): QuotePiece {
     plan,
     count,
     unitPrice: f.price,
-    // Hourly is charged once however many hours; every other plan repeats it
-    // for each period (owner rule, 2026-09-19).
-    surcharge: plan === "hourly" ? f.oversizeSurcharge : f.oversizeSurcharge * count,
+    surcharge: f.oversizeSurcharge * surchargeUnits(plan, count),
   };
 }
 
